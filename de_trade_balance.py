@@ -48,13 +48,38 @@ Hence:
                         is a net importer in expensive hours and a net exporter
                         in cheap hours, the balance is negative.
 
+                        Worth seeing that it collapses to
+                        sum(net_MWh * price_de) per MTU: both directions carry
+                        the same price, so gross volumes cancel and only the
+                        net position in each hour survives. That makes it the
+                        sturdiest of the three -- indifferent to whether the
+                        source reports flows gross or already netted -- and it
+                        is also why it says nothing about how much trade
+                        actually took place.
+
   balance_at_zonal      Imports valued at the exporting zone's price, exports
                         valued at the German price -- i.e. money actually
                         leaving/entering the German market area, ignoring
                         congestion rent. Almost always the friendlier number.
 
-  congestion_rent       The gap between the two. Not a loss; it is revenue to
-                        the TSOs on both sides.
+  congestion_rent       Rent on both legs, which works out as
+                        sum(net_MWh * spread) per border and MTU: imports earn
+                        it when P_DE > P_X, exports when P_X > P_DE. Not a loss;
+                        it is revenue to the two TSOs on that border, normally
+                        split 50/50.
+
+                        It is *not* the gap between the two balances above, easy
+                        as that is to assume. balance_at_zonal only re-prices
+                        the import leg -- exports sit at the German price in
+                        both metrics -- so the gap is the import-side rent
+                        alone: 43.6 of 99.6 MEUR over July 2026. The export-side
+                        rent is real TSO revenue that neither balance reports.
+
+                        Being net-only per border, it is as indifferent to gross
+                        volumes as balance_at_de_price. entsoe and energy-charts
+                        agreed on it to 0.6% for July 2026 despite differing by
+                        1,499 GWh of gross bidirectional flow; what little gap
+                        remains is DK_2 finally being priced at its own zone.
 
 Also worth keeping in mind:
   * Day-ahead is the bulk of it, not all of it. Intraday and balancing trades
@@ -284,15 +309,30 @@ class EnergyChartsBackend(Backend):
     1. Flows arrive already netted: one signed series per border (positive =
        into Germany), in GW, one request for all borders at once. ENTSO-E
        publishes each direction separately, and a border can genuinely carry
-       flow both ways inside one MTU. Here that cancels, so gross import and
-       export volumes come out somewhat lower than via ENTSO-E. The *net*
-       balance per border is unaffected, but balance_at_de_price is not
-       strictly net-only (it prices gross volumes at the same price, so it
-       survives; balance_at_zonal does shift slightly).
+       flow both ways inside one MTU, which here cancels instead.
+
+       Measured against --source entsoe over July 2026: gross imports come out
+       26% low (4,165 against 5,664 GWh) and exports 28% low, the cancelled
+       1,499 GWh valuing at 101.27 EUR/MWh in *both* directions -- necessarily,
+       since it is one volume at one hourly price. So it drops out of
+       balance_at_de_price completely: that metric reduces to
+       sum(net_MWh * price_de) and never sees gross volumes. The two sources
+       agreed on it to 0.5 kEUR in 300,428 (0.0002%), which is display rounding.
+
+       What netting does move: import_GWh and export_GWh, the volume-weighted
+       imp_px_de and exp_px_de (biased high and low respectively -- 136.71 and
+       69.26 here, against 127.33 and 78.18), mean_spread, pct_coupled, and
+       balance_at_zonal.
     2. Series are labelled by country, and Denmark is not guaranteed to arrive
        split into DK1/DK2. If it comes through as plain "Denmark" the whole
        flow gets priced at DK1 -- right for the Jutland interconnectors, wrong
        for the Kontek cable to DK2. The script warns when this happens.
+
+       Note what this is and is not: the July 2026 net import matched ENTSO-E
+       exactly (281.4 GWh) even though DK_2 was reported as absent, so the
+       Kontek energy is all present, just filed under DK_1. The damage is
+       confined to which zonal price it gets priced at -- balance_at_zonal and
+       congestion_rent -- and never reaches the volumes or balance_at_de_price.
     3. Prices for DE-LU and every zone bordering it are redistributed from
        SMARD under CC BY 4.0, so this use is fine. Other bidding zones on the
        same endpoint are marked private/internal use only -- don't widen the
