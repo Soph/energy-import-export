@@ -473,11 +473,15 @@ function drawBalance(host, days) {
 
 /** Two price lines on one axis, with the gap between them washed in. */
 function drawPrice(host, days) {
-  const W = host.clientWidth || 720, H = PLOT_H + PAD.t + PAD.b;
+  // A band above the plot for the unit label. Without it the topmost tick and
+  // the unit share a line whenever the data reaches the top of the scale, which
+  // is exactly what a source with different price levels will do to you.
+  const TOP = PAD.t + 14;
+  const W = host.clientWidth || 720, H = PLOT_H + TOP + PAD.b;
   const R = PAD.r + 34;                                  // room for end labels
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
                           role: "img", "aria-label": "Volume-weighted price when importing and when exporting, euro per megawatt hour" });
-  const x0 = PAD.l, x1 = W - R, y0 = PAD.t, y1 = PAD.t + PLOT_H;
+  const x0 = PAD.l, x1 = W - R, y0 = TOP, y1 = TOP + PLOT_H;
 
   const all = days.flatMap(d => [d.imp_px_de, d.exp_px_de]).filter(v => v != null);
   const lo = Math.min(...all), hi = Math.max(...all);
@@ -524,7 +528,7 @@ function drawPrice(host, days) {
                     num(last[field])));
     }
   }
-  svg.append(el("text", { x: x0 - 8, y: y0 - 2, "text-anchor": "end" }, "€/MWh"));
+  svg.append(el("text", { x: x0 - 8, y: y0 - 9, "text-anchor": "end" }, "€/MWh"));
 
   // crosshair + nearest-point tooltip across the whole plot
   const cross = el("line", { class: "crosshair", y1: y0, y2: y1, x1: 0, x2: 0, opacity: 0 });
