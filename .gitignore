@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Secrets. The ENTSO-E token is read from the environment (ENTSOE_API_TOKEN);
+# if you ever keep it in a dotenv instead, it stays out of the repo.
+.env
+
+# Script output. `--csv out/` is the documented example; add your own dir here
+# if you point --csv somewhere else.
+out/
+
+# Response cache. Lives in ~/.cache/de_trade_balance by default, so this only
+# matters if DE_TRADE_CACHE or --cache points inside the repo.
+.cache/
+
+# Per-user tool settings (.claude/settings.json is shared and stays tracked)
+.claude/settings.local.json
+
+# macOS
+.DS_Store
