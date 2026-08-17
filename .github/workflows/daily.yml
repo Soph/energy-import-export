@@ -40,7 +40,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install --quiet pandas requests
+      - run: pip install --quiet pandas requests entsoe-py
 
       - name: Fetch and merge
         # Inputs arrive as env vars, never interpolated into the script body --
@@ -48,8 +48,18 @@ jobs:
         env:
           IN_DATE: ${{ inputs.date }}
           IN_END: ${{ inputs.end }}
+          # Settings -> Secrets and variables -> Actions -> ENTSOE_API_TOKEN.
+          # Without it the job fails loudly rather than quietly falling back to a
+          # source with different gross volumes, which would make the series a
+          # mix of two definitions.
+          ENTSOE_API_TOKEN: ${{ secrets.ENTSOE_API_TOKEN }}
         run: |
           set -euo pipefail
+          if [ -z "${ENTSOE_API_TOKEN:-}" ]; then
+            echo "::error::ENTSOE_API_TOKEN secret is not set. Add it, or pass" \
+                 "--source energy-charts to build without a token."
+            exit 1
+          fi
           if [ -n "$IN_DATE" ]; then
             if [ -n "$IN_END" ]; then
               python3 build_data.py --date "$IN_DATE" --end "$IN_END"

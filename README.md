@@ -51,9 +51,13 @@ branch to make the cron live.
 
 ## Which source to use
 
-The default needs no auth and is right for the headline numbers. Use
-`--source entsoe` (free token in `ENTSOE_API_TOKEN`, plus `pip install entsoe-py`)
-when you need gross volumes.
+The dashboard is built from **ENTSO-E** (`build_data.py` defaults to it), because
+it publishes each direction of a border separately and carries every bidding zone.
+It needs a free token in `ENTSOE_API_TOKEN` and `pip install entsoe-py`; for the
+daily job the token goes in Settings → Secrets and variables → Actions.
+
+`de_trade_balance.py` still defaults to energy-charts, so the CLI and `--demo`
+keep working with no account at all. Both scripts take `--source`.
 
 Measured over July 2026, the two agree on `balance_at_de_price` to **0.0002%** and
 on `congestion_rent` to 0.6% — not luck, but because both reduce to net-only

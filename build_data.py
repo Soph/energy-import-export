@@ -6,19 +6,22 @@ Everything analytical lives in de_trade_balance.py; this only reshapes its outpu
 into one record per day and upserts it into docs/data/daily.json, so a daily cron
 and a one-off backfill are the same code path.
 
+    export ENTSOE_API_TOKEN=...              # the default source needs it
     ./build_data.py                          # yesterday, into docs/data/daily.json
     ./build_data.py --date 2026-07           # all of July
     ./build_data.py --date 2026-07-17 --days 31
-    ./build_data.py --source entsoe          # gross per-direction flows, needs a token
+    ./build_data.py --source energy-charts   # no token, netted flows
 
 Upsert is by date, so re-running a day overwrites it in place -- which is what you
-want, because both sources revise the last few days after first publication.
+want, because both sources revise the last few days after first publication. Add
+--refresh to overwrite days already on file that came from another source.
 
-Each record carries the source it came from. That matters: balance_at_de_price,
-congestion_rent and the whole daily series are net-only and agree across sources
-to well under a percent, but the gross columns (import_gwh, export_gwh, the
-volume-weighted prices) are ~26% low from energy-charts, which reports flows
-already netted. The dashboard says which source it is showing for that reason.
+ENTSO-E is the default because it publishes each direction of a border separately.
+The netted alternative agrees on balance_at_de_price to 0.0002% and on
+congestion_rent to 0.6% -- both are net-only per MTU, so netting cannot move them
+-- but its gross columns (import_gwh, export_gwh, and the volume-weighted prices
+derived from them) run ~26% low, and it does not carry DK_2 at all. Each record
+keeps the source it came from, and the dashboard credits and caveats per source.
 """
 
 from __future__ import annotations
@@ -128,7 +131,10 @@ def main() -> None:
     ap.add_argument("--freq", default="60min")
     ap.add_argument("--borders", help="comma-separated subset")
     ap.add_argument("--source", choices=["energy-charts", "entsoe", "demo"],
-                    default=os.environ.get("DE_TRADE_SOURCE", "energy-charts"))
+                    default=os.environ.get("DE_TRADE_SOURCE", "entsoe"),
+                    help="default entsoe: gross per-direction flows and DK_2, which "
+                         "the netted source cannot give. energy-charts needs no token "
+                         "and agrees on the balance, if you want it as a fallback")
     ap.add_argument("--token", default=os.environ.get("ENTSOE_API_TOKEN"))
     ap.add_argument("--out", default=OUT, help=f"JSON store (default: {OUT})")
     ap.add_argument("--no-cache", action="store_true")
