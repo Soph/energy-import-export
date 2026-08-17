@@ -6,22 +6,36 @@ Everything analytical lives in de_trade_balance.py; this only reshapes its outpu
 into one record per day and upserts it into docs/data/daily.json, so a daily cron
 and a one-off backfill are the same code path.
 
-    export ENTSOE_API_TOKEN=...              # the default source needs it
     ./build_data.py                          # yesterday, into docs/data/daily.json
     ./build_data.py --date 2026-07           # all of July
     ./build_data.py --date 2026-07-17 --days 31
-    ./build_data.py --source energy-charts   # no token, netted flows
+    ./build_data.py --source entsoe          # better data, but see the warning below
 
 Upsert is by date, so re-running a day overwrites it in place -- which is what you
-want, because both sources revise the last few days after first publication. Add
---refresh to overwrite days already on file that came from another source.
+want, because both sources revise the last few days after first publication. It
+also means switching source rewrites those days, so the dashboard's attribution
+follows along on its own.
 
-ENTSO-E is the default because it publishes each direction of a border separately.
-The netted alternative agrees on balance_at_de_price to 0.0002% and on
-congestion_rent to 0.6% -- both are net-only per MTU, so netting cannot move them
--- but its gross columns (import_gwh, export_gwh, and the volume-weighted prices
-derived from them) run ~26% low, and it does not carry DK_2 at all. Each record
-keeps the source it came from, and the dashboard credits and caveats per source.
+
+WHY THE DEFAULT IS energy-charts, AND WHY THAT IS NOT A DATA-QUALITY CALL
+-------------------------------------------------------------------------------
+ENTSO-E is the better data: gross per-direction flows, and DK_2 present instead of
+folded into DK_1. Use it freely for analysis -- that is what the CLI defaults to.
+
+But this script feeds a *published* page, and publishing is redistribution, which
+is a licensing question rather than a data one. ENTSO-E's list of data available
+for free re-use (Article 2.5 of its terms) covers physical flows, 12.1.g, and does
+not cover day-ahead prices, 12.1.d, or scheduled commercial exchanges, 12.1.f --
+the whole 12.1.d/e/f market-results block is absent, because those belong to the
+power exchanges rather than the TSOs, and ENTSO-E cannot sub-license what it does
+not hold. energy-charts carries the same prices for DE-LU and all 11 neighbouring
+zones under CC BY 4.0 from Bundesnetzagentur | SMARD.de, a public authority that
+did license them openly.
+
+So: --source entsoe to analyse, the default to publish. If you switch the site to
+ENTSO-E for the gross volumes, you are making a licensing decision, not just a
+data one. (Checked against the 18 Oct 2023 revision of that list; it does get
+amended, so it is worth re-reading before relying on this.)
 """
 
 from __future__ import annotations
@@ -131,10 +145,11 @@ def main() -> None:
     ap.add_argument("--freq", default="60min")
     ap.add_argument("--borders", help="comma-separated subset")
     ap.add_argument("--source", choices=["energy-charts", "entsoe", "demo"],
-                    default=os.environ.get("DE_TRADE_SOURCE", "entsoe"),
-                    help="default entsoe: gross per-direction flows and DK_2, which "
-                         "the netted source cannot give. energy-charts needs no token "
-                         "and agrees on the balance, if you want it as a fallback")
+                    default=os.environ.get("DE_TRADE_SOURCE", "energy-charts"),
+                    help="default energy-charts, whose prices are CC BY 4.0 and so "
+                         "publishable. entsoe gives gross flows and DK_2 but its "
+                         "prices and scheduled exchanges are not licensed for "
+                         "redistribution -- see the note at the top of this file")
     ap.add_argument("--token", default=os.environ.get("ENTSOE_API_TOKEN"))
     ap.add_argument("--out", default=OUT, help=f"JSON store (default: {OUT})")
     ap.add_argument("--no-cache", action="store_true")

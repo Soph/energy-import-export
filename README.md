@@ -51,13 +51,34 @@ branch to make the cron live.
 
 ## Which source to use
 
-The dashboard is built from **ENTSO-E** (`build_data.py` defaults to it), because
-it publishes each direction of a border separately and carries every bidding zone.
-It needs a free token in `ENTSOE_API_TOKEN` and `pip install entsoe-py`; for the
-daily job the token goes in Settings → Secrets and variables → Actions.
+**ENTSO-E to analyse, energy-charts to publish.** That split is a licensing
+decision, not a data-quality one, and it is worth understanding before changing it.
 
-`de_trade_balance.py` still defaults to energy-charts, so the CLI and `--demo`
-keep working with no account at all. Both scripts take `--source`.
+ENTSO-E is the better data: it publishes each direction of a border separately, and
+carries DK_2 instead of folding it into DK_1. Use it freely for analysis —
+`--source entsoe` with a free token in `ENTSOE_API_TOKEN` and `pip install
+entsoe-py`.
+
+But the dashboard *republishes*, and ENTSO-E's
+[list of data available for free re-use](https://transparencyplatform.zendesk.com/hc/en-us/articles/40921911218961-Legal-Terms-and-Conditions)
+(Article 2.5 of its terms) does not cover the two series this project leans on:
+
+| Series | Article | On the free-re-use list |
+|---|---|---|
+| Physical flows | 12.1.g | yes, item #18 |
+| Day-ahead prices | 12.1.d | **no** |
+| Scheduled commercial exchanges | 12.1.f | **no** |
+
+The whole `12.1.d/e/f` market-results block is absent. That is not an oversight:
+those series belong to the power exchanges rather than the TSOs, and ENTSO-E cannot
+sub-license what it does not hold rights to. The transparency mandate makes the
+data *visible*; it does not grant redistribution.
+
+energy-charts carries the same prices for DE-LU and all 11 neighbouring zones under
+CC BY 4.0 from Bundesnetzagentur | SMARD.de — a public authority that did license
+them openly — which is why the published page uses it. (Its other bidding zones are
+marked private/internal use only, so don't widen `NEIGHBOURS` and then publish.)
+Checked against the 18 Oct 2023 revision of that list, which does get amended.
 
 Measured over July 2026, the two agree on `balance_at_de_price` to **0.0002%** and
 on `congestion_rent` to 0.6% — not luck, but because both reduce to net-only
