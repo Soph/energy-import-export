@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Germany's cross-border power balance</title>
+<meta name="description" content="Daily value of German electricity imports and exports, from day-ahead prices and cross-border exchange.">
+<style>
+  /* ---- palette: one language across the page --------------------------------
+     red  = money out (imports, deficit)
+     blue = money in  (exports, surplus)
+     Both poles of the diverging pair, validated for CVD separation and contrast
+     against each surface (worst pair CVD dE 21.6 light / 19.2 dark).
+     Dark steps are chosen for the dark surface, not flipped from light.        */
+  :root {
+    color-scheme: light;
+    --plane:      #f9f9f7;
+    --surface:    #fcfcfb;
+    --ink:        #0b0b0b;
+    --ink-2:      #52514e;
+    --muted:      #898781;
+    --grid:       #e1e0d9;
+    --axis:       #c3c2b7;
+    --hairline:   rgba(11, 11, 11, .10);
+    --out:        #e34948;   /* imports / deficit */
+    --in:         #2a78d6;   /* exports / surplus */
+    --zero:       #f0efec;   /* diverging midpoint: neutral, never a hue */
+    --shadow:     0 1px 2px rgba(11,11,11,.04), 0 8px 24px -12px rgba(11,11,11,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --plane:    #0d0d0d;
+      --surface:  #1a1a19;
+      --ink:      #ffffff;
+      --ink-2:    #c3c2b7;
+      --muted:    #898781;
+      --grid:     #2c2c2a;
+      --axis:     #383835;
+      --hairline: rgba(255,255,255,.10);
+      --out:      #e66767;
+      --in:       #3987e5;
+      --zero:     #383835;
+      --shadow:   none;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --plane:    #0d0d0d;
+    --surface:  #1a1a19;
+    --ink:      #ffffff;
+    --ink-2:    #c3c2b7;
+    --muted:    #898781;
+    --grid:     #2c2c2a;
+    --axis:     #383835;
+    --hairline: rgba(255,255,255,.10);
+    --out:      #e66767;
+    --in:       #3987e5;
+    --zero:     #383835;
+    --shadow:   none;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--plane);
+    color: var(--ink);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  /* ---- header ---- */
+  header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
+  header .grow { flex: 1; min-width: 0; }
+  h1 { font-size: 21px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 4px; }
+  .sub { color: var(--ink-2); font-size: 14px; margin: 0; }
+  .ghost {
+    background: var(--surface); color: var(--ink-2); cursor: pointer;
+    border: 1px solid var(--hairline); border-radius: 8px;
+    padding: 7px 11px; font: inherit; font-size: 13px; line-height: 1;
+  }
+  .ghost:hover { color: var(--ink); }
+
+  /* ---- hero + tiles ---- */
+  .hero {
+    background: var(--surface); border: 1px solid var(--hairline);
+    border-radius: 14px; box-shadow: var(--shadow);
+    padding: 22px 24px; margin-bottom: 14px;
+    display: grid; grid-template-columns: minmax(240px, 1.1fr) 2fr; gap: 28px;
+  }
+  @media (max-width: 720px) { .hero { grid-template-columns: 1fr; gap: 20px; } }
+  .lede-label { color: var(--ink-2); font-size: 13px; margin-bottom: 2px; }
+  /* hero figure: same sans as everything, proportional figures (no tabular-nums),
+     and in primary ink -- the sign carries the direction, the swatch carries the
+     colour. Numbers never wear the data colour. */
+  .lede-value { font-size: 52px; font-weight: 600; letter-spacing: -.025em; line-height: 1.05;
+                display: flex; align-items: center; gap: 12px; }
+  .lede-value i { width: 12px; height: 34px; border-radius: 4px; flex: none; }
+  .lede-note { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 20px 24px; }
+  .tile-label { color: var(--ink-2); font-size: 13px; }
+  .tile-value { font-size: 24px; font-weight: 600; letter-spacing: -.015em; margin-top: 1px; }
+  .tile-note { color: var(--muted); font-size: 12px; }
+
+  /* ---- filter row: one row, above everything it scopes ---- */
+  .filters { display: flex; align-items: center; gap: 8px; margin: 22px 0 14px; flex-wrap: wrap; }
+  .filters .spacer { flex: 1; }
+  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--hairline); border-radius: 9px; padding: 2px; }
+  .seg button {
+    background: none; border: 0; border-radius: 7px; cursor: pointer;
+    color: var(--ink-2); font: inherit; font-size: 13px; padding: 6px 12px;
+  }
+  .seg button[aria-pressed="true"] { background: var(--plane); color: var(--ink); font-weight: 600; }
+  .range-note { color: var(--muted); font-size: 13px; }
+
+  /* ---- cards ---- */
+  .card {
+    background: var(--surface); border: 1px solid var(--hairline);
+    border-radius: 14px; box-shadow: var(--shadow);
+    padding: 20px 22px 14px; margin-bottom: 14px;
+  }
+  .card > h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .card > p.hint { color: var(--ink-2); font-size: 13px; margin: 3px 0 0; }
+  .card-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .card-head .grow { flex: 1; min-width: 180px; }
+  .plot { margin-top: 14px; }
+  .plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+  /* legend: always present for two or more series */
+  .key { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .key span { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+  .key i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .key i.line { width: 14px; height: 2px; border-radius: 2px; }
+
+  /* chart text wears text tokens, never the series color */
+  text { fill: var(--muted); font-size: 11px; }
+  text.val { fill: var(--ink-2); font-size: 11px; font-weight: 600; }
+  text.tick { font-variant-numeric: tabular-nums; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .axisline { stroke: var(--axis); stroke-width: 1; }
+  .hit { fill: transparent; cursor: crosshair; }
+  .crosshair { stroke: var(--axis); stroke-width: 1; pointer-events: none; }
+
+  /* ---- tooltip: enhances, never the only way to a value ---- */
+  #tip {
+    position: fixed; z-index: 10; pointer-events: none; opacity: 0;
+    transition: opacity .1s; transform: translate(-50%, -100%);
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--hairline); border-radius: 9px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.16);
+    padding: 9px 11px; font-size: 12.5px; min-width: 150px;
+  }
+  #tip .t-date { font-weight: 600; margin-bottom: 5px; }
+  #tip .t-row { display: flex; justify-content: space-between; gap: 14px; }
+  #tip .t-row span:last-child { font-variant-numeric: tabular-nums; }
+  #tip .t-sep { border-top: 1px solid var(--hairline); margin: 5px 0; }
+
+  /* ---- table view ---- */
+  details { margin-top: 6px; }
+  summary { cursor: pointer; color: var(--ink-2); font-size: 14px; padding: 6px 0; }
+  summary:hover { color: var(--ink); }
+  .scroll { overflow-x: auto; margin-top: 10px; }
+  table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
+  th, td { text-align: right; padding: 6px 10px; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: var(--ink-2); font-weight: 600; border-bottom: 1px solid var(--axis); }
+  tbody td { font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--grid); color: var(--ink-2); }
+  tbody td:first-child { color: var(--ink); }
+  .neg { color: var(--out); }
+
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 30px; }
+  footer p { margin: 0 0 7px; }
+  footer a { color: var(--ink-2); }
+  #err { display: none; padding: 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hairline); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="grow">
+      <h1>Germany's cross-border power balance</h1>
+      <p class="sub">What imported electricity cost against what exports earned, valued at
+      German day-ahead prices, day by day.</p>
+    </div>
+    <button class="ghost" id="theme" title="Switch theme">Theme</button>
+  </header>
+
+  <div id="err"></div>
+
+  <section class="hero" id="hero" hidden>
+    <div>
+      <div class="lede-label">Balance over the window</div>
+      <div class="lede-value" id="heroValue">—</div>
+      <div class="lede-note" id="heroNote"></div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <div class="filters" id="filters" hidden>
+    <div class="seg" id="ranges" role="group" aria-label="Time range"></div>
+    <div class="spacer"></div>
+    <div class="range-note" id="rangeNote"></div>
+  </div>
+
+  <section class="card" id="cardBalance" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2>Daily balance</h2>
+        <p class="hint">Export revenue minus import cost, both at the German price.</p>
+      </div>
+      <div class="key">
+        <span><i style="background:var(--out)"></i>deficit</span>
+        <span><i style="background:var(--in)"></i>surplus</span>
+      </div>
+    </div>
+    <div class="plot" id="plotBalance"></div>
+  </section>
+
+  <section class="card" id="cardPrice" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2>Why: bought dear, sold cheap</h2>
+        <p class="hint">Volume-weighted German price in the hours Germany imported, against
+        the hours it exported. Both are the same price curve — the gap is timing.</p>
+      </div>
+      <div class="key">
+        <span><i class="line" style="background:var(--out)"></i>when importing</span>
+        <span><i class="line" style="background:var(--in)"></i>when exporting</span>
+      </div>
+    </div>
+    <div class="plot" id="plotPrice"></div>
+  </section>
+
+  <section class="card" id="cardVolume" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2>Volumes</h2>
+        <p class="hint" id="volHint">Energy crossing the border each day.</p>
+      </div>
+      <div class="key">
+        <span><i style="background:var(--out)"></i>imported</span>
+        <span><i style="background:var(--in)"></i>exported</span>
+      </div>
+    </div>
+    <div class="plot" id="plotVolume"></div>
+  </section>
+
+  <section class="card" id="cardBorder" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2>By border</h2>
+        <p class="hint">Balance per neighbouring bidding zone, summed over the window.</p>
+      </div>
+    </div>
+    <div class="plot" id="plotBorder"></div>
+  </section>
+
+  <section class="card" id="cardTable" hidden>
+    <details>
+      <summary>Table view — every value on this page</summary>
+      <div class="scroll" id="tableWrap"></div>
+    </details>
+  </section>
+
+  <footer>
+    <p id="prov"></p>
+    <p>Day-ahead prices for Germany and its neighbours are
+    <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> from
+    <a href="https://www.smard.de">Bundesnetzagentur | SMARD.de</a>, redistributed by
+    <a href="https://www.energy-charts.info">Energy-Charts.info</a> (Fraunhofer ISE),
+    which is also the source of the cross-border exchange series.</p>
+    <p>Three caveats worth carrying: this is day-ahead only, so intraday and balancing
+    trades are missing; the balance is what the volume was worth at each side's zonal
+    price, not a payment anyone makes, since cross-border trade in the coupled market is
+    implicit; and congestion rent is revenue to the transmission operators on both sides
+    of a border, not a loss.</p>
+  </footer>
+</div>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* ========================================================================== *
+ * data
+ * ========================================================================== */
+
+const RANGES = [
+  { key: 7,   label: "7 days" },
+  { key: 30,  label: "30 days" },
+  { key: 90,  label: "90 days" },
+  { key: 0,   label: "All" },
+];
+
+const state = { store: null, days: [], range: 30 };
+
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+// Format from the string parts. Parsing "2026-08-16" as a Date would drag the
+// value through UTC and can land the label on the previous day.
+const dLabel = s => `${+s.slice(8, 10)} ${MONTHS[+s.slice(5, 7) - 1]}`;
+const dLong  = s => `${dLabel(s)} ${s.slice(0, 4)}`;
+
+const num = (v, dp = 0) => v == null ? "—"
+  : v.toLocaleString("en-GB", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+/** kEUR -> a compact signed money string. */
+const money = (k, dp = 1) => {
+  if (k == null) return "—";
+  const s = k < 0 ? "−" : "+", a = Math.abs(k);
+  if (a >= 1000) return `${s}€${num(a / 1000, dp)}M`;
+  return `${s}€${num(a, 0)}k`;
+};
+
+/* ========================================================================== *
+ * tiny svg helpers
+ * ========================================================================== */
+
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(name, attrs = {}, text) {
+  const n = document.createElementNS(SVGNS, name);
+  for (const k in attrs) if (attrs[k] != null) n.setAttribute(k, attrs[k]);
+  if (text != null) n.textContent = text;
+  return n;
+}
+const scale = (d0, d1, r0, r1) => v => r0 + (v - d0) / ((d1 - d0) || 1) * (r1 - r0);
+
+/** Bar path with the data-end rounded and the baseline end square. */
+function barPath(x, y, w, h, r, roundUp) {
+  r = Math.max(0, Math.min(r, w / 2, h));
+  if (h <= 0.6) return `M${x} ${y}h${w}`;               // hairline for ~zero
+  return roundUp
+    ? `M${x} ${y + h}V${y + r}q0 ${-r} ${r} ${-r}h${w - 2 * r}q${r} 0 ${r} ${r}V${y + h}Z`
+    : `M${x} ${y}V${y + h - r}q0 ${r} ${r} ${r}h${w - 2 * r}q${r} 0 ${r} ${-r}V${y}Z`;
+}
+
+/** Which x positions get a date label.
+ *  Counted back from the last day, so the most recent date is always labelled
+ *  and the spacing stays even -- labelling every nth from the left and then
+ *  forcing the last one lands two labels on top of each other. How many fit is
+ *  a function of the plot width, not a constant: eight labels that breathe on a
+ *  desktop run into each other at 390px. */
+function labelIndices(n, plotW) {
+  const target = Math.max(3, Math.min(8, Math.floor(plotW / 72)));
+  const every = Math.max(1, Math.ceil(n / target));
+  const idx = new Set();
+  for (let i = n - 1; i >= 0; i -= every) idx.add(i);
+  return idx;
+}
+
+/** Nice round tick values covering [lo, hi], aiming for ~count steps. */
+function ticks(lo, hi, count = 5) {
+  const span = (hi - lo) || 1;
+  const raw = span / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || 10 * mag;
+  const out = [];
+  for (let t = Math.ceil(lo / step) * step; t <= hi + step * 1e-6; t += step) out.push(t);
+  return out;
+}
+
+/* ========================================================================== *
+ * tooltip
+ * ========================================================================== */
+
+const tip = document.getElementById("tip");
+function showTip(evt, html) {
+  tip.innerHTML = html;
+  tip.style.opacity = 1;
+  const pad = 12, w = tip.offsetWidth;
+  let x = evt.clientX;
+  x = Math.max(w / 2 + 4, Math.min(x, window.innerWidth - w / 2 - 4));
+  tip.style.left = x + "px";
+  tip.style.top = Math.max(tip.offsetHeight + 4, evt.clientY - pad) + "px";
+}
+const hideTip = () => { tip.style.opacity = 0; };
+function tipRows(d) {
+  return `<div class="t-date">${dLong(d.date)}</div>
+    <div class="t-row"><span>Balance</span><span>${money(d.bal_de_keur, 2)}</span></div>
+    <div class="t-sep"></div>
+    <div class="t-row"><span>Imported</span><span>${num(d.import_gwh, 1)} GWh</span></div>
+    <div class="t-row"><span>Exported</span><span>${num(d.export_gwh, 1)} GWh</span></div>
+    <div class="t-row"><span>Price when importing</span><span>${num(d.imp_px_de, 1)}</span></div>
+    <div class="t-row"><span>Price when exporting</span><span>${num(d.exp_px_de, 1)}</span></div>
+    <div class="t-row"><span>Congestion rent</span><span>${money(d.rent_keur, 2)}</span></div>`;
+}
+
+/* ========================================================================== *
+ * charts
+ * ========================================================================== */
+
+const PLOT_H = 210, PAD = { t: 12, r: 16, b: 26, l: 52 };
+const BAR_MAX = 24, GAP = 2, RAD = 4;
+
+/** Columns growing from a zero line, red below / blue above. */
+function drawBalance(host, days) {
+  const W = host.clientWidth || 720, H = PLOT_H + PAD.t + PAD.b;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
+                          role: "img", "aria-label": "Daily balance, thousand euro" });
+  const x0 = PAD.l, x1 = W - PAD.r, y0 = PAD.t, y1 = PAD.t + PLOT_H;
+
+  const vals = days.map(d => d.bal_de_keur ?? 0);
+  const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
+  // a lane past the extreme, so its label sits below the deepest bar instead of
+  // landing in the date row
+  const y = scale(lo - (hi - lo) * .10, hi, y1, y0);
+
+  for (const t of ticks(lo, hi)) {                          // hairline, solid
+    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
+                            x1: x0, x2: x1, y1: y(t), y2: y(t) }));
+    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" },
+                  (t < 0 ? "−" : "") + num(Math.abs(t) / 1000, 1) + "M"));
+  }
+
+  const band = (x1 - x0) / days.length;
+  const bw = Math.min(BAR_MAX, band - GAP);
+  const worst = days.reduce((a, b) => (b.bal_de_keur ?? 0) < (a.bal_de_keur ?? 0) ? b : a, days[0]);
+  const labels = labelIndices(days.length, x1 - x0);
+
+  days.forEach((d, i) => {
+    const v = d.bal_de_keur ?? 0, up = v >= 0;
+    const cx = x0 + band * (i + .5), top = Math.min(y(v), y(0));
+    svg.append(el("path", {
+      d: barPath(cx - bw / 2, top, bw, Math.abs(y(v) - y(0)), RAD, up),
+      fill: up ? "var(--in)" : "var(--out)",
+    }));
+    // hit target spans the whole band, so it clears the 24px minimum
+    const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PLOT_H });
+    hit.addEventListener("pointerenter", e => showTip(e, tipRows(d)));
+    hit.addEventListener("pointermove", e => showTip(e, tipRows(d)));
+    hit.addEventListener("pointerleave", hideTip);
+    svg.append(hit);
+
+    if (d === worst) {                     // label the extreme only, never every bar
+      svg.append(el("text", { class: "val", x: cx, y: y(v) + (v < 0 ? 14 : -7),
+                              "text-anchor": "middle" }, money(v)));
+    }
+    if (labels.has(i)) {
+      svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" }, dLabel(d.date)));
+    }
+  });
+
+  host.replaceChildren(svg);
+}
+
+/** Two price lines on one axis, with the gap between them washed in. */
+function drawPrice(host, days) {
+  const W = host.clientWidth || 720, H = PLOT_H + PAD.t + PAD.b;
+  const R = PAD.r + 34;                                  // room for end labels
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
+                          role: "img", "aria-label": "Volume-weighted price when importing and when exporting, euro per megawatt hour" });
+  const x0 = PAD.l, x1 = W - R, y0 = PAD.t, y1 = PAD.t + PLOT_H;
+
+  const all = days.flatMap(d => [d.imp_px_de, d.exp_px_de]).filter(v => v != null);
+  const lo = Math.min(...all), hi = Math.max(...all);
+  const pad = (hi - lo) * .12 || 1;
+  const y = scale(lo - pad, hi + pad, y1, y0);
+  const x = i => x0 + (days.length < 2 ? (x1 - x0) / 2 : (x1 - x0) * i / (days.length - 1));
+
+  for (const t of ticks(lo - pad, hi + pad)) {
+    svg.append(el("line", { class: "gridline", x1: x0, x2: x1, y1: y(t), y2: y(t) }));
+    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" }, num(t)));
+  }
+
+  // the wash between the curves: the day's spread, ~10% opacity, never a block
+  const top = days.map((d, i) => [x(i), d.imp_px_de]).filter(p => p[1] != null);
+  const bot = days.map((d, i) => [x(i), d.exp_px_de]).filter(p => p[1] != null);
+  if (top.length > 1 && bot.length > 1) {
+    const path = top.map(p => `${p[0]} ${y(p[1])}`).join("L") + "L"
+               + [...bot].reverse().map(p => `${p[0]} ${y(p[1])}`).join("L");
+    svg.append(el("path", { d: `M${path}Z`, fill: "var(--out)", opacity: .10 }));
+  }
+
+  // segmented so a null day breaks the line rather than inventing a value
+  for (const [field, colour] of [["imp_px_de", "var(--out)"], ["exp_px_de", "var(--in)"]]) {
+    let seg = [];
+    const flush = () => {
+      if (seg.length > 1) svg.append(el("path", {
+        d: "M" + seg.map(p => `${p[0]} ${p[1]}`).join("L"),
+        fill: "none", stroke: colour, "stroke-width": 2,
+        "stroke-linejoin": "round", "stroke-linecap": "round",
+      }));
+      else if (seg.length === 1) svg.append(el("circle", {
+        cx: seg[0][0], cy: seg[0][1], r: 2, fill: colour }));
+      seg = [];
+    };
+    days.forEach((d, i) => d[field] == null ? flush() : seg.push([x(i), y(d[field])]));
+    flush();
+
+    const last = days.filter(d => d[field] != null).pop();
+    if (last) {
+      const i = days.indexOf(last);
+      svg.append(el("circle", { cx: x(i), cy: y(last[field]), r: 4, fill: colour,
+                                stroke: "var(--surface)", "stroke-width": 2 }));
+      svg.append(el("text", { class: "val", x: x(i) + 9, y: y(last[field]) + 4 },
+                    num(last[field])));
+    }
+  }
+  svg.append(el("text", { x: x0 - 8, y: y0 - 2, "text-anchor": "end" }, "€/MWh"));
+
+  // crosshair + nearest-point tooltip across the whole plot
+  const cross = el("line", { class: "crosshair", y1: y0, y2: y1, x1: 0, x2: 0, opacity: 0 });
+  svg.append(cross);
+  const hit = el("rect", { class: "hit", x: x0, y: y0, width: x1 - x0, height: PLOT_H });
+  const at = evt => {
+    const box = svg.getBoundingClientRect();
+    const px = (evt.clientX - box.left) * (W / box.width);
+    const i = Math.max(0, Math.min(days.length - 1,
+      Math.round((px - x0) / ((x1 - x0) / Math.max(1, days.length - 1)))));
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
+    cross.setAttribute("opacity", 1);
+    showTip(evt, tipRows(days[i]));
+  };
+  hit.addEventListener("pointerenter", at);
+  hit.addEventListener("pointermove", at);
+  hit.addEventListener("pointerleave", () => { cross.setAttribute("opacity", 0); hideTip(); });
+  svg.append(hit);
+
+  const labels = labelIndices(days.length, x1 - x0);
+  days.forEach((d, i) => {
+    if (labels.has(i))
+      svg.append(el("text", { x: x(i), y: y1 + 17, "text-anchor": "middle" }, dLabel(d.date)));
+  });
+
+  host.replaceChildren(svg);
+}
+
+/** Imports above the axis, exports below: direction encoded twice. */
+function drawVolume(host, days) {
+  const H2 = 96, W = host.clientWidth || 720, H = H2 * 2 + PAD.t + PAD.b;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
+                          role: "img", "aria-label": "Imported and exported energy per day, gigawatt hours" });
+  const x0 = PAD.l, x1 = W - PAD.r, mid = PAD.t + H2;
+
+  const top = Math.max(...days.map(d => Math.max(d.import_gwh ?? 0, d.export_gwh ?? 0)), 1);
+  const h = v => (v ?? 0) / top * (H2 - 6);
+
+  for (const t of ticks(0, top, 3)) {
+    if (t === 0) continue;
+    for (const s of [-1, 1]) {
+      svg.append(el("line", { class: "gridline", x1: x0, x2: x1,
+                              y1: mid - s * h(t), y2: mid - s * h(t) }));
+      svg.append(el("text", { class: "tick", x: x0 - 8, y: mid - s * h(t) + 4,
+                              "text-anchor": "end" }, num(t)));
+    }
+  }
+  svg.append(el("line", { class: "axisline", x1: x0, x2: x1, y1: mid, y2: mid }));
+  svg.append(el("text", { x: x0 - 8, y: PAD.t - 2, "text-anchor": "end" }, "GWh"));
+
+  const band = (x1 - x0) / days.length;
+  const bw = Math.min(BAR_MAX, band - GAP);
+  const labels = labelIndices(days.length, x1 - x0);
+  days.forEach((d, i) => {
+    const cx = x0 + band * (i + .5);
+    svg.append(el("path", { d: barPath(cx - bw / 2, mid - h(d.import_gwh), bw,
+                                       h(d.import_gwh), RAD, true), fill: "var(--out)" }));
+    svg.append(el("path", { d: barPath(cx - bw / 2, mid, bw, h(d.export_gwh), RAD, false),
+                            fill: "var(--in)" }));
+    const hit = el("rect", { class: "hit", x: cx - band / 2, y: PAD.t, width: band, height: H2 * 2 });
+    hit.addEventListener("pointerenter", e => showTip(e, tipRows(d)));
+    hit.addEventListener("pointermove", e => showTip(e, tipRows(d)));
+    hit.addEventListener("pointerleave", hideTip);
+    svg.append(hit);
+    if (labels.has(i))
+      svg.append(el("text", { x: cx, y: mid + H2 + 17, "text-anchor": "middle" }, dLabel(d.date)));
+  });
+
+  host.replaceChildren(svg);
+}
+
+/** Horizontal diverging bars, one per border, value at the tip. */
+function drawBorders(host, days) {
+  const totals = {};
+  for (const d of days)
+    for (const [b, v] of Object.entries(d.borders || {})) {
+      const t = totals[b] || (totals[b] = { bal: 0, imp: 0, exp: 0, rent: 0 });
+      t.bal += v.bal_de_keur ?? 0; t.rent += v.rent_keur ?? 0;
+      t.imp += v.import_gwh ?? 0;  t.exp += v.export_gwh ?? 0;
+    }
+  const rows = Object.entries(totals).sort((a, b) => a[1].bal - b[1].bal);
+  if (!rows.length) { host.replaceChildren(); return; }
+
+  const ROW = 26, W = host.clientWidth || 720, H = rows.length * ROW + 34;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
+                          role: "img", "aria-label": "Balance per border over the window" });
+  const L = 62, LBL = 74;                 // row names, then room for a tip label
+  const x0 = L, x1 = W - 8;
+
+  // One scale for both arms, with LBL held back at each populated end so the
+  // longest bar's value label always fits outside the bar instead of landing on
+  // the row name.
+  const maxNeg = Math.max(0, ...rows.map(r => -Math.min(0, r[1].bal)));
+  const maxPos = Math.max(0, ...rows.map(r => Math.max(0, r[1].bal)));
+  const usable = (x1 - x0) - (maxNeg ? LBL : 0) - (maxPos ? LBL : 0);
+  const px = Math.max(0, usable) / ((maxNeg + maxPos) || 1);
+  const zero = x0 + (maxNeg ? LBL + maxNeg * px : 0);
+  const w = v => Math.abs(v) * px;
+
+  svg.append(el("line", { class: "axisline", x1: zero, x2: zero, y1: 6, y2: rows.length * ROW + 4 }));
+  const bh = 14;
+  rows.forEach(([name, t], i) => {
+    const yTop = 8 + i * ROW + (ROW - bh) / 2 - 2, up = t.bal >= 0;
+    // horizontal bar: rotate the same path so the rounding lands on the data end
+    svg.append(el("path", {
+      d: barPath(0, 0, bh, w(t.bal), RAD, !up),
+      fill: up ? "var(--in)" : "var(--out)",
+      transform: `translate(${up ? zero : zero - w(t.bal)} ${yTop + bh}) rotate(-90)`,
+    }));
+    svg.append(el("text", { x: L - 10, y: yTop + bh - 2, "text-anchor": "end" },
+                  name.replace("_", "")));
+    const tipX = up ? zero + w(t.bal) + 8 : zero - w(t.bal) - 8;
+    svg.append(el("text", { class: "val", x: tipX, y: yTop + bh - 2,
+                            "text-anchor": up ? "start" : "end" }, money(t.bal)));
+    const hit = el("rect", { class: "hit", x: 0, y: 8 + i * ROW - 2, width: W, height: ROW });
+    const html = `<div class="t-date">${name.replace("_", "")}</div>
+      <div class="t-row"><span>Balance</span><span>${money(t.bal, 2)}</span></div>
+      <div class="t-sep"></div>
+      <div class="t-row"><span>Imported</span><span>${num(t.imp, 1)} GWh</span></div>
+      <div class="t-row"><span>Exported</span><span>${num(t.exp, 1)} GWh</span></div>
+      <div class="t-row"><span>Congestion rent</span><span>${money(t.rent, 2)}</span></div>`;
+    hit.addEventListener("pointerenter", e => showTip(e, html));
+    hit.addEventListener("pointermove", e => showTip(e, html));
+    hit.addEventListener("pointerleave", hideTip);
+    svg.append(hit);
+  });
+  host.replaceChildren(svg);
+}
+
+/* ========================================================================== *
+ * summary + table
+ * ========================================================================== */
+
+function drawSummary(days) {
+  const sum = f => days.reduce((a, d) => a + (d[f] ?? 0), 0);
+  const bal = sum("bal_de_keur"), imp = sum("import_gwh"), exp = sum("export_gwh");
+  const impCost = days.reduce((a, d) => a + (d.import_gwh ?? 0) * (d.imp_px_de ?? 0), 0);
+  const expRev  = days.reduce((a, d) => a + (d.export_gwh ?? 0) * (d.exp_px_de ?? 0), 0);
+  const deficit = days.filter(d => (d.bal_de_keur ?? 0) < 0).length;
+
+  document.getElementById("heroValue").innerHTML =
+    `<i style="background:${bal < 0 ? "var(--out)" : "var(--in)"}"></i>`
+    + `<span>${money(bal, 1)}</span>`;
+  document.getElementById("heroNote").textContent =
+    `${money(bal / days.length, 2)} per day on average, ${days.length} days`;
+
+  const tiles = [
+    ["Net import", `${num(imp - exp, 0)} GWh`, `${num(imp, 0)} in, ${num(exp, 0)} out`],
+    ["Price when importing", num(impCost / (imp || 1), 1), "€/MWh, volume-weighted"],
+    ["Price when exporting", num(expRev / (exp || 1), 1), "€/MWh, volume-weighted"],
+    ["Days in deficit", `${deficit} of ${days.length}`, "at the German price"],
+    ["Congestion rent", money(sum("rent_keur"), 1), "to the grid operators"],
+  ];
+  document.getElementById("tiles").innerHTML = tiles.map(([l, v, n]) =>
+    `<div><div class="tile-label">${l}</div><div class="tile-value">${v}</div>
+     <div class="tile-note">${n}</div></div>`).join("");
+}
+
+function drawTable(days) {
+  const cols = [
+    ["Date", d => dLong(d.date)],
+    ["Imported GWh", d => num(d.import_gwh, 1)],
+    ["Exported GWh", d => num(d.export_gwh, 1)],
+    ["Net GWh", d => num(d.net_import_gwh, 1)],
+    ["Px importing", d => num(d.imp_px_de, 1)],
+    ["Px exporting", d => num(d.exp_px_de, 1)],
+    ["Balance kEUR", d => num(d.bal_de_keur, 1)],
+    ["Zonal kEUR", d => num(d.bal_zonal_keur, 1)],
+    ["Rent kEUR", d => num(d.rent_keur, 1)],
+  ];
+  document.getElementById("tableWrap").innerHTML =
+    `<table><thead><tr>${cols.map(c => `<th>${c[0]}</th>`).join("")}</tr></thead><tbody>`
+    + [...days].reverse().map(d => "<tr>" + cols.map(c =>
+        `<td>${c[1](d)}</td>`).join("") + "</tr>").join("")
+    + "</tbody></table>";
+}
+
+/* ========================================================================== *
+ * wiring
+ * ========================================================================== */
+
+function slice() {
+  const all = state.store.days;
+  return state.range ? all.slice(-state.range) : all;
+}
+
+function render() {
+  const days = state.days = slice();
+  if (!days.length) return;
+  // the marks it was anchored to are about to be replaced, and after a range
+  // change it would be describing a day no longer on screen
+  hideTip();
+  drawSummary(days);
+  drawBalance(document.getElementById("plotBalance"), days);
+  drawPrice(document.getElementById("plotPrice"), days);
+  drawVolume(document.getElementById("plotVolume"), days);
+  drawBorders(document.getElementById("plotBorder"), days);
+  drawTable(days);
+  document.getElementById("rangeNote").textContent =
+    `${dLong(days[0].date)} — ${dLong(days.at(-1).date)}`;
+
+  const srcs = [...new Set(days.map(d => d.source))];
+  const flows = [...new Set(days.map(d => d.flows))];
+  const netted = srcs.includes("energy-charts");
+  document.getElementById("volHint").textContent = netted
+    ? "Energy crossing the border each day. This source reports flows already netted "
+      + "per border and hour, so gross volumes run roughly a quarter low; the balance "
+      + "above is unaffected by that, being net-only by construction."
+    : "Energy crossing the border each day, gross in each direction.";
+  document.getElementById("prov").textContent =
+    `${flows.join(" + ")} exchanges via ${srcs.join(" + ")}. `
+    + `${state.store.days.length} days on file, last built `
+    + `${(state.store.generated_at || "").slice(0, 16).replace("T", " ")}.`;
+}
+
+function buildRanges() {
+  const host = document.getElementById("ranges");
+  const total = state.store.days.length;
+  host.replaceChildren(...RANGES.filter(r => !r.key || total > 7).map(r => {
+    const b = document.createElement("button");
+    b.textContent = r.label;
+    b.setAttribute("aria-pressed", String(r.key === state.range));
+    b.disabled = r.key > total;
+    if (b.disabled) b.style.opacity = .4;
+    b.onclick = () => {
+      state.range = r.key;
+      [...host.children].forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+      render();
+    };
+    return b;
+  }));
+}
+
+document.getElementById("theme").onclick = () => {
+  const now = document.documentElement.getAttribute("data-theme");
+  const dark = now ? now === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+  render();                                   // re-read the swapped tokens
+};
+
+let t;
+addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120); });
+
+fetch("data/daily.json", { cache: "no-cache" })
+  .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+  .then(store => {
+    if (!store.days || !store.days.length) throw new Error("no days in the data file");
+    state.store = store;
+    if (store.days.length < state.range) state.range = 0;
+    for (const id of ["hero", "filters", "cardBalance", "cardPrice", "cardVolume",
+                      "cardBorder", "cardTable"])
+      document.getElementById(id).hidden = false;
+    buildRanges();
+    render();
+  })
+  .catch(e => {
+    const box = document.getElementById("err");
+    box.style.display = "block";
+    box.innerHTML = `<b>No data to show.</b><br>`
+      + `<span style="color:var(--ink-2)">${e.message}. Run `
+      + `<code>python3 build_data.py --date 2026-07 --end 2026-08</code> to fill `
+      + `<code>docs/data/daily.json</code>.</span>`;
+  });
+</script>
+</body>
+</html>
