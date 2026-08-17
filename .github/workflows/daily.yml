@@ -42,12 +42,12 @@ jobs:
 
       - run: pip install --quiet pandas requests
 
-      # Deliberately energy-charts, and deliberately not configurable here. This
-      # job publishes, and ENTSO-E's day-ahead prices (12.1.d) and scheduled
+      # Uses build_data.py's default, SMARD, and deliberately takes no source
+      # input: this job publishes, and SMARD is the only source that is both CC BY
+      # 4.0 and gross per direction. ENTSO-E's prices (12.1.d) and scheduled
       # exchanges (12.1.f) are absent from its free-re-use list, so they are not
-      # ours to redistribute. energy-charts carries the same prices under CC BY
-      # 4.0 from SMARD. ENTSO-E is the right source for local analysis -- see the
-      # note at the top of build_data.py before changing this.
+      # ours to redistribute; energy-charts is licensed but nets the flows away.
+      # See the note at the top of build_data.py before changing this.
       - name: Fetch and merge
         # Inputs arrive as env vars, never interpolated into the script body --
         # `${{ inputs.date }}` inline would be a shell-injection hole.

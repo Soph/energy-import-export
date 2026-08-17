@@ -15,20 +15,23 @@ docs/                  the dashboard GitHub Pages serves
 ```bash
 pip install pandas requests           # entsoe-py too, for --source entsoe
 ./de_trade_balance.py --date 2026-08-16          # one day, per MTU
+./de_trade_balance.py --date 2026-08-16 --source smard   # gross per-direction flows
 ./de_trade_balance.py --date 2026-07             # all of July, per day
 ./de_trade_balance.py --date 2026 --by week      # the year, per ISO week
 ./de_trade_balance.py --demo                     # synthetic, no network
 ```
 
-No account needed: it defaults to Fraunhofer ISE's energy-charts API. Every raw
-response is cached under `~/.cache/de_trade_balance`, which matters because that
-API is rate limited per IP and endpoint and has no bulk export — a cold month of
-all 11 borders costs ~90s and about a dozen requests, then it is free forever.
+No account needed for either no-auth source. Raw responses are cached under
+`~/.cache/de_trade_balance`, which matters most for energy-charts: it is rate
+limited per IP and endpoint and has no bulk export, so a cold month of all 11
+borders costs ~90s, then is free forever. SMARD is far cheaper — it takes many
+series per request, so a month of every border plus prices and load is six
+requests in a couple of seconds.
 
 ## The dashboard
 
 ```bash
-python3 build_data.py --date 2026-07-18 --days 30   # fill the data file
+python3 build_data.py --date 2026-07-18 --days 30   # fill the data file (SMARD)
 cd docs && python3 -m http.server 8731              # then open localhost:8731
 ```
 
@@ -51,15 +54,25 @@ branch to make the cron live.
 
 ## Which source to use
 
-**ENTSO-E to analyse, energy-charts to publish.** That split is a licensing
-decision, not a data-quality one, and it is worth understanding before changing it.
+**SMARD** (`--source smard`, the dashboard default). Bundesnetzagentur is the
+primary publisher, a public authority, its data is CC BY 4.0, and it carries each
+direction of each border separately. It is the only source that is both
+publishable and complete — cross-checked against ENTSO-E for 2026-07-18, all 11
+borders and both directions, agreeing to under 0.02 GWh. No account needed.
 
-ENTSO-E is the better data: it publishes each direction of a border separately, and
-carries DK_2 instead of folding it into DK_1. Use it freely for analysis —
-`--source entsoe` with a free token in `ENTSOE_API_TOKEN` and `pip install
-entsoe-py`.
+The other two are worth keeping for what they are: **`--source entsoe`** as an
+independent cross-check (free token in `ENTSOE_API_TOKEN`, `pip install entsoe-py`),
+and **`--source energy-charts`** as a no-fuss fallback with a finer generation-type
+taxonomy.
 
-But the dashboard *republishes*, and ENTSO-E's
+| Source | licence to republish | flows | Denmark |
+|---|---|---|---|
+| smard | CC BY 4.0, primary publisher | gross per direction | DK_1 / DK_2 split |
+| energy-charts | CC BY 4.0 (prices from SMARD) | netted, ~27% low | often unsplit |
+| entsoe | prices + scheduled exchanges **not** on the free-re-use list | gross per direction | split |
+
+That last row is the constraint that shapes everything. The dashboard *republishes*,
+and ENTSO-E's
 [list of data available for free re-use](https://transparencyplatform.zendesk.com/hc/en-us/articles/40921911218961-Legal-Terms-and-Conditions)
 (Article 2.5 of its terms) does not cover the two series this project leans on:
 
@@ -74,11 +87,11 @@ those series belong to the power exchanges rather than the TSOs, and ENTSO-E can
 sub-license what it does not hold rights to. The transparency mandate makes the
 data *visible*; it does not grant redistribution.
 
-energy-charts carries the same prices for DE-LU and all 11 neighbouring zones under
-CC BY 4.0 from Bundesnetzagentur | SMARD.de — a public authority that did license
-them openly — which is why the published page uses it. (Its other bidding zones are
-marked private/internal use only, so don't widen `NEIGHBOURS` and then publish.)
-Checked against the 18 Oct 2023 revision of that list, which does get amended.
+SMARD, being the primary publisher and a public authority, licensed the same series
+openly — which is why the published page uses it. (energy-charts' non-SMARD bidding
+zones are marked private/internal use only, so don't widen `NEIGHBOURS` and then
+publish.) Checked against the 18 Oct 2023 revision of that list, which does get
+amended.
 
 Measured over July 2026, the two agree on `balance_at_de_price` to **0.0002%** and
 on `congestion_rent` to 0.6% — not luck, but because both reduce to net-only
@@ -109,10 +122,17 @@ included. The long-form version of all of this is the docstring at the top of
 
 ## Attribution
 
-Day-ahead prices for Germany and its neighbours are
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) from
-[Bundesnetzagentur | SMARD.de](https://www.smard.de), redistributed unchanged by
-[Energy-Charts.info](https://www.energy-charts.info) (Fraunhofer ISE), which is
-also the source of the cross-border exchange series. Other bidding zones on that
-endpoint are marked private/internal use only — don't widen the border list and
-then publish the numbers.
+Cross-border exchange, day-ahead prices and load come from
+[Bundesnetzagentur | SMARD.de](https://www.smard.de) under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Under
+`--source energy-charts` the prices are the same SMARD series redistributed
+unchanged by [Energy-Charts.info](https://www.energy-charts.info) (Fraunhofer ISE),
+which is then also the source of the exchange series; its other bidding zones are
+marked private/internal use only, so don't widen the border list and then publish.
+The dashboard's footer credits whichever source each day actually came from.
+
+SMARD's download API is undocumented, so the parts worth knowing are recorded in
+`SmardBackend`: the module manifest lives at
+`/app/chart_configuration/market_data_configuration.json`, cross-border modules
+exist only for region `DE-LU`, columns must be matched by header label rather than
+request order, and imports arrive negative in German number format.

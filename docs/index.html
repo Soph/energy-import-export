@@ -253,6 +253,21 @@
     <div class="plot" id="plotVolume"></div>
   </section>
 
+  <section class="card" id="cardResidual" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2>What the price had to reach for</h2>
+        <p class="hint" id="resHint">Residual load is demand minus wind and solar — how far
+        into the dispatchable stack a day had to reach.</p>
+      </div>
+      <div class="key">
+        <span><i style="background:var(--out)"></i>net importer</span>
+        <span><i style="background:var(--in)"></i>net exporter</span>
+      </div>
+    </div>
+    <div class="plot" id="plotResidual"></div>
+  </section>
+
   <section class="card" id="cardBorder" hidden>
     <div class="card-head">
       <div class="grow">
@@ -307,6 +322,10 @@ const state = { store: null, days: [], range: 30 };
    both directions -- crediting a party that supplied nothing, and omitting the
    one whose terms require it. */
 const ATTRIB = {
+  "smard": `Cross-border exchange, day-ahead prices and load are
+    <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> from
+    <a href="https://www.smard.de">Bundesnetzagentur | SMARD.de</a>, the primary
+    publisher. Flows are gross in each direction, per bidding zone.`,
   "energy-charts": `Day-ahead prices for Germany and its neighbours are
     <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> from
     <a href="https://www.smard.de">Bundesnetzagentur | SMARD.de</a>, redistributed
@@ -600,6 +619,69 @@ function drawVolume(host, days) {
   host.replaceChildren(svg);
 }
 
+/** Residual load against price, one dot per day.
+ *
+ *  A scatter rather than two lines on one time axis: they are different measures
+ *  (GW and €/MWh), and putting both on a shared time axis would need two y-scales
+ *  -- the one chart form that reliably invents a correlation. Here each measure
+ *  owns an axis and the relationship is the thing you read. Dot colour carries the
+ *  day's trade direction, tying the mechanism back to the balance above.
+ */
+function drawResidual(host, days) {
+  const pts = days.filter(d => d.residual_gw != null && d.price_de_mean != null);
+  if (pts.length < 2) { host.replaceChildren(); return null; }
+
+  const H2 = 240, W = host.clientWidth || 720, H = H2 + PAD.t + PAD.b + 8;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
+    "aria-label": "Daily mean day-ahead price against residual load" });
+  const x0 = PAD.l + 6, x1 = W - PAD.r, y0 = PAD.t + 8, y1 = PAD.t + 8 + H2;
+
+  const xs = pts.map(d => d.residual_gw), ys = pts.map(d => d.price_de_mean);
+  const xlo = Math.min(...xs), xhi = Math.max(...xs);
+  const ylo = Math.min(...ys), yhi = Math.max(...ys);
+  const xp = (xhi - xlo) * .08 || 1, yp = (yhi - ylo) * .10 || 1;
+  const x = scale(xlo - xp, xhi + xp, x0, x1), y = scale(ylo - yp, yhi + yp, y1, y0);
+
+  for (const t of ticks(ylo - yp, yhi + yp, 4)) {
+    svg.append(el("line", { class: "gridline", x1: x0, x2: x1, y1: y(t), y2: y(t) }));
+    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" }, num(t)));
+  }
+  for (const t of ticks(xlo - xp, xhi + xp, 6)) {
+    svg.append(el("line", { class: "gridline", x1: x(t), x2: x(t), y1: y0, y2: y1 }));
+    svg.append(el("text", { class: "tick", x: x(t), y: y1 + 17, "text-anchor": "middle" }, num(t)));
+  }
+  svg.append(el("text", { x: x0 - 8, y: y0 - 6, "text-anchor": "end" }, "€/MWh"));
+  svg.append(el("text", { x: x1, y: y1 + 30, "text-anchor": "end" }, "residual load, GW"));
+
+  for (const d of pts) {
+    const imp = (d.net_import_gwh ?? 0) >= 0;
+    svg.append(el("circle", { cx: x(d.residual_gw), cy: y(d.price_de_mean), r: 5,
+      fill: imp ? "var(--out)" : "var(--in)",
+      stroke: "var(--surface)", "stroke-width": 2 }));   // ring keeps overlaps legible
+    // hit target well past the mark, so a 10px dot is still easy to catch
+    const hit = el("circle", { class: "hit", cx: x(d.residual_gw), cy: y(d.price_de_mean), r: 13 });
+    const html = tipRows(d)
+      + `<div class="t-sep"></div>`
+      + `<div class="t-row"><span>Residual load</span><span>${num(d.residual_gw, 1)} GW</span></div>`
+      + `<div class="t-row"><span>Load</span><span>${num(d.load_gw, 1)} GW</span></div>`;
+    hit.addEventListener("pointerenter", e => showTip(e, html));
+    hit.addEventListener("pointermove", e => showTip(e, html));
+    hit.addEventListener("pointerleave", hideTip);
+    svg.append(hit);
+  }
+  host.replaceChildren(svg);
+
+  // Pearson r, so the hint states the strength instead of implying it
+  const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const my = ys.reduce((a, b) => a + b, 0) / ys.length;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let i = 0; i < xs.length; i++) {
+    const dx = xs[i] - mx, dy = ys[i] - my;
+    sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+  }
+  return sxy / (Math.sqrt(sxx * syy) || 1);
+}
+
 /** Horizontal diverging bars, one per border, value at the tip. */
 function drawBorders(host, days) {
   const totals = {};
@@ -693,6 +775,8 @@ function drawTable(days) {
     ["Imported GWh", d => num(d.import_gwh, 1)],
     ["Exported GWh", d => num(d.export_gwh, 1)],
     ["Net GWh", d => num(d.net_import_gwh, 1)],
+    ["Residual GW", d => num(d.residual_gw, 1)],
+    ["Load GW", d => num(d.load_gw, 1)],
     ["Px importing", d => num(d.imp_px_de, 1)],
     ["Px exporting", d => num(d.exp_px_de, 1)],
     ["Balance kEUR", d => num(d.bal_de_keur, 1)],
@@ -725,6 +809,22 @@ function render() {
   drawBalance(document.getElementById("plotBalance"), days);
   drawPrice(document.getElementById("plotPrice"), days);
   drawVolume(document.getElementById("plotVolume"), days);
+  // Unhide before drawing, never after: a hidden container measures 0 wide, the
+  // fallback width takes over, and the SVG then scales down to fit -- shrinking
+  // every label with it. Only visible on narrow viewports, where it matters most.
+  const resCard = document.getElementById("cardResidual");
+  resCard.hidden = !days.some(d => d.residual_gw != null && d.price_de_mean != null);
+  const r = resCard.hidden ? null
+          : drawResidual(document.getElementById("plotResidual"), days);
+  if (r != null) {
+    const strength = Math.abs(r) > .8 ? "moves closely with"
+                   : Math.abs(r) > .5 ? "tracks" : "is only loosely related to";
+    document.getElementById("resHint").textContent =
+      "Residual load is demand minus wind and solar \u2014 how far into the "
+      + "dispatchable stack a day had to reach. The price " + strength
+      + " it (r = " + r.toFixed(2) + "), and the days Germany imported are the "
+      + "days it reached furthest.";
+  }
   drawBorders(document.getElementById("plotBorder"), days);
   drawTable(days);
   document.getElementById("rangeNote").textContent =
@@ -733,7 +833,7 @@ function render() {
   // sources present in what is actually on screen, so attribution tracks the view
   const srcs = [...new Set(days.map(d => d.source))].sort();
   const flows = [...new Set(days.map(d => d.flows))];
-  const netted = srcs.includes("energy-charts");
+  const netted = srcs.includes("energy-charts");   // the only netted source
   document.getElementById("volHint").textContent = netted
     ? (srcs.length > 1
         ? "Energy crossing the border each day. Part of this window comes from a source "
@@ -799,7 +899,7 @@ fetch("data/daily.json", { cache: "no-cache" })
     state.store = store;
     if (store.days.length < state.range) state.range = 0;
     for (const id of ["hero", "filters", "cardBalance", "cardPrice", "cardVolume",
-                      "cardBorder", "cardTable"])
+                      "cardBorder", "cardTable"])   // cardResidual is data-dependent
       document.getElementById(id).hidden = false;
     buildRanges();
     render();

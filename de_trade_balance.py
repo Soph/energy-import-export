@@ -17,6 +17,7 @@ token" (older accounts: email transparency@entsoe.eu asking for API access).
     export ENTSOE_API_TOKEN=...             # --source entsoe only
     pip install entsoe-py pandas requests
     ./de_trade_balance.py --date 2026-08-16                    # one day, per MTU
+    ./de_trade_balance.py --date 2026-08-16 --source smard     # gross per direction
     ./de_trade_balance.py --date 2026-07                       # all of July, per day
     ./de_trade_balance.py --date 2026 --by week                # the year, ISO weeks
     ./de_trade_balance.py --date 2026-01-01 --end 2026-06-30 --by month
@@ -112,7 +113,8 @@ refetching what it already had. Months that ended more than five days ago are
 kept indefinitely; anything nearer to now expires after an hour, because
 day-ahead prices arrive during the day and exchange volumes are still being
 revised. --refresh overrides that, --no-cache skips it, and only the
-energy-charts backend is cached at all.
+energy-charts and smard backends are cached (entsoe-py returns parsed objects
+rather than payloads).
 
 Two things to watch when reading period rows:
   * Weeks and months at the edges of a range are usually partial. The "days"
@@ -448,6 +450,200 @@ class EnergyChartsBackend(Backend):
             print(f"  ! unmapped series ignored: {unknown} (add to EC_SERIES)",
                   file=sys.stderr)
         return out
+
+
+class SmardBackend(Backend):
+    """Bundesnetzagentur's SMARD (smard.de). No auth, and gross flows.
+
+    The reason to prefer this over energy-charts for anything published: it is
+    the primary publisher, a public authority, and its data is CC BY 4.0 -- while
+    also giving each direction of each border separately, which energy-charts
+    nets away and ENTSO-E only licenses for private use. Cross-checked against
+    ENTSO-E on 2026-07-18: gross MWh per direction agreed to within 3 MWh on both
+    Danish borders, i.e. to rounding.
+
+    Undocumented API, reverse-engineered from the site's own traffic, so the
+    details worth writing down:
+      * The dataset manifest is /app/chart_configuration/market_data_configuration.json;
+        every series is a numbered "module" scoped to one or more regions. The
+        ids below come from that manifest.
+      * Cross-border modules exist only for region DE-LU. Asking with region=DE
+        returns a valid CSV containing "Keine Daten für gegebene Anfrage".
+      * One POST can carry many modules, so a whole window costs two requests
+        (all flows, all prices) rather than one per zone.
+      * CSV is German-formatted -- 1.234,56 -- and imports arrive negative.
+      * Values are MWh per interval; at hourly resolution that is numerically the
+        same as the MW average the Backend contract wants.
+    """
+
+    BASE = "https://www.smard.de"
+    DOWNLOAD = "/nip-download-manager/nip/download/market-data"
+    REGION = "DE-LU"
+
+    # Großhandelspreise
+    PRICE = {"DE_LU": 8004169, "AT": 8004170, "DK_1": 8000252, "DK_2": 8000253,
+             "FR": 8000254, "NL": 8000256, "PL": 8000257, "SE_4": 8000258,
+             "CH": 8000259, "CZ": 8000261, "BE": 8004996, "NO_2": 8004997}
+
+    # Kommerzieller Außenhandel -- (export from DE, import into DE)
+    SCHEDULED = {
+        "DK_1": (22004486, 22004504), "DK_2": (22004487, 22004505),
+        "FR": (22004488, 22004506), "NL": (22004489, 22004507),
+        "PL": (22004490, 22004508), "SE_4": (22004491, 22004509),
+        "CH": (22004492, 22004510), "CZ": (22004493, 22004511),
+        "AT": (22004494, 22004512), "NO_2": (22004718, 22004720),
+        "BE": (22004706, 22004708),
+    }
+    # Physikalischer Stromfluss
+    PHYSICAL = {
+        "DK_1": (31004821, 31004840), "DK_2": (31004822, 31004841),
+        "FR": (31004823, 31004842), "NL": (31004824, 31004843),
+        "PL": (31004825, 31004844), "SE_4": (31004826, 31004845),
+        "CH": (31004827, 31004846), "CZ": (31004828, 31004847),
+        "AT": (31004829, 31004848), "NO_2": (31004976, 31004978),
+        "BE": (31004980, 31004982),
+    }
+    # Realisierter Stromverbrauch: load, and load minus wind and solar
+    LOAD, RESIDUAL = 5000410, 5004359
+
+    # Columns are matched by their header label, never by position: SMARD returns
+    # them in its own order once a request carries more than a handful of modules,
+    # so zipping the response to the requested id list silently permutes borders
+    # -- the totals still tie out, which is exactly what makes it hard to spot.
+    ZONE_LABEL = {"DE_LU": "Deutschland/Luxemburg", "AT": "Österreich",
+                  "DK_1": "Dänemark 1", "DK_2": "Dänemark 2", "FR": "Frankreich",
+                  "NL": "Niederlande", "PL": "Polen", "SE_4": "Schweden 4",
+                  "CH": "Schweiz", "CZ": "Tschechien", "BE": "Belgien",
+                  "NO_2": "Norwegen 2"}
+
+    def __init__(self, timeout: int = 90, cache: Cache | None = None):
+        import requests
+        self.s = requests.Session()
+        self.s.headers["User-Agent"] = "de_trade_balance/1.0 (+github)"
+        self.timeout = timeout
+        self.cache = cache
+        self._batch: dict = {}      # window -> {module id: Series}
+
+    @staticmethod
+    def _ms(ts) -> int:
+        return int(ts.timestamp() * 1000)
+
+    @staticmethod
+    def _de_num(s: str) -> float:
+        s = s.strip()
+        if s in ("", "-"):
+            return float("nan")
+        return float(s.replace(".", "").replace(",", "."))
+
+    def _fetch(self, modules: list, start, end, resolution="hour") -> dict:
+        """POST once for many modules; returns {column label: Series} in local time."""
+        body = {"request_form": [{
+            "format": "CSV", "moduleIds": list(modules), "region": self.REGION,
+            "timestamp_from": self._ms(start), "timestamp_to": self._ms(end),
+            "type": "discrete", "language": "de", "resolution": resolution,
+        }]}
+        # cache on the request's meaning, with `end` in a form Cache.settled reads
+        key = Cache.key(self.DOWNLOAD, {"modules": ",".join(map(str, sorted(modules))),
+                                        "region": self.REGION, "res": resolution,
+                                        "start": start.isoformat(), "end": end.isoformat()})
+        text = self.cache.get(key) if self.cache else None
+        if text == MISSING:
+            raise LookupError("no SMARD data (cached)")
+        if text is None:
+            r = self.s.post(f"{self.BASE}{self.DOWNLOAD}", json=body, timeout=self.timeout)
+            r.raise_for_status()
+            text = r.text
+            if self.cache:
+                self.cache.put(key, text, {"end": end.isoformat()})
+
+        import csv as _csv
+        rows = list(_csv.reader(text.lstrip("﻿").splitlines(), delimiter=";"))
+        if not rows or len(rows[0]) < 3:
+            raise LookupError("SMARD returned no columns")
+        header = rows[0][2:]
+        stamps, cols = [], [[] for _ in header]
+        for r in rows[1:]:
+            if len(r) < 3 or not r[0].strip():
+                continue
+            if "Keine Daten" in r[0]:
+                raise LookupError(f"SMARD: no data for {start.date()}..{end.date()} "
+                                  f"(region {self.REGION})")
+            stamps.append(r[0].strip())
+            for i in range(len(header)):
+                cols[i].append(self._de_num(r[2 + i]) if 2 + i < len(r) else float("nan"))
+        if not stamps:
+            raise LookupError("SMARD returned no rows")
+
+        idx = pd.to_datetime(stamps, format="%d.%m.%Y %H:%M")
+        # local wall-clock timestamps; infer the repeated hour when clocks go back
+        idx = idx.tz_localize(TZ, ambiguous="infer", nonexistent="shift_forward")
+
+        out = {}
+        for label, col in zip(header, cols):
+            # "Dänemark 1 (Export) [MWh] Berechnete Auflösungen" -> "Dänemark 1 (Export)"
+            name = label.split("[")[0].strip()
+            if name in out:
+                raise LookupError(f"SMARD returned duplicate column {name!r}")
+            out[name] = pd.Series(col, index=idx, dtype="float64")
+        return out
+
+    def _prices_for(self, start, end) -> dict:
+        """All price zones for a window, in one request, then remembered."""
+        k = ("px", start.isoformat(), end.isoformat())
+        if k not in self._batch:
+            got = self._fetch(list(self.PRICE.values()), start, end)
+            self._batch[k] = {z: got[self.ZONE_LABEL[z]] for z in self.PRICE
+                              if self.ZONE_LABEL.get(z) in got}
+        return self._batch[k]
+
+    def prices(self, zone, start, end):
+        zone = str(zone)
+        if zone not in self.PRICE:
+            raise LookupError(f"{zone}: SMARD publishes no price for this zone")
+        s = self._prices_for(start, end).get(zone)
+        if s is None or s.dropna().empty:
+            raise LookupError(f"{zone}: empty price series")
+        return s
+
+    def exchanges(self, start, end, physical, neighbours):
+        table = self.PHYSICAL if physical else self.SCHEDULED
+        pairs = {z: table[z] for z in neighbours if z in table}
+        missing = [z for z in neighbours if z not in table]
+        if missing:
+            print(f"  ! no SMARD module for {missing}", file=sys.stderr)
+        if not pairs:
+            raise LookupError("no SMARD modules for the requested borders")
+
+        mods = [m for pair in pairs.values() for m in pair]
+        got = self._fetch(mods, start, end)
+
+        out = {}
+        for zone in pairs:
+            label = self.ZONE_LABEL[zone]
+            exp, imp = got.get(f"{label} (Export)"), got.get(f"{label} (Import)")
+            if exp is None or imp is None:
+                print(f"  ! {zone}: SMARD returned no {label!r} column, dropped",
+                      file=sys.stderr)
+                continue
+            # SMARD signs imports negative; flip and clip so a sign surprise
+            # cannot quietly turn an import into a negative export
+            df = pd.DataFrame({"import_mw": (-imp).clip(lower=0),
+                               "export_mw": exp.clip(lower=0)})
+            if df.isna().all().all():
+                print(f"  ! {zone}: SMARD series empty, dropped", file=sys.stderr)
+                continue
+            out[zone] = df
+        return out
+
+    def demand(self, start, end) -> pd.DataFrame:
+        """Load and residual load (load minus wind and solar), MW.
+
+        Not part of the Backend contract -- the dashboard uses it to show what
+        the price had to reach into, which is the thing the balance cannot say.
+        """
+        got = self._fetch([self.LOAD, self.RESIDUAL], start, end)
+        return pd.DataFrame({"load_mw": got.get("Netzlast"),
+                             "residual_mw": got.get("Residuallast")})
 
 
 class DemoBackend(Backend):
@@ -833,9 +1029,10 @@ def main() -> None:
                     help="ignore what is cached, refetch and overwrite it")
     ap.add_argument("--borders", help="comma-separated subset, e.g. FR,NL,PL")
     ap.add_argument("--csv", metavar="DIR", help="also write raw + summary CSVs here")
-    ap.add_argument("--source", choices=["energy-charts", "entsoe", "demo"],
+    ap.add_argument("--source", choices=["smard", "energy-charts", "entsoe", "demo"],
                     default=os.environ.get("DE_TRADE_SOURCE", "energy-charts"),
-                    help="data backend (default: energy-charts, no auth needed)")
+                    help="data backend (default: energy-charts). smard also needs no "
+                         "auth and gives gross per-direction flows")
     ap.add_argument("--token", default=os.environ.get("ENTSOE_API_TOKEN"),
                     help="ENTSO-E security token (--source entsoe only)")
     ap.add_argument("--demo", action="store_true", help="alias for --source demo")
@@ -877,7 +1074,7 @@ def main() -> None:
 
     # only the energy-charts JSON layer is cached: entsoe-py hands back parsed
     # pandas objects rather than payloads, and demo data costs nothing to make
-    cache = None if (a.no_cache or a.source != "energy-charts") else Cache(
+    cache = None if (a.no_cache or a.source not in ("energy-charts", "smard")) else Cache(
         a.cache or default_cache_dir(), refresh=a.refresh)
 
     if a.source == "demo":
@@ -888,6 +1085,8 @@ def main() -> None:
             sys.exit("Set ENTSOE_API_TOKEN or pass --token "
                      "(or drop --source entsoe to use energy-charts, which needs neither).")
         backend = EntsoeBackend(a.token)
+    elif a.source == "smard":
+        backend = SmardBackend(cache=cache)
     else:
         backend = EnergyChartsBackend(cache=cache)
 

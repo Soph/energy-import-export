@@ -17,25 +17,28 @@ also means switching source rewrites those days, so the dashboard's attribution
 follows along on its own.
 
 
-WHY THE DEFAULT IS energy-charts, AND WHY THAT IS NOT A DATA-QUALITY CALL
+WHY THE DEFAULT IS SMARD
 -------------------------------------------------------------------------------
-ENTSO-E is the better data: gross per-direction flows, and DK_2 present instead of
-folded into DK_1. Use it freely for analysis -- that is what the CLI defaults to.
+It is the only source that is both publishable and complete.
 
-But this script feeds a *published* page, and publishing is redistribution, which
-is a licensing question rather than a data one. ENTSO-E's list of data available
-for free re-use (Article 2.5 of its terms) covers physical flows, 12.1.g, and does
-not cover day-ahead prices, 12.1.d, or scheduled commercial exchanges, 12.1.f --
-the whole 12.1.d/e/f market-results block is absent, because those belong to the
-power exchanges rather than the TSOs, and ENTSO-E cannot sub-license what it does
-not hold. energy-charts carries the same prices for DE-LU and all 11 neighbouring
-zones under CC BY 4.0 from Bundesnetzagentur | SMARD.de, a public authority that
-did license them openly.
+The trade-off looked unavoidable for a while. ENTSO-E has the better shape --
+gross per-direction flows, DK_2 as its own border -- but its list of data
+available for free re-use (Article 2.5 of its terms) covers physical flows at
+12.1.g and does *not* cover day-ahead prices at 12.1.d or scheduled commercial
+exchanges at 12.1.f. The whole 12.1.d/e/f market-results block is absent, because
+it belongs to the power exchanges rather than the TSOs, and ENTSO-E cannot
+sub-license rights it does not hold. energy-charts is cleanly licensed but nets
+opposite flows within each border-hour, so its gross volumes run ~27% low and
+Denmark arrives unsplit.
 
-So: --source entsoe to analyse, the default to publish. If you switch the site to
-ENTSO-E for the gross volumes, you are making a licensing decision, not just a
-data one. (Checked against the 18 Oct 2023 revision of that list; it does get
-amended, so it is worth re-reading before relying on this.)
+SMARD is both: Bundesnetzagentur is the primary publisher and a public authority,
+its data is CC BY 4.0, and it carries each direction of each border separately.
+Cross-checked against ENTSO-E for 2026-07-18 -- all 11 borders, both directions,
+agreeing to under 0.02 GWh.
+
+So the ordering is: SMARD to publish, ENTSO-E to cross-check, energy-charts as the
+no-fuss fallback. (The re-use list checked was the 18 Oct 2023 revision; it gets
+amended, so re-read it before leaning on the ENTSO-E half of this.)
 """
 
 from __future__ import annotations
@@ -61,7 +64,32 @@ def _n(v, digits=2):
     return round(float(v), digits)
 
 
-def day_records(d: pd.DataFrame, source: str, flows: str) -> list[dict]:
+def demand_daily(backend, start, end) -> pd.DataFrame | None:
+    """Daily mean load and residual load in GW, when the backend has them.
+
+    Residual load is load minus wind and solar -- how far into the dispatchable
+    stack the day had to reach. It is the closest thing to an answer for "what set
+    this price", which the balance itself cannot say.
+    """
+    if not hasattr(backend, "demand"):
+        return None
+    frames = []
+    for ws, we in dtb.windows(start, end, "month"):
+        try:
+            frames.append(backend.demand(ws, we))
+        except Exception as exc:
+            print(f"  ! demand {ws.date()}: {type(exc).__name__}: {exc}", file=sys.stderr)
+    if not frames:
+        return None
+    df = pd.concat(frames).sort_index()
+    df = df[(df.index >= start) & (df.index < end)]
+    g = df.groupby(dtb.period_of(df.index, "day"))
+    return pd.DataFrame({"load_gw": g["load_mw"].mean() / 1000,
+                         "residual_gw": g["residual_mw"].mean() / 1000})
+
+
+def day_records(d: pd.DataFrame, source: str, flows: str,
+                demand: pd.DataFrame | None = None) -> list[dict]:
     """One record per calendar day, with its per-border breakdown nested."""
     day = dtb.per_period(d, "day")
     per_bd = dtb.per_border_period(d, "day")
@@ -83,11 +111,14 @@ def day_records(d: pd.DataFrame, source: str, flows: str) -> list[dict]:
                     "rent_keur": _n(b["rent_kEUR"], 1),
                     "mean_spread": _n(b["mean_spread"]),
                 }
+        dm = demand.loc[date] if demand is not None and date in demand.index else None
         out.append({
             "date": date,
             "source": source,
             "flows": flows,
             "price_de_mean": _n(px.get(date)),
+            "load_gw": _n(dm["load_gw"]) if dm is not None else None,
+            "residual_gw": _n(dm["residual_gw"]) if dm is not None else None,
             "import_gwh": _n(r["import_GWh"]),
             "export_gwh": _n(r["export_GWh"]),
             "net_import_gwh": _n(r["net_imp_GWh"]),
@@ -144,12 +175,11 @@ def main() -> None:
     ap.add_argument("--flows", choices=["scheduled", "physical"], default="scheduled")
     ap.add_argument("--freq", default="60min")
     ap.add_argument("--borders", help="comma-separated subset")
-    ap.add_argument("--source", choices=["energy-charts", "entsoe", "demo"],
-                    default=os.environ.get("DE_TRADE_SOURCE", "energy-charts"),
-                    help="default energy-charts, whose prices are CC BY 4.0 and so "
-                         "publishable. entsoe gives gross flows and DK_2 but its "
-                         "prices and scheduled exchanges are not licensed for "
-                         "redistribution -- see the note at the top of this file")
+    ap.add_argument("--source", choices=["smard", "energy-charts", "entsoe", "demo"],
+                    default=os.environ.get("DE_TRADE_SOURCE", "smard"),
+                    help="default smard: CC BY 4.0 and gross per-direction flows, "
+                         "the only source that is both. See the note at the top of "
+                         "this file before changing it")
     ap.add_argument("--token", default=os.environ.get("ENTSOE_API_TOKEN"))
     ap.add_argument("--out", default=OUT, help=f"JSON store (default: {OUT})")
     ap.add_argument("--no-cache", action="store_true")
@@ -164,10 +194,12 @@ def main() -> None:
         sys.exit("Empty range.")
     borders = [b.strip() for b in a.borders.split(",")] if a.borders else dtb.NEIGHBOURS
 
-    cache = None if (a.no_cache or a.source != "energy-charts") else dtb.Cache(
+    cache = None if (a.no_cache or a.source not in ("energy-charts", "smard")) else dtb.Cache(
         dtb.default_cache_dir(), refresh=a.refresh)
     if a.source == "demo":
         backend = dtb.DemoBackend()
+    elif a.source == "smard":
+        backend = dtb.SmardBackend(cache=cache)
     elif a.source == "entsoe":
         if not a.token:
             sys.exit("Set ENTSOE_API_TOKEN or pass --token.")
@@ -180,10 +212,11 @@ def main() -> None:
     raw = dtb.collect_range(backend, start, end, a.freq, a.flows == "physical",
                             borders, "month")
     d = dtb.value(raw, pd.Timedelta(a.freq) / pd.Timedelta("1h"))
+    demand = demand_daily(backend, start, end)
     if cache:
         cache.report()
 
-    write(a.out, merge(a.out, day_records(d, a.source, a.flows), borders))
+    write(a.out, merge(a.out, day_records(d, a.source, a.flows, demand), borders))
     print(f"  -> {a.out}")
 
 
