@@ -1,0 +1,80 @@
+this script currently calculates daily import/export, can we expand this to a date range? maybe per week of the year or month
+
+---
+
+does energy charts maybe has exports of the whole dataset and it's easier to use that then the API
+
+---
+
+which month did you fetch and shouldn't this now just work:
+
+❯ python3 de_trade_balance.py --date 2026-07
+  ! Denmark arrives unsplit; pricing all of it at DK1 (Kontek/DK2 volume is misattributed).
+  . 429 on /price, retrying in 26s
+  . 429 on /price, retrying in 2s
+  . 429 on /price, retrying in 29s
+  . 429 on /price, retrying in 29s
+
+---
+
+question, can you explain me now how the calculation cross border works, like we do get the hourly prices and compare the hourly import/export and calculate then the costs per hour out of both?
+
+---
+
+what is a TSO
+
+---
+
+could you do add a .gitignore for python, I think __pycache__ should not be commited, right?
+
+---
+
+I have a token for entsoe now
+
+---
+
+entsoe:
+
+------------------------------------------------------------------------------
+Totals -- 2026-07-01 .. 2026-07-31 (31 days)
+------------------------------------------------------------------------------
+  days covered                          31
+  borders included                      11 of 11
+  imported                         5,664.5 GWh
+  exported                         5,383.0 GWh
+  net import                         281.4 GWh
+  volume-weighted import px         127.33 EUR/MWh (at DE price)
+  volume-weighted export px          78.18 EUR/MWh (at DE price)
+
+  import cost @ DE price         721,254.6 kEUR
+  export revenue @ DE price      420,826.7 kEUR
+  -> balance_at_de_price        -300,427.9 kEUR
+     per day (avg)                -9,691.2 kEUR
+
+enery charts:
+
+------------------------------------------------------------------------------
+Totals -- 2026-07-01 .. 2026-07-31 (31 days)
+------------------------------------------------------------------------------
+  days covered                          31
+  borders included                      10 of 11
+  imported                         4,165.0 GWh
+  exported                         3,883.5 GWh
+  net import                         281.4 GWh
+  volume-weighted import px         136.71 EUR/MWh (at DE price)
+  volume-weighted export px          69.26 EUR/MWh (at DE price)
+
+  import cost @ DE price         569,406.4 kEUR
+  export revenue @ DE price      268,978.0 kEUR
+  -> balance_at_de_price        -300,428.4 kEUR
+     per day (avg)                -9,691.2 kEUR
+
+---
+
+import cost @ zonal price      678,793.6 kEUR
+  -> balance_at_zonal           -257,966.9 kEUR
+  congestion rent to TSOs        100,216.3 kEUR
+
+  days in deficit                       26 of 31 (at DE price)
+  worst day                      -33,574.7 kEUR  (2026-07-01)
+  best day                         7,960.5 kEUR  (2026-07-07)
