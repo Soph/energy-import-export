@@ -472,8 +472,10 @@ class SmardBackend(Backend):
       * One POST can carry many modules, so a whole window costs two requests
         (all flows, all prices) rather than one per zone.
       * CSV is German-formatted -- 1.234,56 -- and imports arrive negative.
-      * Values are MWh per interval; at hourly resolution that is numerically the
-        same as the MW average the Backend contract wants.
+      * Values are energy per interval, not power, so they are scaled to MW by the
+        interval actually returned -- at hourly they coincide, at quarter-hourly
+        they are out by four. The unit is read off the column header so prices,
+        which are already EUR/MWh, are left alone.
     """
 
     BASE = "https://www.smard.de"
@@ -578,13 +580,23 @@ class SmardBackend(Backend):
         # local wall-clock timestamps; infer the repeated hour when clocks go back
         idx = idx.tz_localize(TZ, ambiguous="infer", nonexistent="shift_forward")
 
+        # SMARD reports energy *per interval*, so MWh equals the MW average only at
+        # hourly resolution. Scale by the interval actually returned, and read the
+        # unit off the header so a EUR/MWh price is never scaled.
+        step = (idx.to_series().diff().dropna().median().total_seconds() / 60
+                if len(idx) > 1 else 60.0)
+        to_mw = 60.0 / step
+
         out = {}
         for label, col in zip(header, cols):
             # "Dänemark 1 (Export) [MWh] Berechnete Auflösungen" -> "Dänemark 1 (Export)"
             name = label.split("[")[0].strip()
             if name in out:
                 raise LookupError(f"SMARD returned duplicate column {name!r}")
-            out[name] = pd.Series(col, index=idx, dtype="float64")
+            ser = pd.Series(col, index=idx, dtype="float64")
+            if "[MWh]" in label:
+                ser = ser * to_mw
+            out[name] = ser
         return out
 
     def _prices_for(self, start, end) -> dict:

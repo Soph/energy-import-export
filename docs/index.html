@@ -237,12 +237,13 @@
     <div class="card-head">
       <div class="grow">
         <h2>Why: bought dear, sold cheap</h2>
-        <p class="hint">Volume-weighted German price in the hours Germany imported, against
-        the hours it exported. Both are the same price curve — the gap is timing.</p>
+        <p class="hint" id="priceHint">Volume-weighted German price in the hours Germany
+        imported, against the hours it exported. Both are the same price curve — the gap
+        is timing.</p>
       </div>
       <div class="key">
-        <span><i class="line" style="background:var(--out)"></i>when importing</span>
-        <span><i class="line" style="background:var(--in)"></i>when exporting</span>
+        <span><i class="line" style="background:var(--out)"></i><span id="keyImp">paid for power kept</span></span>
+        <span><i class="line" style="background:var(--in)"></i><span id="keyExp">earned on own output</span></span>
       </div>
     </div>
     <div class="plot" id="plotPrice"></div>
@@ -376,7 +377,9 @@ const dLabel = s => `${+s.slice(8, 10)} ${MONTHS[+s.slice(5, 7) - 1]}`;
 const dLong  = s => `${dLabel(s)} ${s.slice(0, 4)}`;
 
 const num = (v, dp = 0) => v == null ? "—"
-  : v.toLocaleString("en-GB", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  // collapse -0 and float dust to a clean zero: an axis reading "-0" is noise
+  : (Math.abs(v) < 5e-10 ? 0 : v).toLocaleString("en-GB",
+      { minimumFractionDigits: dp, maximumFractionDigits: dp });
 /** kEUR -> a compact signed money string. */
 const money = (k, dp = 1) => {
   if (k == null) return "—";
@@ -529,7 +532,9 @@ function drawPrice(host, days) {
                           role: "img", "aria-label": "Volume-weighted price when importing and when exporting, euro per megawatt hour" });
   const x0 = PAD.l, x1 = W - R, y0 = TOP, y1 = TOP + PLOT_H;
 
-  const all = days.flatMap(d => [d.imp_px_de, d.exp_px_de]).filter(v => v != null);
+  const ownBasis = days.some(d => d.imp_px_own != null);
+  const fI = ownBasis ? "imp_px_own" : "imp_px_de", fE = ownBasis ? "exp_px_own" : "exp_px_de";
+  const all = days.flatMap(d => [d[fI], d[fE]]).filter(v => v != null);
   const lo = Math.min(...all), hi = Math.max(...all);
   const pad = (hi - lo) * .12 || 1;
   const y = scale(lo - pad, hi + pad, y1, y0);
@@ -546,8 +551,8 @@ function drawPrice(host, days) {
   }
 
   // the wash between the curves: the day's spread, ~10% opacity, never a block
-  const top = days.map((d, i) => [x(i), d.imp_px_de]).filter(p => p[1] != null);
-  const bot = days.map((d, i) => [x(i), d.exp_px_de]).filter(p => p[1] != null);
+  const top = days.map((d, i) => [x(i), d[fI]]).filter(p => p[1] != null);
+  const bot = days.map((d, i) => [x(i), d[fE]]).filter(p => p[1] != null);
   if (top.length > 1 && bot.length > 1) {
     const path = top.map(p => `${p[0]} ${y(p[1])}`).join("L") + "L"
                + [...bot].reverse().map(p => `${p[0]} ${y(p[1])}`).join("L");
@@ -555,7 +560,12 @@ function drawPrice(host, days) {
   }
 
   // segmented so a null day breaks the line rather than inventing a value
-  for (const [field, colour] of [["imp_px_de", "var(--out)"], ["exp_px_de", "var(--in)"]]) {
+  // Prefer the transit-free basis: transit is bought and sold in the same hour at
+  // the same price, so including it pulls both curves toward each other and
+  // understates the gap this chart exists to show.
+  const own = days.some(d => d.imp_px_own != null);
+  const F_IMP = own ? "imp_px_own" : "imp_px_de", F_EXP = own ? "exp_px_own" : "exp_px_de";
+  for (const [field, colour] of [[F_IMP, "var(--out)"], [F_EXP, "var(--in)"]]) {
     let seg = [];
     const flush = () => {
       if (seg.length > 1) svg.append(el("path", {
@@ -902,8 +912,14 @@ function drawBorders(host, days) {
 function drawSummary(days) {
   const sum = f => days.reduce((a, d) => a + (d[f] ?? 0), 0);
   const bal = sum("bal_de_keur"), imp = sum("import_gwh"), exp = sum("export_gwh");
-  const impCost = days.reduce((a, d) => a + (d.import_gwh ?? 0) * (d.imp_px_de ?? 0), 0);
-  const expRev  = days.reduce((a, d) => a + (d.export_gwh ?? 0) * (d.exp_px_de ?? 0), 0);
+  // Germany's own share where the data has it, gross otherwise
+  const useOwn = days.some(d => d.imp_px_own != null);
+  const vI = useOwn ? "stayed_gwh" : "import_gwh", pI = useOwn ? "imp_px_own" : "imp_px_de";
+  const vE = useOwn ? "from_de_plants_gwh" : "export_gwh", pE = useOwn ? "exp_px_own" : "exp_px_de";
+  const impVol = days.reduce((a, d) => a + (d[vI] ?? 0), 0);
+  const expVol = days.reduce((a, d) => a + (d[vE] ?? 0), 0);
+  const impCost = days.reduce((a, d) => a + (d[vI] ?? 0) * (d[pI] ?? 0), 0);
+  const expRev  = days.reduce((a, d) => a + (d[vE] ?? 0) * (d[pE] ?? 0), 0);
   const deficit = days.filter(d => (d.bal_de_keur ?? 0) < 0).length;
 
   document.getElementById("heroValue").innerHTML =
@@ -917,8 +933,10 @@ function drawSummary(days) {
     ["Net import", `${num(imp - exp, 0)} GWh`, `${num(imp, 0)} in, ${num(exp, 0)} out`],
     ...(thru ? [["In transit", `${num(thru, 0)} GWh`,
                 `${Math.round(thru / (imp || 1) * 100)}% of arrivals passed straight through`]] : []),
-    ["Price when importing", num(impCost / (imp || 1), 1), "€/MWh, volume-weighted"],
-    ["Price when exporting", num(expRev / (exp || 1), 1), "€/MWh, volume-weighted"],
+    ["Paid for power it kept", num(impCost / (impVol || 1), 1),
+     useOwn ? "€/MWh, transit excluded" : "€/MWh, volume-weighted"],
+    ["Earned on its own output", num(expRev / (expVol || 1), 1),
+     useOwn ? "€/MWh, transit excluded" : "€/MWh, volume-weighted"],
     ["Days in deficit", `${deficit} of ${days.length}`, "at the German price"],
     ["Congestion rent", money(sum("rent_keur"), 1), "to the grid operators"],
   ];
@@ -936,8 +954,10 @@ function drawTable(days) {
     ["Transit GWh", d => num(d.transit_gwh, 1)],
     ["Residual GW", d => num(d.residual_gw, 1)],
     ["Load GW", d => num(d.load_gw, 1)],
-    ["Px importing", d => num(d.imp_px_de, 1)],
-    ["Px exporting", d => num(d.exp_px_de, 1)],
+    ["Px kept", d => num(d.imp_px_own, 1)],
+    ["Px own exports", d => num(d.exp_px_own, 1)],
+    ["Px importing (gross)", d => num(d.imp_px_de, 1)],
+    ["Px exporting (gross)", d => num(d.exp_px_de, 1)],
     ["Balance kEUR", d => num(d.bal_de_keur, 1)],
     ["Zonal kEUR", d => num(d.bal_zonal_keur, 1)],
     ["Rent kEUR", d => num(d.rent_keur, 1)],
@@ -996,6 +1016,18 @@ function render() {
     `${dLong(days[0].date)} — ${dLong(days.at(-1).date)}`;
 
   // sources present in what is actually on screen, so attribution tracks the view
+  document.getElementById("priceHint").textContent = days.some(d => d.imp_px_own != null)
+    ? "What Germany paid for the power it kept, against what it earned on power its own "
+      + "plants sent out. Same price curve, so the gap is pure timing. Power in transit "
+      + "is left out of both: it is bought and sold in the same hour at the same price, "
+      + "so counting it only drags the two lines together."
+    : "Volume-weighted German price in the hours Germany imported, against the hours it "
+      + "exported. Both are the same price curve — the gap is timing.";
+
+  const ownPx = days.some(d => d.imp_px_own != null);
+  document.getElementById("keyImp").textContent = ownPx ? "paid for power kept" : "when importing";
+  document.getElementById("keyExp").textContent = ownPx ? "earned on own output" : "when exporting";
+
   const srcs = [...new Set(days.map(d => d.source))].sort();
   const flows = [...new Set(days.map(d => d.flows))];
   const netted = srcs.includes("energy-charts");   // the only netted source

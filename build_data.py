@@ -104,7 +104,23 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
     # bound on it and has to be taken per MTU -- min of daily totals would hide
     # every hour whose direction differed from the day's net.
     ov = across[["import_mwh", "export_mwh"]].min(axis=1)
-    transit = ov.groupby(dtb.period_of(ov.index, "day")).sum() / 1000
+    key = dtb.period_of(ov.index, "day")
+    transit = ov.groupby(key).sum() / 1000
+
+    # Prices for Germany's own share only. Transit is bought and sold in the same
+    # hour at the same German price, so leaving it in drags both averages toward
+    # each other and understates the very gap the page is about. Weighted per MTU,
+    # never an average of daily averages.
+    stayed = (across["import_mwh"] - ov)
+    german = (across["export_mwh"] - ov)
+    px_h = across["price_de"]              # hourly; `px` above is the daily mean
+    def vw(vol):
+        num = (vol * px_h).groupby(key).sum()
+        den = vol.groupby(key).sum()
+        return (num / den).where(den > 0)
+    imp_px_own, exp_px_own = vw(stayed), vw(german)
+    stayed_d = stayed.groupby(key).sum() / 1000
+    german_d = german.groupby(key).sum() / 1000
 
     out = []
     for date, r in day.iterrows():
@@ -131,6 +147,10 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
             "export_gwh": _n(r["export_GWh"]),
             "net_import_gwh": _n(r["net_imp_GWh"]),
             "transit_gwh": _n(transit.get(date)),
+            "stayed_gwh": _n(stayed_d.get(date)),
+            "from_de_plants_gwh": _n(german_d.get(date)),
+            "imp_px_own": _n(imp_px_own.get(date)),
+            "exp_px_own": _n(exp_px_own.get(date)),
             "imp_px_de": _n(r["imp_px_de"]),
             "exp_px_de": _n(r["exp_px_de"]),
             "bal_de_keur": _n(r["bal_de_kEUR"], 1),
