@@ -106,6 +106,8 @@
   .lede-value { font-size: 52px; font-weight: 600; letter-spacing: -.025em; line-height: 1.05;
                 display: flex; align-items: center; gap: 12px; }
   .lede-value i { width: 12px; height: 34px; border-radius: 4px; flex: none; }
+  .lede-value small { font-size: 22px; font-weight: 500; color: var(--ink-2);
+                      letter-spacing: 0; align-self: flex-end; padding-bottom: 6px; }
   .lede-note { color: var(--muted); font-size: 13px; margin-top: 6px; }
   .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 20px 24px; }
   .tile-label { color: var(--ink-2); font-size: 13px; }
@@ -195,8 +197,8 @@
   <header>
     <div class="grow">
       <h1>Germany's cross-border power balance</h1>
-      <p class="sub">What imported electricity cost against what exports earned, valued at
-      German day-ahead prices, day by day.</p>
+      <p class="sub">Germany buys power in its expensive hours and sells in its cheap
+      ones. How far apart those two prices are, day by day, and what drives the gap.</p>
     </div>
     <button class="ghost" id="theme" title="Switch theme">Theme</button>
   </header>
@@ -206,7 +208,7 @@
 
   <section class="hero" id="hero" hidden>
     <div>
-      <div class="lede-label">Balance over the window</div>
+      <div class="lede-label" id="heroLabel">The gap between buying and selling</div>
       <div class="lede-value" id="heroValue">—</div>
       <div class="lede-note" id="heroNote"></div>
     </div>
@@ -803,21 +805,30 @@ function drawSummary(days) {
   const expRev  = days.reduce((a, d) => a + (d[vE] ?? 0) * (d[pE] ?? 0), 0);
   const deficit = days.filter(d => (d.bal_de_keur ?? 0) < 0).length;
 
+  // Lead with the asymmetry, not the balance. The balance is an accounting
+  // consequence of it -- and the most misread number on the page, since it looks
+  // like a loss and is not one. The gap is the finding: it is what says German
+  // supply is short at the wrong hours, which is the thing worth knowing.
+  const paid = impCost / (impVol || 1), earned = expRev / (expVol || 1);
+  const gap = paid - earned;
+  document.getElementById("heroLabel").textContent = useOwn
+    ? "Paid for power it kept, against earned on its own output"
+    : "Paid when importing, against earned when exporting";
   document.getElementById("heroValue").innerHTML =
-    `<i style="background:${bal < 0 ? "var(--out)" : "var(--in)"}"></i>`
-    + `<span>${money(bal, 1)}</span>`;
+    `<i style="background:var(--out)"></i><span>€${num(gap, 0)}</span>`
+    + `<small>/MWh apart</small>`;
   document.getElementById("heroNote").textContent =
-    `${money(bal / days.length, 2)} per day on average, ${days.length} days`;
+    `€${num(paid, 1)} paid, €${num(earned, 1)} earned — `
+    + `${(paid / (earned || 1)).toFixed(1)}× the price, for the same commodity in the `
+    + `same market, hours apart.`;
 
   const thru = sum("transit_gwh");
   const tiles = [
+    ["Balance", money(bal, 1),
+     `${money(bal / days.length, 2)}/day — a value gap, not a loss`],
     ["Net import", `${num(imp - exp, 0)} GWh`, `${num(imp, 0)} in, ${num(exp, 0)} out`],
     ...(thru ? [["In transit", `${num(thru, 0)} GWh`,
                 `${Math.round(thru / (imp || 1) * 100)}% of arrivals passed straight through`]] : []),
-    ["Paid for power it kept", num(impCost / (impVol || 1), 1),
-     useOwn ? "€/MWh, transit excluded" : "€/MWh, volume-weighted"],
-    ["Earned on its own output", num(expRev / (expVol || 1), 1),
-     useOwn ? "€/MWh, transit excluded" : "€/MWh, volume-weighted"],
     ["Days in deficit", `${deficit} of ${days.length}`, "at the German price"],
     ["Congestion rent", money(sum("rent_keur"), 1), "to the grid operators"],
   ];
