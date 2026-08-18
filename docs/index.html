@@ -299,7 +299,8 @@
         <p class="hint" id="levelsHint">Every bar is euros per megawatt-hour. The two
         coloured ones are from this page's own data; the grey ones are reference levels.
         Note how little of a household bill moves with the wholesale price, and how
-        nearly all of a relieved industrial one does.</p>
+        nearly all of a relieved industrial one does. The two wholesale bars are price
+        levels reached in different hours, not sums anyone was billed.</p>
       </div>
     </div>
     <div class="plot" id="plotLevels"></div>
@@ -781,13 +782,15 @@ function drawLevels(host, days, ref) {
            hc ? `modelled, ${hh.month} — only €${Math.round(hc.procurement_sales_margin_eur_mwh)} of it moves with wholesale`
               : "modelled, " + hh.month, "var(--thru)"],
     ip && ["Industry pays, no reliefs", ip.no_relief_eur_mwh, "modelled, " + ip.month, "var(--thru)"],
-    paid && ["Germany paid for power it kept", paid, "day-ahead, import hours", "var(--out)"],
+    paid && ["German price, importing hours", paid,
+             "day-ahead, weighted by the imports that stayed", "var(--out)"],
     ["Day-ahead average, all hours", avg, "this window", "var(--thru)"],
     ip && ["Industry pays, with reliefs", ip.with_relief_eur_mwh, "modelled, " + ip.month, "var(--thru)"],
     ["Solar's market value", wmv("solar"), "generation-weighted", "var(--thru)"],
     ["Wind's market value", wmv("wind_onshore"), "onshore, generation-weighted", "var(--thru)"],
     pol && ["Subsidised industry price", pol.capped_price_eur_mwh, "policy cap from 2026", "var(--thru)"],
-    earned && ["Germany earned on its own output", earned, "day-ahead, export hours", "var(--in)"],
+    earned && ["German price, exporting hours", earned,
+               "day-ahead, weighted by own-plant exports", "var(--in)"],
   ].filter(r => r && r[1] != null).sort((a, b) => b[1] - a[1]);
   if (rows.length < 3) { host.replaceChildren(); return false; }
 
@@ -900,16 +903,16 @@ function drawSummary(days) {
   // supply is short at the wrong hours, which is the thing worth knowing.
   const paid = impCost / (impVol || 1), earned = expRev / (expVol || 1);
   const gap = paid - earned;
-  document.getElementById("heroLabel").textContent = useOwn
-    ? "Paid for power it kept, against earned on its own output"
-    : "Paid when importing, against earned when exporting";
+  document.getElementById("heroLabel").textContent =
+    "The German price in importing hours, against exporting hours";
   document.getElementById("heroValue").innerHTML =
     `<i style="background:var(--out)"></i><span>€${num(gap, 0)}</span>`
     + `<small>/MWh apart</small>`;
   document.getElementById("heroNote").textContent =
-    `€${num(paid, 1)} paid, €${num(earned, 1)} earned — `
-    + `${(paid / (earned || 1)).toFixed(1)}× the price, for the same commodity in the `
-    + `same market, hours apart.`;
+    `€${num(paid, 1)} when importing, €${num(earned, 1)} when exporting — `
+    + `${(paid / (earned || 1)).toFixed(1)}× for the same commodity in the same market, `
+    + `hours apart. A price level, not a payment: everyone buying in the German zone `
+    + `pays that hour's German price, whatever its power came from.`;
 
   const thru = sum("transit_gwh");
   const tiles = [
@@ -935,8 +938,8 @@ function drawTable(days) {
     ["Transit GWh", d => num(d.transit_gwh, 1)],
     ["Residual GW", d => num(d.residual_gw, 1)],
     ["Load GW", d => num(d.load_gw, 1)],
-    ["Px kept", d => num(d.imp_px_own, 1)],
-    ["Px own exports", d => num(d.exp_px_own, 1)],
+    ["Px, import hours", d => num(d.imp_px_own, 1)],
+    ["Px, export hours", d => num(d.exp_px_own, 1)],
     ["Px importing (gross)", d => num(d.imp_px_de, 1)],
     ["Px exporting (gross)", d => num(d.exp_px_de, 1)],
     ["Balance kEUR", d => num(d.bal_de_keur, 1)],
@@ -1004,16 +1007,17 @@ function render() {
 
   // sources present in what is actually on screen, so attribution tracks the view
   document.getElementById("priceHint").textContent = days.some(d => d.imp_px_own != null)
-    ? "What Germany paid for the power it kept, against what it earned on power its own "
-      + "plants sent out. Same price curve, so the gap is pure timing. Power in transit "
-      + "is left out of both: it is bought and sold in the same hour at the same price, "
-      + "so counting it only drags the two lines together."
+    ? "The German day-ahead price in the hours power was arriving, against the hours it "
+      + "was leaving — one price curve, read at different hours, so the gap is pure "
+      + "timing. Weighted by the volumes that actually stayed or came from German plants; "
+      + "power in transit is left out, since it is bought and sold in the same hour at the "
+      + "same price and only drags the two lines together."
     : "Volume-weighted German price in the hours Germany imported, against the hours it "
       + "exported. Both are the same price curve — the gap is timing.";
 
   const ownPx = days.some(d => d.imp_px_own != null);
-  document.getElementById("keyImp").textContent = ownPx ? "paid for power kept" : "when importing";
-  document.getElementById("keyExp").textContent = ownPx ? "earned on own output" : "when exporting";
+  document.getElementById("keyImp").textContent = "when importing";
+  document.getElementById("keyExp").textContent = "when exporting";
 
   const srcs = [...new Set(days.map(d => d.source))].sort();
   const flows = [...new Set(days.map(d => d.flows))];

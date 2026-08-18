@@ -141,10 +141,13 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
     key = dtb.period_of(ov.index, "day")
     transit = ov.groupby(key).sum() / 1000
 
-    # Prices for Germany's own share only. Transit is bought and sold in the same
-    # hour at the same German price, so leaving it in drags both averages toward
-    # each other and understates the very gap the page is about. Weighted per MTU,
-    # never an average of daily averages.
+    # The German price weighted by Germany's own share of the flows. Note what this
+    # is and is not: it is the price the German zone cleared at during importing or
+    # exporting hours, not a payment for imported energy -- nobody buys a labelled
+    # imported MWh, everyone in the zone pays that hour's German price. Transit is
+    # excluded because it is bought and sold in the same hour at the same price, so
+    # leaving it in drags both averages together. Weighted per MTU, never an average
+    # of daily averages.
     stayed = (across["import_mwh"] - ov)
     german = (across["export_mwh"] - ov)
     px_h = across["price_de"]              # hourly; `px` above is the daily mean
