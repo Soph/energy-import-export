@@ -256,9 +256,9 @@
   <section class="card" id="cardResidual" hidden>
     <div class="card-head">
       <div class="grow">
-        <h2>What the price had to reach for</h2>
-        <p class="hint" id="resHint">Residual load is demand minus wind and solar — how far
-        into the dispatchable stack a day had to reach.</p>
+        <h2>Cheap days are windy days</h2>
+        <p class="hint" id="resHint">One dot per day: how much of demand wind and solar
+        did not cover, against what power cost that day.</p>
       </div>
       <div class="key">
         <span><i style="background:var(--out)"></i>net importer</span>
@@ -631,7 +631,11 @@ function drawResidual(host, days) {
   const pts = days.filter(d => d.residual_gw != null && d.price_de_mean != null);
   if (pts.length < 2) { host.replaceChildren(); return null; }
 
-  const H2 = 240, W = host.clientWidth || 720, H = H2 + PAD.t + PAD.b + 8;
+  const H2 = 240, W = host.clientWidth || 720;
+  // three labels share the axis line on a wide plot; below that they collide, so
+  // the title drops to a second line and the chart grows to hold it
+  const wide = W > 620;
+  const H = H2 + PAD.t + PAD.b + 8 + (wide ? 0 : 14);
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
     "aria-label": "Daily mean day-ahead price against residual load" });
   const x0 = PAD.l + 6, x1 = W - PAD.r, y0 = PAD.t + 8, y1 = PAD.t + 8 + H2;
@@ -651,7 +655,41 @@ function drawResidual(host, days) {
     svg.append(el("text", { class: "tick", x: x(t), y: y1 + 17, "text-anchor": "middle" }, num(t)));
   }
   svg.append(el("text", { x: x0 - 8, y: y0 - 6, "text-anchor": "end" }, "€/MWh"));
-  svg.append(el("text", { x: x1, y: y1 + 30, "text-anchor": "end" }, "residual load, GW"));
+  // the axis title carries its own direction, so nobody has to work out which way
+  // "more residual load" points
+  svg.append(el("text", { x: x0, y: y1 + 31, "text-anchor": "start" },
+                "\u2190 more wind & sun"));
+  svg.append(el("text", { x: x1, y: y1 + 31, "text-anchor": "end" },
+                "less wind & sun \u2192"));
+  svg.append(el("text", { x: wide ? (x0 + x1) / 2 : (x0 + x1) / 2,
+                          y: y1 + (wide ? 31 : 45), "text-anchor": "middle" },
+                "demand not covered by wind & solar, GW"));
+
+  // Least-squares fit, drawn in neutral ink: the relationship is the point of the
+  // chart, so it should be visible rather than only quoted in the caption.
+  const mx0 = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const my0 = ys.reduce((a, b) => a + b, 0) / ys.length;
+  let num1 = 0, den1 = 0;
+  for (let i = 0; i < xs.length; i++) {
+    num1 += (xs[i] - mx0) * (ys[i] - my0);
+    den1 += (xs[i] - mx0) ** 2;
+  }
+  if (den1 > 0) {
+    const slope = num1 / den1, at = v => my0 + slope * (v - mx0);
+    // clipped to the plot rectangle -- extended far enough to span it, then cut,
+    // so a steep fit cannot poke out of the top corner
+    const clip = el("clipPath", { id: "res-plot" });
+    clip.append(el("rect", { x: x0, y: y0, width: x1 - x0, height: y1 - y0 }));
+    const defs = el("defs"); defs.append(clip); svg.append(defs);
+    const xa = xlo - xp, xb = xhi + xp;
+    svg.append(el("path", { d: `M${x(xa)} ${y(at(xa))}L${x(xb)} ${y(at(xb))}`,
+                            fill: "none", stroke: "var(--axis)", "stroke-width": 2,
+                            "stroke-linecap": "round", "clip-path": "url(#res-plot)" }));
+  }
+
+  // two anchors so the cloud has landmarks: the most and least renewable day
+  const lo = pts.reduce((a, b) => b.residual_gw < a.residual_gw ? b : a, pts[0]);
+  const hi = pts.reduce((a, b) => b.residual_gw > a.residual_gw ? b : a, pts[0]);
 
   for (const d of pts) {
     const imp = (d.net_import_gwh ?? 0) >= 0;
@@ -668,6 +706,12 @@ function drawResidual(host, days) {
     hit.addEventListener("pointermove", e => showTip(e, html));
     hit.addEventListener("pointerleave", hideTip);
     svg.append(hit);
+
+    if (d === lo || d === hi) {
+      svg.append(el("text", { class: "val", x: x(d.residual_gw),
+                              y: y(d.price_de_mean) - 11, "text-anchor": "middle" },
+                    dLabel(d.date)));
+    }
   }
   host.replaceChildren(svg);
 
@@ -820,10 +864,11 @@ function render() {
     const strength = Math.abs(r) > .8 ? "moves closely with"
                    : Math.abs(r) > .5 ? "tracks" : "is only loosely related to";
     document.getElementById("resHint").textContent =
-      "Residual load is demand minus wind and solar \u2014 how far into the "
-      + "dispatchable stack a day had to reach. The price " + strength
-      + " it (r = " + r.toFixed(2) + "), and the days Germany imported are the "
-      + "days it reached furthest.";
+      "One dot per day. Further right means wind and solar covered less of demand, "
+      + "so more had to come from gas, coal and imports. Price " + strength
+      + " that (r = " + r.toFixed(2) + "): the right-hand days are dear and red "
+      + "\u2014 Germany importing \u2014 while the left-hand days are cheap and "
+      + "blue, with power to spare to sell.";
   }
   drawBorders(document.getElementById("plotBorder"), days);
   drawTable(days);
