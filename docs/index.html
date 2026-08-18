@@ -292,6 +292,18 @@
     <div class="plot" id="plotBorder"></div>
   </section>
 
+  <section class="card" id="cardLevels" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2>Who actually pays what</h2>
+        <p class="hint" id="levelsHint">Every bar is euros per megawatt-hour. The two
+        coloured ones are from this page's own data; the grey ones are reference levels,
+        for scale.</p>
+      </div>
+    </div>
+    <div class="plot" id="plotLevels"></div>
+  </section>
+
   <section class="card" id="cardTable" hidden>
     <details>
       <summary>Table view — every value on this page</summary>
@@ -328,7 +340,7 @@ const RANGES = [
   { key: 0,   label: "All" },
 ];
 
-const state = { store: null, days: [], range: 30 };
+const state = { store: null, days: [], range: 30, ref: null };
 
 /* Credit required per source. energy-charts asks for attribution to itself and
    passes SMARD's CC BY 4.0 through; ENTSO-E's platform is a different licence
@@ -730,6 +742,73 @@ function drawResidualDaily(host, days) {
   return true;
 }
 
+/** Price levels on one axis, because everything here is EUR/MWh.
+ *
+ *  Deliberately a plain levels comparison with emphasis rather than a categorical
+ *  palette: the two bars from this page's data wear its colours, everything else is
+ *  the neutral, so the eye goes to the comparison being made. Mixing an hourly
+ *  subset with a monthly model in one chart is only honest if each bar says what it
+ *  is, so each carries its basis in the label.
+ */
+function drawLevels(host, days, ref) {
+  const sum = f => days.reduce((a, d) => a + (d[f] ?? 0), 0);
+  const wmv = t => {
+    const v = days.reduce((a, d) => a + (d[`${t}_gwh`] ?? 0), 0);
+    const n = days.reduce((a, d) => a + (d[`${t}_gwh`] ?? 0) * (d[`${t}_mv`] ?? 0), 0);
+    return v > 0 ? n / v : null;
+  };
+  const paid = sum("stayed_gwh") ? days.reduce((a, d) =>
+        a + (d.stayed_gwh ?? 0) * (d.imp_px_own ?? 0), 0) / sum("stayed_gwh") : null;
+  const earned = sum("from_de_plants_gwh") ? days.reduce((a, d) =>
+        a + (d.from_de_plants_gwh ?? 0) * (d.exp_px_own ?? 0), 0) / sum("from_de_plants_gwh") : null;
+  const avg = days.reduce((a, d) => a + (d.price_de_mean ?? 0), 0) / (days.length || 1);
+
+  // the regulator's modelled industrial price for the latest month in the window
+  const month = (days.at(-1)?.date || "").slice(0, 7);
+  const ip = ref?.industrial_prices_eur_mwh?.slice().reverse()
+               .find(r => r.month <= month) || null;
+  const pol = ref?.industriestrompreis_policy || null;
+
+  const rows = [
+    ip && ["Industry pays, no reliefs", ip.no_relief_eur_mwh, "modelled, " + ip.month, "var(--thru)"],
+    paid && ["Germany paid for power it kept", paid, "day-ahead, import hours", "var(--out)"],
+    ["Day-ahead average, all hours", avg, "this window", "var(--thru)"],
+    ip && ["Industry pays, with reliefs", ip.with_relief_eur_mwh, "modelled, " + ip.month, "var(--thru)"],
+    ["Solar's market value", wmv("solar"), "generation-weighted", "var(--thru)"],
+    ["Wind's market value", wmv("wind_onshore"), "onshore, generation-weighted", "var(--thru)"],
+    pol && ["Subsidised industry price", pol.capped_price_eur_mwh, "policy cap from 2026", "var(--thru)"],
+    earned && ["Germany earned on its own output", earned, "day-ahead, export hours", "var(--in)"],
+  ].filter(r => r && r[1] != null).sort((a, b) => b[1] - a[1]);
+  if (rows.length < 3) { host.replaceChildren(); return false; }
+
+  // Side by side while there is room for a label column; stacked below that, since
+  // squeezing eight labels into 200px turns the bars into stubs and pushes the basis
+  // text out of the card.
+  const W = host.clientWidth || 720;
+  const narrow = W < 560;
+  const ROW = narrow ? 56 : 30, L = narrow ? 2 : 210;
+  const H = rows.length * ROW + (narrow ? 8 : 16);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
+    "aria-label": "Electricity price levels in euro per megawatt hour" });
+  const x0 = L, x1 = W - (narrow ? 54 : 66);
+  const lim = Math.max(...rows.map(r => r[1]));
+  const bh = 15;
+
+  rows.forEach(([label, v, basis, fill], i) => {
+    const y = (narrow ? 4 : 8) + i * ROW;
+    const barY = narrow ? y + 15 : y;
+    const w = Math.max(1, v / lim * (x1 - x0));
+    svg.append(el("path", { d: barPath(0, 0, bh, w, RAD, false), fill,
+                            transform: `translate(${x0} ${barY + bh}) rotate(-90)` }));
+    svg.append(el("text", narrow ? { x: x0, y: y + 9 }
+                                 : { x: L - 10, y: y + bh - 3, "text-anchor": "end" }, label));
+    svg.append(el("text", { class: "val", x: x0 + w + 8, y: barY + bh - 3 }, "€" + num(v, 0)));
+    svg.append(el("text", { x: x0 + (narrow ? 0 : 6), y: barY + bh + 12 }, basis));
+  });
+  host.replaceChildren(svg);
+  return true;
+}
+
 /** Horizontal diverging bars, one per border, value at the tip. */
 function drawBorders(host, days) {
   const totals = {};
@@ -905,6 +984,10 @@ function render() {
 
   drawVolume(document.getElementById("plotVolume"), days);
   drawBorders(document.getElementById("plotBorder"), days);
+
+  const levels = document.getElementById("cardLevels");
+  levels.hidden = false;                       // unhide before measuring
+  levels.hidden = !drawLevels(document.getElementById("plotLevels"), days, state.ref);
   drawTable(days);
   document.getElementById("rangeNote").textContent =
     `${dLong(days[0].date)} — ${dLong(days.at(-1).date)}`;
@@ -997,26 +1080,38 @@ document.getElementById("theme").onclick = () => {
 let t;
 addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120); });
 
-fetch("data/daily.json", { cache: "no-cache" })
-  .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-  .then(store => {
+// Sequential and plain, rather than a promise chain: the reference levels are a
+// hand-refreshed snapshot, so a miss there must not stop the page, while a missing
+// daily.json must show the error box.
+async function boot() {
+  try {
+    const r = await fetch("data/reference_prices.json", { cache: "no-cache" });
+    state.ref = r.ok ? await r.json() : null;
+  } catch (e) {
+    state.ref = null;
+  }
+  try {
+    const r = await fetch("data/daily.json", { cache: "no-cache" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const store = await r.json();
     if (!store.days || !store.days.length) throw new Error("no days in the data file");
     state.store = store;
     if (store.days.length < state.range) state.range = 0;
     for (const id of ["hero", "filters", "cardBalance", "cardPrice", "cardVolume",
-                      "cardBorder", "cardTable"])   // cardResidualDaily is data-dependent
+                      "cardBorder", "cardTable"])   // the rest are data-dependent
       document.getElementById(id).hidden = false;
     buildRanges();
     render();
-  })
-  .catch(e => {
+  } catch (e) {
     const box = document.getElementById("err");
     box.style.display = "block";
     box.innerHTML = `<b>No data to show.</b><br>`
       + `<span style="color:var(--ink-2)">${e.message}. Run `
       + `<code>python3 build_data.py --date 2026-07 --end 2026-08</code> to fill `
       + `<code>docs/data/daily.json</code>.</span>`;
-  });
+  }
+}
+boot();
 </script>
 </body>
 </html>

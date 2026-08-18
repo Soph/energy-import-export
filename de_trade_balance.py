@@ -647,6 +647,22 @@ class SmardBackend(Backend):
             out[zone] = df
         return out
 
+    # Realisierte Erzeugung, the technologies whose market value we care about
+    GEN = {"solar": 1004068, "wind_onshore": 1004067, "wind_offshore": 1001225}
+
+    def generation(self, start, end) -> pd.DataFrame:
+        """Actual German generation per technology, MW.
+
+        Used for market values: the generation-weighted average price, which is
+        the official Marktwert definition and the input to the EEG top-up. SMARD
+        refuses a request that mixes module categories, so this cannot be folded
+        into the demand() call.
+        """
+        got = self._fetch(list(self.GEN.values()), start, end)
+        label = {"solar": "Photovoltaik", "wind_onshore": "Wind Onshore",
+                 "wind_offshore": "Wind Offshore"}
+        return pd.DataFrame({k: got[v] for k, v in label.items() if v in got})
+
     def demand(self, start, end) -> pd.DataFrame:
         """Load and residual load (load minus wind and solar), MW.
 

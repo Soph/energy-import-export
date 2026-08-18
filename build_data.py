@@ -88,8 +88,42 @@ def demand_daily(backend, start, end) -> pd.DataFrame | None:
                          "residual_gw": g["residual_mw"].mean() / 1000})
 
 
+def market_values(backend, start, end, price: pd.Series) -> pd.DataFrame | None:
+    """Per day: how much each technology's output was worth at the hourly price.
+
+    The generation-weighted price is the official Marktwert, and the gap to the
+    plain average is the cannibalisation that drives the EEG top-up: solar all
+    arrives in the same hours and depresses the price in exactly those hours.
+    Stored with the volumes so the page can re-weight across any window.
+    """
+    if not hasattr(backend, "generation"):
+        return None
+    frames = []
+    for ws, we in dtb.windows(start, end, "month"):
+        try:
+            frames.append(backend.generation(ws, we))
+        except Exception as exc:
+            print(f"  ! generation {ws.date()}: {type(exc).__name__}: {exc}", file=sys.stderr)
+    if not frames:
+        return None
+    g = pd.concat(frames).sort_index()
+    g = g[(g.index >= start) & (g.index < end)]
+    j = g.join(price.rename("_px"), how="inner").dropna(subset=["_px"])
+    if j.empty:
+        return None
+    key = dtb.period_of(j.index, "day")
+    out = {}
+    for tech in [c for c in g.columns]:
+        vol = j[tech].groupby(key).sum()
+        val = (j[tech] * j["_px"]).groupby(key).sum()
+        out[f"{tech}_gwh"] = vol / 1000
+        out[f"{tech}_mv"] = (val / vol).where(vol > 0)
+    return pd.DataFrame(out)
+
+
 def day_records(d: pd.DataFrame, source: str, flows: str,
-                demand: pd.DataFrame | None = None) -> list[dict]:
+                demand: pd.DataFrame | None = None,
+                mv: pd.DataFrame | None = None) -> list[dict]:
     """One record per calendar day, with its per-border breakdown nested."""
     day = dtb.per_period(d, "day")
     per_bd = dtb.per_border_period(d, "day")
@@ -136,6 +170,7 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
                     "mean_spread": _n(b["mean_spread"]),
                 }
         dm = demand.loc[date] if demand is not None and date in demand.index else None
+        mrow = mv.loc[date] if mv is not None and date in mv.index else None
         out.append({
             "date": date,
             "source": source,
@@ -157,6 +192,7 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
             "bal_zonal_keur": _n(r["bal_zonal_kEUR"], 1),
             "rent_keur": _n(r["rent_kEUR"], 1),
             "borders": borders,
+            **({k: _n(v) for k, v in mrow.items()} if mrow is not None else {}),
         })
     return out
 
@@ -242,10 +278,11 @@ def main() -> None:
                             borders, "month")
     d = dtb.value(raw, pd.Timedelta(a.freq) / pd.Timedelta("1h"))
     demand = demand_daily(backend, start, end)
+    mv = market_values(backend, start, end, dtb._across_borders(d)["price_de"])
     if cache:
         cache.report()
 
-    write(a.out, merge(a.out, day_records(d, a.source, a.flows, demand), borders))
+    write(a.out, merge(a.out, day_records(d, a.source, a.flows, demand, mv), borders))
     print(f"  -> {a.out}")
 
 
