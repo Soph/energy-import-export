@@ -297,8 +297,9 @@
       <div class="grow">
         <h2>Who actually pays what</h2>
         <p class="hint" id="levelsHint">Every bar is euros per megawatt-hour. The two
-        coloured ones are from this page's own data; the grey ones are reference levels,
-        for scale.</p>
+        coloured ones are from this page's own data; the grey ones are reference levels.
+        Note how little of a household bill moves with the wholesale price, and how
+        nearly all of a relieved industrial one does.</p>
       </div>
     </div>
     <div class="plot" id="plotLevels"></div>
@@ -769,7 +770,16 @@ function drawLevels(host, days, ref) {
                .find(r => r.month <= month) || null;
   const pol = ref?.industriestrompreis_policy || null;
 
+  const hh = ref?.household_prices_eur_mwh?.slice().reverse()
+               .find(r => r.month <= month) || null;
+  const hc = ref?.household_components_latest || null;
+
   const rows = [
+    hh && ["Household, dynamic tariff", hh.dynamic_eur_mwh,
+           "modelled, " + hh.month + " — tracks the hourly price", "var(--thru)"],
+    hh && ["Household, new contract", hh.new_eur_mwh,
+           hc ? `modelled, ${hh.month} — only €${Math.round(hc.procurement_sales_margin_eur_mwh)} of it moves with wholesale`
+              : "modelled, " + hh.month, "var(--thru)"],
     ip && ["Industry pays, no reliefs", ip.no_relief_eur_mwh, "modelled, " + ip.month, "var(--thru)"],
     paid && ["Germany paid for power it kept", paid, "day-ahead, import hours", "var(--out)"],
     ["Day-ahead average, all hours", avg, "this window", "var(--thru)"],
