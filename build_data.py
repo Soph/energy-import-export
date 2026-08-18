@@ -95,8 +95,16 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
     per_bd = dtb.per_border_period(d, "day")
 
     # the day's mean day-ahead price, deduplicated across borders first
-    px = dtb._across_borders(d)["price_de"]
+    across = dtb._across_borders(d)
+    px = across["price_de"]
     px = px.groupby(dtb.period_of(px.index, "day")).mean()
+
+    # Transit: in every hour Germany both imports and exports, and the overlap is
+    # power that entered by one border and left by another. min() is the tight
+    # bound on it and has to be taken per MTU -- min of daily totals would hide
+    # every hour whose direction differed from the day's net.
+    ov = across[["import_mwh", "export_mwh"]].min(axis=1)
+    transit = ov.groupby(dtb.period_of(ov.index, "day")).sum() / 1000
 
     out = []
     for date, r in day.iterrows():
@@ -122,6 +130,7 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
             "import_gwh": _n(r["import_GWh"]),
             "export_gwh": _n(r["export_GWh"]),
             "net_import_gwh": _n(r["net_imp_GWh"]),
+            "transit_gwh": _n(transit.get(date)),
             "imp_px_de": _n(r["imp_px_de"]),
             "exp_px_de": _n(r["exp_px_de"]),
             "bal_de_keur": _n(r["bal_de_kEUR"], 1),

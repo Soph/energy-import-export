@@ -25,6 +25,13 @@
     --out:        #e34948;   /* imports / deficit */
     --in:         #2a78d6;   /* exports / surplus */
     --zero:       #f0efec;   /* diverging midpoint: neutral, never a hue */
+    /* Transit is neither money out nor money in, so it takes the neutral pole of
+       the same diverging scale rather than a third hue. A categorical hue would
+       fail worse: aqua reads as "renewable" on a page about wind and solar, and
+       violet is 1.9 dE from our blue under protanopia in dark mode. Validated
+       for band, separation and >=3:1 contrast against both surfaces; the chroma
+       floor is a categorical gate and does not govern a diverging neutral. */
+    --thru:       #8a887f;
     --shadow:     0 1px 2px rgba(11,11,11,.04), 0 8px 24px -12px rgba(11,11,11,.10);
   }
   @media (prefers-color-scheme: dark) {
@@ -41,6 +48,7 @@
       --out:      #e66767;
       --in:       #3987e5;
       --zero:     #383835;
+      --thru:     #6e6c66;
       --shadow:   none;
     }
   }
@@ -57,6 +65,7 @@
     --out:      #e66767;
     --in:       #3987e5;
     --zero:     #383835;
+    --thru:     #6e6c66;
     --shadow:   none;
   }
 
@@ -262,8 +271,9 @@
         <p class="hint" id="volHint">Energy crossing the border each day.</p>
       </div>
       <div class="key">
-        <span><i style="background:var(--out)"></i>imported</span>
-        <span><i style="background:var(--in)"></i>exported</span>
+        <span><i style="background:var(--out)"></i>imported and used here</span>
+        <span><i style="background:var(--thru)"></i>in transit</span>
+        <span><i style="background:var(--in)"></i>exported from German plants</span>
       </div>
     </div>
     <div class="plot" id="plotVolume"></div>
@@ -443,6 +453,7 @@ function tipRows(d) {
     <div class="t-sep"></div>
     <div class="t-row"><span>Imported</span><span>${num(d.import_gwh, 1)} GWh</span></div>
     <div class="t-row"><span>Exported</span><span>${num(d.export_gwh, 1)} GWh</span></div>
+    <div class="t-row"><span>of which in transit</span><span>${num(d.transit_gwh, 1)} GWh</span></div>
     <div class="t-row"><span>Price when importing</span><span>${num(d.imp_px_de, 1)}</span></div>
     <div class="t-row"><span>Price when exporting</span><span>${num(d.exp_px_de, 1)}</span></div>
     <div class="t-row"><span>Congestion rent</span><span>${money(d.rent_keur, 2)}</span></div>`;
@@ -623,10 +634,31 @@ function drawVolume(host, days) {
   const labels = labelIndices(days.length, x1 - x0);
   days.forEach((d, i) => {
     const cx = x0 + band * (i + .5);
-    svg.append(el("path", { d: barPath(cx - bw / 2, mid - h(d.import_gwh), bw,
-                                       h(d.import_gwh), RAD, true), fill: "var(--out)" }));
-    svg.append(el("path", { d: barPath(cx - bw / 2, mid, bw, h(d.export_gwh), RAD, false),
-                            fill: "var(--in)" }));
+    // Each side splits in two. Germany's own share -- power used here, or generated
+    // here -- sits against the axis so it can be compared across days on a common
+    // baseline; the transit overlap extends beyond it. The transit block is the
+    // same height above and below by construction, which is the point: one flow
+    // crossing the country, counted once in each direction.
+    const thru = Math.min(d.transit_gwh ?? 0, d.import_gwh ?? 0, d.export_gwh ?? 0);
+    const stack = (total, up, mine) => {
+      const own = Math.max(0, total - thru);
+      const dir = up ? -1 : 1;
+      // inner segment: square both ends, it meets the axis and the next segment
+      if (own > 0) {
+        const hp = h(own);
+        svg.append(el("rect", { x: cx - bw / 2, y: up ? mid - hp : mid,
+                                width: bw, height: hp, fill: mine }));
+      }
+      // outer segment: rounded on the data end only, held off by the surface gap
+      if (thru > 0) {
+        const base = mid + dir * (h(own) + GAP);
+        const hp = Math.max(0, h(thru) - GAP);
+        svg.append(el("path", { d: barPath(cx - bw / 2, up ? base - hp : base,
+                                           bw, hp, RAD, up), fill: "var(--thru)" }));
+      }
+    };
+    stack(d.import_gwh ?? 0, true, "var(--out)");
+    stack(d.export_gwh ?? 0, false, "var(--in)");
     const hit = el("rect", { class: "hit", x: cx - band / 2, y: PAD.t, width: band, height: H2 * 2 });
     hit.addEventListener("pointerenter", e => showTip(e, tipRows(d)));
     hit.addEventListener("pointermove", e => showTip(e, tipRows(d)));
@@ -880,8 +912,11 @@ function drawSummary(days) {
   document.getElementById("heroNote").textContent =
     `${money(bal / days.length, 2)} per day on average, ${days.length} days`;
 
+  const thru = sum("transit_gwh");
   const tiles = [
     ["Net import", `${num(imp - exp, 0)} GWh`, `${num(imp, 0)} in, ${num(exp, 0)} out`],
+    ...(thru ? [["In transit", `${num(thru, 0)} GWh`,
+                `${Math.round(thru / (imp || 1) * 100)}% of arrivals passed straight through`]] : []),
     ["Price when importing", num(impCost / (imp || 1), 1), "€/MWh, volume-weighted"],
     ["Price when exporting", num(expRev / (exp || 1), 1), "€/MWh, volume-weighted"],
     ["Days in deficit", `${deficit} of ${days.length}`, "at the German price"],
@@ -898,6 +933,7 @@ function drawTable(days) {
     ["Imported GWh", d => num(d.import_gwh, 1)],
     ["Exported GWh", d => num(d.export_gwh, 1)],
     ["Net GWh", d => num(d.net_import_gwh, 1)],
+    ["Transit GWh", d => num(d.transit_gwh, 1)],
     ["Residual GW", d => num(d.residual_gw, 1)],
     ["Load GW", d => num(d.load_gw, 1)],
     ["Px importing", d => num(d.imp_px_de, 1)],
@@ -963,7 +999,21 @@ function render() {
   const srcs = [...new Set(days.map(d => d.source))].sort();
   const flows = [...new Set(days.map(d => d.flows))];
   const netted = srcs.includes("energy-charts");   // the only netted source
-  document.getElementById("volHint").textContent = netted
+  // headline the transit share, because 60% of it passing through changes what
+  // the whole chart means
+  const gi = days.reduce((a, d) => a + (d.import_gwh ?? 0), 0);
+  const gt = days.reduce((a, d) => a + (d.transit_gwh ?? 0), 0);
+  const hasT = days.some(d => d.transit_gwh != null);
+  document.getElementById("volHint").textContent = hasT
+    ? `Energy crossing the border each day, gross in each direction. `
+      + `${Math.round(gt / (gi || 1) * 100)}% of what came in left again by another `
+      + `border in the same hour — Germany as a corridor, not a buyer. Only the `
+      + `coloured ends are power this country actually used or generated.`
+    : legacyVolHint(days, netted);
+  if (!hasT) document.getElementById("volHint").textContent = legacyVolHint(days, netted);
+  const _unused = netted
+    ;
+  function legacyVolHint(days, netted) { return netted
     ? (srcs.length > 1
         ? "Energy crossing the border each day. Part of this window comes from a source "
           + "that reports flows already netted per border and hour, so gross volumes are "
@@ -972,7 +1022,7 @@ function render() {
         : "Energy crossing the border each day. This source reports flows already netted "
           + "per border and hour, so gross volumes run roughly a quarter low; the balance "
           + "above is unaffected by that, being net-only by construction.")
-    : "Energy crossing the border each day, gross in each direction.";
+    : "Energy crossing the border each day, gross in each direction."; }
   document.getElementById("prov").textContent =
     `${flows.join(" + ")} exchanges via ${srcs.join(" + ")}. `
     + `${state.store.days.length} days on file, last built `
