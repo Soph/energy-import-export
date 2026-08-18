@@ -239,6 +239,22 @@
     <div class="plot" id="plotPrice"></div>
   </section>
 
+  <section class="card" id="cardResidualDaily" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2>…because the wind and sun decide it</h2>
+        <p class="hint" id="resDailyHint">The same days as the chart above: how much
+        demand wind and solar left for everything else to cover. Tall bars line up with
+        the expensive days.</p>
+      </div>
+      <div class="key">
+        <span><i style="background:var(--out)"></i>net importer</span>
+        <span><i style="background:var(--in)"></i>net exporter</span>
+      </div>
+    </div>
+    <div class="plot" id="plotResidualDaily"></div>
+  </section>
+
   <section class="card" id="cardVolume" hidden>
     <div class="card-head">
       <div class="grow">
@@ -506,7 +522,12 @@ function drawPrice(host, days) {
   const lo = Math.min(...all), hi = Math.max(...all);
   const pad = (hi - lo) * .12 || 1;
   const y = scale(lo - pad, hi + pad, y1, y0);
-  const x = i => x0 + (days.length < 2 ? (x1 - x0) / 2 : (x1 - x0) * i / (days.length - 1));
+  // Band centres, not edge-to-edge: each value is a daily *average*, so it belongs
+  // in the middle of its day rather than on a boundary -- and it puts these points
+  // exactly above the columns in the panel below, which is the whole point of
+  // pairing them.
+  const band = (x1 - x0) / days.length;
+  const x = i => x0 + band * (i + .5);
 
   for (const t of ticks(lo - pad, hi + pad)) {
     svg.append(el("line", { class: "gridline", x1: x0, x2: x1, y1: y(t), y2: y(t) }));
@@ -556,8 +577,7 @@ function drawPrice(host, days) {
   const at = evt => {
     const box = svg.getBoundingClientRect();
     const px = (evt.clientX - box.left) * (W / box.width);
-    const i = Math.max(0, Math.min(days.length - 1,
-      Math.round((px - x0) / ((x1 - x0) / Math.max(1, days.length - 1)))));
+    const i = Math.max(0, Math.min(days.length - 1, Math.floor((px - x0) / band)));
     cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
     cross.setAttribute("opacity", 1);
     showTip(evt, tipRows(days[i]));
@@ -617,6 +637,68 @@ function drawVolume(host, days) {
   });
 
   host.replaceChildren(svg);
+}
+
+/** Tooltip body for the demand charts: the usual day, plus what it had to cover. */
+function tipDemand(d) {
+  return tipRows(d)
+    + `<div class="t-sep"></div>`
+    + `<div class="t-row"><span>Not covered by wind/solar</span><span>${num(d.residual_gw, 1)} GW</span></div>`
+    + `<div class="t-row"><span>Total demand</span><span>${num(d.load_gw, 1)} GW</span></div>`;
+}
+
+/** Residual load per day, as columns on the price chart's own x geometry.
+ *
+ *  Deliberately the same left and right insets as drawPrice, so the two plots
+ *  share a date grid and the shapes can be compared by scanning down the page
+ *  rather than by trusting a correlation coefficient. This is the small-multiples
+ *  answer to "two measures, different units" -- the alternative, one plot with two
+ *  y-scales, is the chart form that invents correlations.
+ */
+function drawResidualDaily(host, days) {
+  const pts = days.filter(d => d.residual_gw != null);
+  if (!pts.length) { host.replaceChildren(); return false; }
+
+  const PH = 126, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
+    "aria-label": "Demand not covered by wind and solar, per day, gigawatts" });
+  const x0 = PAD.l, x1 = W - (PAD.r + 34), y0 = PAD.t, y1 = PAD.t + PH;
+
+  const vals = days.map(d => d.residual_gw ?? 0);
+  const hi = Math.max(...vals, 1), lo = Math.min(0, ...vals);
+  const y = scale(lo, hi * 1.06, y1, y0);
+
+  for (const t of ticks(lo, hi, 3)) {
+    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
+                            x1: x0, x2: x1, y1: y(t), y2: y(t) }));
+    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" },
+                  num(t)));
+  }
+  svg.append(el("text", { x: x0 - 8, y: y0 - 2, "text-anchor": "end" }, "GW"));
+
+  const band = (x1 - x0) / days.length;
+  const bw = Math.min(BAR_MAX, band - GAP);
+  const labels = labelIndices(days.length, x1 - x0);
+  days.forEach((d, i) => {
+    const cx = x0 + band * (i + .5);
+    if (d.residual_gw != null) {
+      const v = d.residual_gw, up = v >= 0;
+      const top = Math.min(y(v), y(0));
+      svg.append(el("path", {
+        d: barPath(cx - bw / 2, top, bw, Math.abs(y(v) - y(0)), RAD, up),
+        fill: (d.net_import_gwh ?? 0) >= 0 ? "var(--out)" : "var(--in)" }));
+    }
+    const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PH });
+    const html = tipDemand(d);
+    hit.addEventListener("pointerenter", e => showTip(e, html));
+    hit.addEventListener("pointermove", e => showTip(e, html));
+    hit.addEventListener("pointerleave", hideTip);
+    svg.append(hit);
+    if (labels.has(i))
+      svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" }, dLabel(d.date)));
+  });
+  host.replaceChildren(svg);
+  return true;
 }
 
 /** Residual load against price, one dot per day.
@@ -698,10 +780,7 @@ function drawResidual(host, days) {
       stroke: "var(--surface)", "stroke-width": 2 }));   // ring keeps overlaps legible
     // hit target well past the mark, so a 10px dot is still easy to catch
     const hit = el("circle", { class: "hit", cx: x(d.residual_gw), cy: y(d.price_de_mean), r: 13 });
-    const html = tipRows(d)
-      + `<div class="t-sep"></div>`
-      + `<div class="t-row"><span>Residual load</span><span>${num(d.residual_gw, 1)} GW</span></div>`
-      + `<div class="t-row"><span>Load</span><span>${num(d.load_gw, 1)} GW</span></div>`;
+    const html = tipDemand(d);
     hit.addEventListener("pointerenter", e => showTip(e, html));
     hit.addEventListener("pointermove", e => showTip(e, html));
     hit.addEventListener("pointerleave", hideTip);
@@ -852,6 +931,11 @@ function render() {
   drawSummary(days);
   drawBalance(document.getElementById("plotBalance"), days);
   drawPrice(document.getElementById("plotPrice"), days);
+  // same rule as below: unhide first, or a 0-wide container distorts the render
+  const resDaily = document.getElementById("cardResidualDaily");
+  resDaily.hidden = !days.some(d => d.residual_gw != null);
+  if (!resDaily.hidden) drawResidualDaily(document.getElementById("plotResidualDaily"), days);
+
   drawVolume(document.getElementById("plotVolume"), days);
   // Unhide before drawing, never after: a hidden container measures 0 wide, the
   // fallback width takes over, and the SVG then scales down to fit -- shrinking
