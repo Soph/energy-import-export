@@ -130,6 +130,44 @@ def market_values(backend, start, end, price: pd.Series) -> pd.DataFrame | None:
     return pd.DataFrame(out)
 
 
+def system_costs(backend, outdir: str) -> None:
+    """Write the TSO's monthly system-security costs, if the backend has them.
+
+    Its own file rather than a column on the daily records: it is monthly, it is
+    Germany-wide rather than per border, and each series publishes on a different lag
+    -- balancing reserve up to three months behind, the rest about one -- so days
+    would carry mostly nulls. Fetched from a fixed start so the file is complete
+    regardless of the range being refreshed.
+    """
+    if not hasattr(backend, "costs"):
+        return
+    try:
+        c = backend.costs(pd.Timestamp("2024-01-01", tz=dtb.TZ),
+                          pd.Timestamp.now(tz=dtb.TZ).normalize() + pd.DateOffset(months=1))
+    except Exception as exc:
+        print(f"  ! system costs: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return
+    months = []
+    for ts, r in c.iterrows():
+        row = {"month": ts.strftime("%Y-%m")}
+        row.update({k: _n(v, 0) for k, v in r.items()})
+        if any(v is not None for k, v in row.items() if k != "month"):
+            months.append(row)
+    _write(os.path.join(outdir, "system_costs.json"), {
+        "note": ("Monthly costs to the transmission operators of keeping the system "
+                 "secure, in EUR. grid_security is the redispatch family reported "
+                 "together -- redispatch, grid reserve, interruptible loads -- and "
+                 "cannot be split further here; measures instructed by distribution "
+                 "operators are not included. Series publish on different lags, so "
+                 "recent months are often partial."),
+        "source": "Bundesnetzagentur | SMARD.de, Kosten der ÜNB (region DE)",
+        "licence": "CC BY 4.0",
+        "generated_at": pd.Timestamp.now(tz=dtb.TZ).isoformat(timespec="seconds"),
+        "months": months,
+    })
+    print(f"  system_costs: {len(months)} month(s)")
+
+
 def day_records(d: pd.DataFrame, source: str, flows: str,
                 demand: pd.DataFrame | None = None,
                 mv: pd.DataFrame | None = None) -> list[dict]:
@@ -340,6 +378,7 @@ def main() -> None:
         cache.report()
 
     merge_months(a.out, day_records(d, a.source, a.flows, demand, mv), borders)
+    system_costs(backend, a.out)
     print(f"  -> {a.out}/")
 
 

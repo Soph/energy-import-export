@@ -470,8 +470,10 @@ class SmardBackend(Backend):
       * The dataset manifest is /app/chart_configuration/market_data_configuration.json;
         every series is a numbered "module" scoped to one or more regions. The
         ids below come from that manifest.
-      * Cross-border modules exist only for region DE-LU. Asking with region=DE
-        returns a valid CSV containing "Keine Daten für gegebene Anfrage".
+      * Region is per series, not per platform. Cross-border modules exist only for
+        DE-LU; the system-cost modules only for DE. Asking with the wrong one returns
+        a valid CSV containing "Keine Daten für gegebene Anfrage", so it fails as
+        missing data rather than as an error.
       * One POST can carry many modules, so a whole window costs two requests
         (all flows, all prices) rather than one per zone.
       * CSV is German-formatted -- 1.234,56 -- and imports arrive negative.
@@ -540,16 +542,18 @@ class SmardBackend(Backend):
             return float("nan")
         return float(s.replace(".", "").replace(",", "."))
 
-    def _fetch(self, modules: list, start, end, resolution="hour") -> dict:
+    def _fetch(self, modules: list, start, end, resolution="hour",
+               region: str | None = None) -> dict:
         """POST once for many modules; returns {column label: Series} in local time."""
+        region = region or self.REGION
         body = {"request_form": [{
-            "format": "CSV", "moduleIds": list(modules), "region": self.REGION,
+            "format": "CSV", "moduleIds": list(modules), "region": region,
             "timestamp_from": self._ms(start), "timestamp_to": self._ms(end),
             "type": "discrete", "language": "de", "resolution": resolution,
         }]}
         # cache on the request's meaning, with `end` in a form Cache.settled reads
         key = Cache.key(self.DOWNLOAD, {"modules": ",".join(map(str, sorted(modules))),
-                                        "region": self.REGION, "res": resolution,
+                                        "region": region, "res": resolution,
                                         "start": start.isoformat(), "end": end.isoformat()})
         text = self.cache.get(key) if self.cache else None
         if text == MISSING:
@@ -572,7 +576,7 @@ class SmardBackend(Backend):
                 continue
             if "Keine Daten" in r[0]:
                 raise LookupError(f"SMARD: no data for {start.date()}..{end.date()} "
-                                  f"(region {self.REGION})")
+                                  f"(region {region})")
             stamps.append(r[0].strip())
             for i in range(len(header)):
                 cols[i].append(self._de_num(r[2 + i]) if 2 + i < len(r) else float("nan"))
@@ -668,6 +672,22 @@ class SmardBackend(Backend):
         got = self._fetch(list(self.GEN.values()), start, end)
         label = {"solar": "Photovoltaik", "wind_onshore": "Wind Onshore",
                  "wind_offshore": "Wind Offshore"}
+        return pd.DataFrame({k: got[v] for k, v in label.items() if v in got})
+
+    # Kosten der ÜNB: monthly, region DE, in EUR. "Netzsicherheit" is the redispatch
+    # family -- redispatch proper, grid reserve and interruptible loads -- reported
+    # together, so redispatch cannot be split out of it here. DSO-instructed measures
+    # are not included at all.
+    COSTS = {"grid_security": 16000418, "countertrading": 16000419,
+             "balancing_reserve": 16004391}
+
+    def costs(self, start, end) -> pd.DataFrame:
+        """Monthly TSO system-security costs in EUR."""
+        got = self._fetch(list(self.COSTS.values()), start, end,
+                          resolution="month", region="DE")
+        label = {"grid_security": "ÜNB-Netzsicherheit",
+                 "countertrading": "Countertrading",
+                 "balancing_reserve": "Regelreserve"}
         return pd.DataFrame({k: got[v] for k, v in label.items() if v in got})
 
     def demand(self, start, end) -> pd.DataFrame:
