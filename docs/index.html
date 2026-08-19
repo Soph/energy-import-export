@@ -185,6 +185,8 @@
     background: var(--surface); border: 1px solid var(--out); border-left-width: 4px;
     border-radius: 10px; padding: 12px 15px; margin-bottom: 14px; font-size: 13.5px;
   }
+  .read { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); }
+  .read b { color: var(--ink); font-weight: 600; }
   footer { color: var(--muted); font-size: 12.5px; margin-top: 30px; }
   footer p { margin: 0 0 7px; }
   footer a { color: var(--ink-2); }
@@ -197,8 +199,9 @@
   <header>
     <div class="grow">
       <h1>Germany's cross-border power balance</h1>
-      <p class="sub">Germany buys power in its expensive hours and sells in its cheap
-      ones. How far apart those two prices are, day by day, and what drives the gap.</p>
+      <p class="sub">The price of German power swings several-fold within a day, and
+      cross-border flows follow it: in when it is dear, out when it is cheap. The cheap
+      hours are cheap <em>because</em> wind and solar are running.</p>
     </div>
     <button class="ghost" id="theme" title="Switch theme">Theme</button>
   </header>
@@ -215,6 +218,18 @@
     <div class="tiles" id="tiles"></div>
   </section>
 
+  <section class="card" id="cardRead" hidden>
+    <p class="read">Three facts that stop the numbers above being read as a verdict.
+    <b>Every trade cleared at a price its seller had bid</b>, so nothing here was sold
+    below cost and nothing was bought unwillingly — a uniform-price auction cannot do
+    either. <b>The cheap hours are cheap because wind and solar are running</b>; without
+    them those hours would price like the expensive ones, and German consumers would pay
+    more, not less. <b>And importing in the dear hours lowers the German price</b> rather
+    than raising it, because the imported megawatt-hour displaces a more expensive German
+    plant. What is left is a real fact with real consequences: the value of a megawatt-hour
+    in Germany varies several-fold within the day.</p>
+  </section>
+
   <div class="filters" id="filters" hidden>
     <div class="seg" id="ranges" role="group" aria-label="Time range"></div>
     <div class="spacer"></div>
@@ -225,11 +240,12 @@
     <div class="card-head">
       <div class="grow">
         <h2>Daily balance</h2>
-        <p class="hint">Export revenue minus import cost, both at the German price.</p>
+        <p class="hint">The value of what left minus the value of what arrived, both priced
+        at the German hourly price. A valuation, not a cash flow.</p>
       </div>
       <div class="key">
-        <span><i style="background:var(--out)"></i>deficit</span>
-        <span><i style="background:var(--in)"></i>surplus</span>
+        <span><i style="background:var(--out)"></i>arrivals worth more</span>
+        <span><i style="background:var(--in)"></i>departures worth more</span>
       </div>
     </div>
     <div class="plot" id="plotBalance"></div>
@@ -238,7 +254,7 @@
   <section class="card" id="cardPrice" hidden>
     <div class="card-head">
       <div class="grow">
-        <h2>Why: bought dear, sold cheap</h2>
+        <h2>When power arrives, and when it leaves</h2>
         <p class="hint" id="priceHint">Volume-weighted German price in the hours Germany
         imported, against the hours it exported. Both are the same price curve — the gap
         is timing.</p>
@@ -254,7 +270,7 @@
   <section class="card" id="cardResidualDaily" hidden>
     <div class="card-head">
       <div class="grow">
-        <h2>…because the wind and sun decide it</h2>
+        <h2>What wind and solar left to cover</h2>
         <p class="hint" id="resDailyHint">The same days as the chart above: how much
         demand wind and solar left for everything else to cover. Tall bars line up with
         the expensive days.</p>
@@ -910,9 +926,9 @@ function drawSummary(days) {
     + `<small>/MWh apart</small>`;
   document.getElementById("heroNote").textContent =
     `€${num(paid, 1)} when importing, €${num(earned, 1)} when exporting — `
-    + `${(paid / (earned || 1)).toFixed(1)}× for the same commodity in the same market, `
-    + `hours apart. A price level, not a payment: everyone buying in the German zone `
-    + `pays that hour's German price, whatever its power came from.`;
+    + `${(paid / (earned || 1)).toFixed(1)}× apart, hours apart, in one market. These are `
+    + `clearing prices, not payments: everyone buying in the German zone pays that hour's `
+    + `German price, whatever its power came from.`;
 
   const thru = sum("transit_gwh");
   const tiles = [
@@ -921,7 +937,7 @@ function drawSummary(days) {
     ["Net import", `${num(imp - exp, 0)} GWh`, `${num(imp, 0)} in, ${num(exp, 0)} out`],
     ...(thru ? [["In transit", `${num(thru, 0)} GWh`,
                 `${Math.round(thru / (imp || 1) * 100)}% of arrivals passed straight through`]] : []),
-    ["Days in deficit", `${deficit} of ${days.length}`, "at the German price"],
+    ["Days arrivals worth more", `${deficit} of ${days.length}`, "at the German price"],
     ["Congestion rent", money(sum("rent_keur"), 1), "to the grid operators"],
   ];
   document.getElementById("tiles").innerHTML = tiles.map(([l, v, n]) =>
@@ -1112,7 +1128,7 @@ async function boot() {
     state.store = store;
     if (store.days.length < state.range) state.range = 0;
     for (const id of ["hero", "filters", "cardBalance", "cardPrice", "cardVolume",
-                      "cardBorder", "cardTable"])   // the rest are data-dependent
+                      "cardBorder", "cardTable", "cardRead"])   // the rest are data-dependent
       document.getElementById(id).hidden = false;
     buildRanges();
     render();
