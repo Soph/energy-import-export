@@ -1,7 +1,11 @@
 name: Daily balance
 
-# Refreshes the monthly files under docs/data/ and commits them. Pages serves docs/ from
-# the branch, so the commit *is* the deploy -- there is nothing to publish here.
+# Refreshes the monthly files under data/ and publishes the dashboard.
+#
+# Pages is deployed from an artifact rather than from a branch folder, which is what
+# lets the data live at data/ instead of inside docs/: the publish directory is
+# assembled here (docs/ plus data/) rather than having to be the repo layout. Set
+# Settings -> Pages -> Source to "GitHub Actions" for this to work.
 #
 # Two things to know about the schedule:
 #   * GitHub only fires `schedule` on the repository's DEFAULT branch. While this
@@ -24,10 +28,12 @@ on:
         required: false
 
 permissions:
-  contents: write
+  contents: write            # to commit the refreshed data
+  pages: write               # to publish
+  id-token: write            # required by deploy-pages
 
 concurrency:
-  group: daily-balance         # never let two runs race on the same file
+  group: daily-balance       # never let two runs race on the same files
   cancel-in-progress: false
 
 jobs:
@@ -73,10 +79,37 @@ jobs:
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/data
+          git add data
           if git diff --staged --quiet; then
             echo "no change"
           else
             git commit -m "data: refresh through $(date -u +%F)"
             git push
           fi
+
+      # The assembly that keeps data out of docs/. serve.py does the same thing
+      # locally by mapping the request, so the page's relative paths are identical
+      # in both places.
+      - name: Assemble the site
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp -r docs/. _site/
+          cp -r data _site/data
+          test -f _site/index.html && test -f _site/data/index.json
+          du -sh _site
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

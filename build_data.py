@@ -3,15 +3,15 @@
 build_data.py -- fetch a date range and merge it into the JSON the dashboard reads.
 
 Everything analytical lives in de_trade_balance.py; this only reshapes its output
-into one record per day and upserts it into docs/data/<YYYY-MM>.json, one file per
-calendar month, then rewrites docs/data/index.json. A daily cron and a one-off
+into one record per day and upserts it into data/<YYYY-MM>.json, one file per
+calendar month, then rewrites data/index.json. A daily cron and a one-off
 backfill are the same code path.
 
 Monthly files rather than one store: the page reads the index to learn what exists,
 then fetches only the months its selected range touches. A single file would make
 someone download every day ever recorded to look at the last week.
 
-    ./build_data.py                          # yesterday, into docs/data/
+    ./build_data.py                          # yesterday, into data/
     ./build_data.py --date 2026-07           # all of July
     ./build_data.py --date 2026-07-17 --days 31
     ./build_data.py --source entsoe          # better data, but see the warning below
@@ -59,7 +59,9 @@ import pandas as pd
 import de_trade_balance as dtb
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "docs", "data")
+# Repo-root data/, not docs/data/: docs/ is the published site, and the site is
+# assembled at deploy time rather than being the source layout.
+OUT = os.path.join(HERE, "data")
 SCHEMA = 1
 
 

@@ -6,8 +6,10 @@ time unit, and reports it over a day or a range.
 
 ```
 de_trade_balance.py    the analysis and CLI report
-build_data.py          reshapes a range into docs/data/<month>.json + index.json
-docs/                  the dashboard GitHub Pages serves
+build_data.py          reshapes a range into data/<month>.json + data/index.json
+data/                  the generated series, one file per calendar month
+docs/                  the dashboard's HTML
+serve.py               serves docs/ + data/ the way Pages will
 ```
 
 ## Quick start
@@ -31,9 +33,14 @@ requests in a couple of seconds.
 ## The dashboard
 
 ```bash
-python3 build_data.py --date 2026-07-18 --days 30   # fill the data file (SMARD)
-cd docs && python3 -m http.server 8731              # then open localhost:8731
+python3 build_data.py --date 2026-07-18 --days 30   # fill data/ (SMARD)
+./serve.py                                          # then open localhost:8731
 ```
+
+`serve.py` exists because the page and its data live in different directories: it
+serves `docs/` and maps `/data/...` to the repo-root `data/`, which is exactly the
+layout the deploy assembles. So a relative fetch resolves identically in dev and in
+production, and there is no separate path to remember.
 
 `build_data.py` upserts by date, so re-running a day corrects it in place. Both
 sources revise the last few days after first publication, which is why the daily
@@ -43,16 +50,19 @@ Data is written one file per calendar month plus an `index.json` manifest. The p
 reads the manifest first, then fetches only the months its range needs — a 30-day
 view pulls two files (~140 KB) rather than the whole history, and switching to a
 longer range fetches just the months it is missing. Reference price levels live in
-`reference_prices.json`, hand-refreshed.
+`data/reference_prices.json`, hand-refreshed.
 
 ### Publishing it
 
-Settings → Pages → Source: **Deploy from a branch**, branch `site-daily-dashboard`,
-folder **`/docs`**. The data file is committed, so each data commit is a deploy;
-there is no build step and no CDN — the page is one HTML file with inline SVG
-charts and no dependencies.
+Settings → Pages → Source: **GitHub Actions**. The workflow assembles the publish
+directory from `docs/` plus `data/` and uploads it, which is what allows the data to
+live at the repo root rather than inside the published folder — branch-based Pages
+can only serve `/` or `/docs`, so anything the page fetches would have to sit under
+`docs/`. There is still no build step and no CDN: the page is one HTML file with
+inline SVG charts and no dependencies.
 
-`.github/workflows/daily.yml` refreshes the data every morning and commits it.
+`.github/workflows/daily.yml` refreshes the data every morning, commits it, and
+deploys.
 **GitHub only fires `schedule` on the default branch**, so while this sits on a
 side branch the cron will not run — trigger it by hand from the Actions tab
 (`workflow_dispatch`, optionally with a date range to backfill), or merge this
