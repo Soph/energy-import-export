@@ -32,6 +32,12 @@
        for band, separation and >=3:1 contrast against both surfaces; the chroma
        floor is a categorical gate and does not govern a diverging neutral. */
     --thru:       #8a887f;
+    /* Merit order is an ordered category, so an ordinal ramp rather than eight
+       arbitrary hues: light is cheap, dark is dear, and the encoding is the lesson.
+       A categorical set would also have fought the red/blue money language above.
+       Validated --ordinal in both modes: monotone lightness, adjacent dL >= 0.06,
+       light end clear of the surface. */
+    --m1: #86b6ef; --m2: #5598e7; --m3: #2a78d6; --m4: #1c5cab; --m5: #104281;
     --shadow:     0 1px 2px rgba(11,11,11,.04), 0 8px 24px -12px rgba(11,11,11,.10);
   }
   @media (prefers-color-scheme: dark) {
@@ -49,6 +55,7 @@
       --in:       #3987e5;
       --zero:     #383835;
       --thru:     #6e6c66;
+      --m1: #b7d3f6; --m2: #86b6ef; --m3: #5598e7; --m4: #2a78d6; --m5: #1c5cab;
       --shadow:   none;
     }
   }
@@ -66,6 +73,7 @@
     --in:       #3987e5;
     --zero:     #383835;
     --thru:     #6e6c66;
+    --m1: #b7d3f6; --m2: #86b6ef; --m3: #5598e7; --m4: #2a78d6; --m5: #1c5cab;
     --shadow:   none;
   }
 
@@ -305,6 +313,18 @@
     <div class="plot" id="plotVolume"></div>
   </section>
 
+  <section class="card" id="cardDay" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2 id="dayTitle">How one day's price happens</h2>
+        <p class="hint" id="dayHint"></p>
+      </div>
+      <div class="key" id="dayKey"></div>
+    </div>
+    <div class="plot" id="plotDay"></div>
+    <p class="read" id="dayNote"></p>
+  </section>
+
   <section class="card" id="cardBorder" hidden>
     <div class="card-head">
       <div class="grow">
@@ -422,7 +442,7 @@ const RANGES = [
   { key: 0,   label: "All" },
 ];
 
-const state = { index: null, months: new Map(), days: [], range: 30, ref: null, costs: null };
+const state = { index: null, months: new Map(), days: [], range: 30, ref: null, costs: null, day: null };
 
 /* Credit required per source. energy-charts asks for attribution to itself and
    passes SMARD's CC BY 4.0 through; ENTSO-E's platform is a different licence
@@ -830,6 +850,104 @@ function drawResidualDaily(host, days) {
   return true;
 }
 
+/** One real day: what generated each hour, and the price underneath it.
+ *
+ *  Two stacked panels on one hour axis rather than generation and price on two
+ *  y-scales. The stack fills bottom-up from cheapest, load is drawn across it so the
+ *  surplus that gets exported is visible, and the price strip below lets the reader
+ *  see the collapse happen under the solar bulge without being told.
+ */
+const STACK_ORDER = [
+  ["solar", "solar", "var(--m1)"],
+  ["wind", "wind", "var(--m2)"],
+  ["hydro_bio", "hydro, storage, biomass", "var(--m3)"],
+  ["coal", "lignite & hard coal", "var(--m4)"],
+  ["gas_other", "gas & other thermal", "var(--m5)"],
+];
+
+function drawDay(host, day) {
+  if (!day?.hours?.length) { host.replaceChildren(); return false; }
+  const hrs = day.hours;
+  const SH = 168, PH2 = 66, GAPY = 30;
+  const W = host.clientWidth || 720, H = SH + GAPY + PH2 + PAD.t + PAD.b;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
+    "aria-label": `Generation by technology and price, ${day.date}` });
+  const x0 = PAD.l, x1 = W - PAD.r, sTop = PAD.t, sBot = PAD.t + SH;
+  const pTop = sBot + GAPY, pBot = pTop + PH2;
+
+  const tot = h => STACK_ORDER.reduce((a, [k]) => a + (h[k] ?? 0), 0);
+  const gMax = Math.max(...hrs.map(h => Math.max(tot(h), h.load_gw ?? 0)));
+  const yG = scale(0, gMax * 1.05, sBot, sTop);
+  const px = hrs.map(h => h.price ?? 0);
+  const pLo = Math.min(0, ...px), pHi = Math.max(...px);
+  const yP = scale(pLo, pHi * 1.08, pBot, pTop);
+
+  for (const t of ticks(0, gMax, 4)) {
+    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
+                            x1: x0, x2: x1, y1: yG(t), y2: yG(t) }));
+    svg.append(el("text", { class: "tick", x: x0 - 8, y: yG(t) + 4, "text-anchor": "end" }, num(t)));
+  }
+  svg.append(el("text", { x: x0 - 8, y: sTop - 2, "text-anchor": "end" }, "GW"));
+  for (const t of ticks(pLo, pHi, 4)) {
+    svg.append(el("line", { class: Math.abs(t) < 1e-9 ? "axisline" : "gridline",
+                            x1: x0, x2: x1, y1: yP(t), y2: yP(t) }));
+    svg.append(el("text", { class: "tick", x: x0 - 8, y: yP(t) + 4, "text-anchor": "end" }, num(t)));
+  }
+  svg.append(el("text", { x: x0 - 8, y: pTop - 2, "text-anchor": "end" }, "€/MWh"));
+
+  const band = (x1 - x0) / hrs.length;
+  const bw = barW(band);
+  const labels = labelIndices(hrs.length, x1 - x0);
+
+  hrs.forEach((h, i) => {
+    const cx = x0 + band * (i + .5);
+    let acc = 0;
+    STACK_ORDER.forEach(([k], si) => {
+      const v = h[k] ?? 0;
+      if (v <= 0) { acc += v; return; }
+      const top = yG(acc + v), hh = Math.max(0, yG(acc) - yG(acc + v) - (si ? GAP : 0));
+      const outer = si === STACK_ORDER.length - 1;
+      svg.append(outer
+        ? el("path", { d: barPath(cx - bw / 2, top, bw, hh, RAD, true), fill: STACK_ORDER[si][2] })
+        : el("rect", { x: cx - bw / 2, y: top, width: bw, height: hh, fill: STACK_ORDER[si][2] }));
+      acc += v;
+    });
+    // load across the stack: anything above the line left the country
+    if (h.load_gw != null)
+      svg.append(el("line", { x1: cx - band / 2, x2: cx + band / 2,
+                              y1: yG(h.load_gw), y2: yG(h.load_gw),
+                              stroke: "var(--ink-2)", "stroke-width": 2 }));
+    // the price, below
+    const pv = h.price ?? 0, up = pv >= 0;
+    svg.append(el("path", { d: barPath(cx - bw / 2, Math.min(yP(pv), yP(0)), bw,
+                                       Math.abs(yP(pv) - yP(0)), RAD, up),
+                            fill: "var(--thru)" }));
+    if (labels.has(i)) {
+      svg.append(el("text", { x: cx, y: sBot + 15, "text-anchor": "middle" }, h.hour));
+      svg.append(el("text", { x: cx, y: pBot + 15, "text-anchor": "middle" }, h.hour));
+    }
+    const hit = el("rect", { class: "hit", x: cx - band / 2, y: sTop, width: band, height: pBot - sTop });
+    const html = `<div class="t-date">${day.date} ${h.hour}</div>`
+      + `<div class="t-row"><span>Price</span><span>€${num(h.price, 1)}</span></div>`
+      + `<div class="t-sep"></div>`
+      + STACK_ORDER.map(([k, lab]) =>
+          `<div class="t-row"><span>${lab}</span><span>${num(h[k], 1)} GW</span></div>`).join("")
+      + `<div class="t-sep"></div>`
+      + `<div class="t-row"><span>generated</span><span>${num(tot(h), 1)} GW</span></div>`
+      + `<div class="t-row"><span>German demand</span><span>${num(h.load_gw, 1)} GW</span></div>`;
+    hit.addEventListener("pointerenter", e => showTip(e, html));
+    hit.addEventListener("pointermove", e => showTip(e, html));
+    hit.addEventListener("pointerleave", hideTip);
+    svg.append(hit);
+  });
+  host.replaceChildren(svg);
+
+  document.getElementById("dayKey").innerHTML =
+    STACK_ORDER.map(([, lab, c]) => `<span><i style="background:${c}"></i>${lab}</span>`).join("")
+    + `<span><i style="background:var(--ink-2);height:2px;width:14px;border-radius:2px"></i>German demand</span>`;
+  return true;
+}
+
 /** Congestion income against congestion spending, by month.
  *
  *  Paired columns rather than a stack: they are not components of one total, they are
@@ -1193,6 +1311,25 @@ function render() {
   }
 
   drawVolume(document.getElementById("plotVolume"), days);
+  const dayCard = document.getElementById("cardDay");
+  dayCard.hidden = false;                      // unhide before measuring
+  dayCard.hidden = !drawDay(document.getElementById("plotDay"), state.day);
+  if (!dayCard.hidden) {
+    const d = state.day, hs = d.hours;
+    const cheap = hs.reduce((a, b) => (b.price ?? 0) < (a.price ?? 0) ? b : a, hs[0]);
+    const dear  = hs.reduce((a, b) => (b.price ?? 0) > (a.price ?? 0) ? b : a, hs[0]);
+    document.getElementById("dayTitle").textContent = `How one day's price happens — ${d.date}`;
+    document.getElementById("dayHint").textContent =
+      `Everything that generated, stacked cheapest at the bottom, with the price beneath. `
+      + `At ${cheap.hour} solar alone ran to ${num(cheap.solar, 0)} GW and the price fell to `
+      + `€${num(cheap.price, Math.abs(cheap.price) < 10 ? 1 : 0)}; by ${dear.hour} it reached `
+      + `€${num(dear.price, 0)}. `
+      + `Nothing about the stack changed except which unit had to run last.`;
+    document.getElementById("dayNote").textContent =
+      `Chosen automatically — ${d.chosen_because}. ${d.note} Where the stack rises above `
+      + `the demand line, the surplus left the country.`;
+  }
+
   drawBorders(document.getElementById("plotBorder"), days);
 
   const costsCard = document.getElementById("cardCosts");
@@ -1307,6 +1444,12 @@ async function boot() {
     state.ref = r.ok ? await r.json() : null;
   } catch (e) {
     state.ref = null;
+  }
+  try {
+    const r = await fetch("data/example_day.json", { cache: "no-cache" });
+    state.day = r.ok ? await r.json() : null;
+  } catch (e) {
+    state.day = null;
   }
   try {
     const r = await fetch("data/system_costs.json", { cache: "no-cache" });

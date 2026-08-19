@@ -168,6 +168,76 @@ def system_costs(backend, outdir: str) -> None:
     print(f"  system_costs: {len(months)} month(s)")
 
 
+# Grouped into five, cheap-to-dear, because a merit order is an *ordered* category
+# and eight-plus technologies in one stack stops being readable. Nuclear is omitted
+# rather than bucketed: Germany's last reactors closed in 2023 and the series is zero.
+STACK = {
+    "solar":     [1004068],
+    "wind":      [1004067, 1001225],
+    "hydro_bio": [1001226, 1004070, 1004066, 1001228],   # hydro, storage, biomass, other RES
+    "coal":      [1001223, 1004069],                     # lignite, hard coal
+    "gas_other": [1004071, 1001227],                     # gas, other conventional
+}
+
+
+def example_day(backend, outdir: str, start, end) -> None:
+    """Write one real day, hour by hour, as a worked example of how a price happens.
+
+    Picks the day in the range with the widest intraday price spread, because that is
+    the one where the mechanism is visible: the stack fills bottom-up with whatever is
+    cheapest, and the price follows whatever had to run last. Records which day and
+    why, so the choice is not mistaken for a hand-picked illustration.
+    """
+    if not hasattr(backend, "generation"):
+        return
+    ids = [i for v in STACK.values() for i in v]
+    try:
+        frames, prices = [], []
+        for ws, we in dtb.windows(start, end, "month"):
+            frames.append(pd.DataFrame(backend._fetch(ids, ws, we)))
+            prices.append(backend._prices_for(ws, we)["DE_LU"])
+        gen = pd.concat(frames).sort_index()
+        px = pd.concat(prices).sort_index()
+        load = pd.concat([backend.demand(ws, we)["load_mw"]
+                          for ws, we in dtb.windows(start, end, "month")]).sort_index()
+    except Exception as exc:
+        print(f"  ! example day: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return
+
+    j = gen.join(px.rename("price"), how="inner").join(load.rename("load"), how="inner")
+    j = j[(j.index >= start) & (j.index < end)].dropna(subset=["price"])
+    if j.empty:
+        return
+    spread = j.groupby(dtb.period_of(j.index, "day"))["price"].agg(lambda s: s.max() - s.min())
+    pick = spread.idxmax()
+    day = j[dtb.period_of(j.index, "day") == pick]
+
+    LABEL = {1004068: "Photovoltaik", 1004067: "Wind Onshore", 1001225: "Wind Offshore",
+             1001226: "Wasserkraft", 1004070: "Pumpspeicher", 1004066: "Biomasse",
+             1001228: "Sonstige Erneuerbare", 1001223: "Braunkohle",
+             1004069: "Steinkohle", 1004071: "Erdgas", 1001227: "Sonstige Konventionelle"}
+    hours = []
+    for ts, r in day.iterrows():
+        row = {"hour": ts.strftime("%H:%M"), "price": _n(r["price"]), "load_gw": _n(r["load"] / 1000)}
+        for bucket, mods in STACK.items():
+            cols = [LABEL[i] for i in mods if LABEL[i] in day.columns]
+            row[bucket] = _n(sum(r[c] for c in cols) / 1000)
+        hours.append(row)
+
+    _write(os.path.join(outdir, "example_day.json"), {
+        "date": pick,
+        "chosen_because": (f"widest intraday price spread in the refreshed range: "
+                           f"{spread[pick]:.0f} EUR/MWh"),
+        "note": ("Generation is what actually ran, grouped cheap-to-dear. The ordering is "
+                 "the conventional merit order, not observed bids -- what each unit offered "
+                 "is not public, so the stack shows volumes, not costs."),
+        "source": "Bundesnetzagentur | SMARD.de",
+        "buckets": list(STACK),
+        "hours": hours,
+    })
+    print(f"  example_day: {pick} ({spread[pick]:.0f} EUR/MWh spread), {len(hours)} hours")
+
+
 def day_records(d: pd.DataFrame, source: str, flows: str,
                 demand: pd.DataFrame | None = None,
                 mv: pd.DataFrame | None = None) -> list[dict]:
@@ -379,6 +449,7 @@ def main() -> None:
 
     merge_months(a.out, day_records(d, a.source, a.flows, demand, mv), borders)
     system_costs(backend, a.out)
+    example_day(backend, a.out, start, end)
     print(f"  -> {a.out}/")
 
 
