@@ -187,6 +187,13 @@
   }
   .read { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); }
   .read b { color: var(--ink); font-weight: 600; }
+  .flows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 30px; margin: 4px 0 10px; }
+  @media (max-width: 720px) { .flows { grid-template-columns: 1fr; gap: 0 0; } }
+  .flows h3 { font-size: 13.5px; font-weight: 600; margin: 12px 0 4px;
+              display: flex; align-items: center; gap: 7px; }
+  .flows h3 i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+  .flows p { font-size: 13px; line-height: 1.55; color: var(--ink-2); margin: 0 0 8px; }
+  .flows b { color: var(--ink); font-weight: 600; }
   footer { color: var(--muted); font-size: 12.5px; margin-top: 30px; }
   footer p { margin: 0 0 7px; }
   footer a { color: var(--ink-2); }
@@ -325,6 +332,44 @@
       </div>
     </div>
     <div class="plot" id="plotCosts"></div>
+    <details>
+      <summary>Where does this money come from, and where does it go?</summary>
+      <div class="flows">
+        <div>
+          <h3><i style="background:var(--in)"></i>The rent, in and out</h3>
+          <p><b>In:</b> when a border is full, the two sides clear at different prices.
+          Buyers in the dearer zone pay their own zonal price and sellers in the cheaper
+          zone receive theirs; the gap on each megawatt-hour that crossed is collected by
+          the coupling mechanism and paid to the two transmission operators on that
+          border, normally split evenly. Nobody is billed for it separately — it is
+          already inside the price the dearer zone paid.</p>
+          <p><b>Out:</b> the operators cannot keep it. Article 19 of Regulation (EU)
+          2019/943 puts it to two priority uses first — guaranteeing that the capacity
+          they sold stays firm, including compensation when it does not, and maintaining
+          or increasing cross-zonal capacity, whether by remedial actions or by building
+          interconnection. Only once those are satisfied may it be counted as income when
+          network tariffs are set, and anything left has to sit in a separate account
+          until it can be spent on those purposes.</p>
+        </div>
+        <div>
+          <h3><i style="background:var(--out)"></i>The spending, in and out</h3>
+          <p><b>Out:</b> the grid inside Germany constrains flows the market ignored, so
+          the operator intervenes. In redispatch it orders one power station down and
+          another up on the far side of the bottleneck, and compensates both for the
+          change. The same budget covers stations held in reserve outside the market for
+          exactly this, loads paid to be interruptible, and countertrading — buying and
+          selling across a border to relieve a constraint.</p>
+          <p><b>In:</b> from every electricity customer. The operators recover it through
+          network charges, passed to the distribution operators and on to consumers,
+          spread across all German users by a mechanism descended from the § 19 StromNEV
+          levy. Domestic and industrial alike, in proportion to network use.</p>
+        </div>
+      </div>
+      <p class="read">So both ends of this chart reach the same place: the grid fee on a
+      bill. Rent can only lower it after the capacity obligations are met; redispatch
+      raises it. And that fee is part of the fixed two-thirds of a household bill in the
+      panel below — the part that does not move when the wholesale price does.</p>
+    </details>
   </section>
 
   <section class="card" id="cardLevels" hidden>
