@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.10.1-nightly.202608180612.e2de3d346.0.20260818084510-79404192b272",
+  "checkpoint_id": "01M0D4RVA126TN06NW8WAWV7SK",
+  "strategy": "manual-commit",
+  "branch": "site-daily-dashboard",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/daily.yml",
+    "serve.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 7107,
+    "cache_read_tokens": 4247972,
+    "output_tokens": 7051,
+    "api_call_count": 5
+  }
+}
