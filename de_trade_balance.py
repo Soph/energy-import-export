@@ -690,6 +690,23 @@ class SmardBackend(Backend):
                  "balancing_reserve": "Regelreserve"}
         return pd.DataFrame({k: got[v] for k, v in label.items() if v in got})
 
+    # Prognostizierte Erzeugung Day-Ahead: what the auction was told wind would do
+    WIND_FC = {"onshore": 2000123, "offshore": 2003791}
+
+    def wind_forecast(self, start, end) -> pd.Series:
+        """Day-ahead forecast of wind output, MW, on- and offshore combined.
+
+        Paired with actual generation this is the only way curtailment shows up at
+        all: a feathered turbine looks exactly like a still hour in the generation
+        series, so what did not run can only be seen as a deficit against what was
+        expected to.
+        """
+        got = self._fetch(list(self.WIND_FC.values()), start, end)
+        cols = [c for c in ("Wind Onshore", "Wind Offshore") if c in got]
+        if not cols:
+            raise LookupError("SMARD returned no wind forecast columns")
+        return sum(got[c] for c in cols)
+
     def demand(self, start, end) -> pd.DataFrame:
         """Load and residual load (load minus wind and solar), MW.
 

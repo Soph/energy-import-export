@@ -298,6 +298,22 @@
     <div class="plot" id="plotResidualDaily"></div>
   </section>
 
+  <section class="card" id="cardCut" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2>Wind that chose not to run</h2>
+        <p class="hint" id="cutHint"></p>
+      </div>
+    </div>
+    <div class="plot" id="plotCut"></div>
+    <p class="read">Only the market-driven half is visible here. When the price is
+    below zero the support premium is withdrawn, so generating costs the operator money
+    and the blades are feathered — a decision, and one that shows up as a deficit
+    against the day-ahead forecast. Curtailment ordered by the grid operator, because
+    northern wind cannot reach southern demand, happens at any price and leaves no
+    trace in this comparison; it sits in the redispatch spending two panels down.</p>
+  </section>
+
   <section class="card" id="cardVolume" hidden>
     <div class="card-head">
       <div class="grow">
@@ -850,6 +866,62 @@ function drawResidualDaily(host, days) {
   return true;
 }
 
+/** Wind that did not run while prices were negative, by day.
+ *
+ *  One series, so no legend: the title names it. Curtailment is a negative -- energy
+ *  never made -- so it can only be drawn against an expectation, and the caption
+ *  carries the control that makes it trustworthy: the same forecast is unbiased across
+ *  all hours, so a shortfall concentrated below zero is a decision, not noise.
+ */
+function drawCut(host, days) {
+  const pts = days.filter(d => d.wind_cut_gwh != null);
+  if (!pts.length) { host.replaceChildren(); return false; }
+
+  const PH = 120, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
+    "aria-label": "Wind output missing against forecast during negative-price hours, by day" });
+  const x0 = PAD.l, x1 = W - PAD.r, y0 = PAD.t, y1 = PAD.t + PH;
+  const hi = Math.max(...days.map(d => d.wind_cut_gwh ?? 0), 1);
+  const y = scale(0, hi * 1.1, y1, y0);
+
+  for (const t of ticks(0, hi, 3)) {
+    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
+                            x1: x0, x2: x1, y1: y(t), y2: y(t) }));
+    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" }, num(t)));
+  }
+  svg.append(el("text", { x: x0 - 8, y: y0 - 2, "text-anchor": "end" }, "GWh"));
+
+  const band = (x1 - x0) / days.length;
+  const bw = barW(band);
+  const labels = labelIndices(days.length, x1 - x0);
+  const worst = days.reduce((a, b) => (b.wind_cut_gwh ?? 0) > (a.wind_cut_gwh ?? 0) ? b : a, days[0]);
+
+  days.forEach((d, i) => {
+    const cx = x0 + band * (i + .5), v = d.wind_cut_gwh ?? 0;
+    if (v > 0)
+      svg.append(el("path", { d: barPath(cx - bw / 2, y(v), bw, y(0) - y(v), RAD, true),
+                              fill: "var(--thru)" }));
+    const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PH });
+    const html = `<div class="t-date">${dLong(d.date)}</div>`
+      + `<div class="t-row"><span>Did not run, below €0</span><span>${num(v, 1)} GWh</span></div>`
+      + `<div class="t-row"><span>Hours below €0</span><span>${num(d.negative_price_hours, 0)}</span></div>`
+      + `<div class="t-sep"></div>`
+      + `<div class="t-row"><span>Wind forecast</span><span>${num(d.wind_forecast_gwh, 0)} GWh</span></div>`
+      + `<div class="t-row"><span>Wind actual</span><span>${num(d.wind_actual_gwh, 0)} GWh</span></div>`;
+    hit.addEventListener("pointerenter", e => showTip(e, html));
+    hit.addEventListener("pointermove", e => showTip(e, html));
+    hit.addEventListener("pointerleave", hideTip);
+    svg.append(hit);
+    if (d === worst && v > 0)
+      svg.append(el("text", { class: "val", x: cx, y: y(v) - 6, "text-anchor": "middle" },
+                    num(v, 0) + " GWh"));
+    if (labels.has(i))
+      svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" }, dLabel(d.date)));
+  });
+  host.replaceChildren(svg);
+  return true;
+}
+
 /** One real day: what generated each hour, and the price underneath it.
  *
  *  Two stacked panels on one hour axis rather than generation and price on two
@@ -1308,6 +1380,21 @@ function render() {
       hint += ` Across this window the two move together at r = ${r.toFixed(2)}.`;
     }
     document.getElementById("resDailyHint").textContent = hint;
+  }
+
+  const cutCard = document.getElementById("cardCut");
+  cutCard.hidden = false;                      // unhide before measuring
+  cutCard.hidden = !drawCut(document.getElementById("plotCut"), days);
+  if (!cutCard.hidden) {
+    const sum = f => days.reduce((a, d) => a + (d[f] ?? 0), 0);
+    const cut = sum("wind_cut_gwh"), fc = sum("wind_forecast_gwh"), gap = sum("wind_gap_gwh");
+    const dayCount = days.filter(d => (d.wind_cut_gwh ?? 0) > 0.5).length;
+    document.getElementById("cutHint").textContent =
+      `Wind output missing against its own day-ahead forecast, counted only in hours the `
+      + `price was below zero: ${num(cut, 0)} GWh over this window, on ${dayCount} of `
+      + `${days.length} days. The same forecast is off by ${num(gap, 0)} GWh across all `
+      + `hours together — near nothing on ${num(fc, 0)} GWh forecast — so this is not `
+      + `forecast error piling up, it is turbines being switched off.`;
   }
 
   drawVolume(document.getElementById("plotVolume"), days);

@@ -238,9 +238,57 @@ def example_day(backend, outdir: str, start, end) -> None:
     print(f"  example_day: {pick} ({spread[pick]:.0f} EUR/MWh spread), {len(hours)} hours")
 
 
+def wind_shortfall(backend, start, end, price: pd.Series) -> pd.DataFrame | None:
+    """Per day: wind that did not run while prices were negative.
+
+    Restricted to negative-price hours on purpose. Summing max(0, forecast - actual)
+    across every hour looks like a curtailment measure and is not one: forecast error
+    is roughly symmetric, so clipping the negative side accumulates ordinary noise
+    into a large positive number. Measured over Jan-Aug it produced its worst "missing"
+    day on a date with no negative-price hour at all, which is the tell.
+
+    What survives that test is the price-conditioned signal: actual wind runs about
+    9.5% under forecast when the price is below zero and matches forecast in every
+    band above it. Below zero the support premium is withdrawn, so generating costs
+    the operator money and the blades get feathered. This isolates that, and carries
+    the all-hours signed gap alongside so the near-zero baseline stays visible.
+
+    It does not capture grid-ordered curtailment, which happens at any price and is
+    invisible to a price-conditioned test.
+    """
+    if not (hasattr(backend, "wind_forecast") and hasattr(backend, "generation")):
+        return None
+    fc, act = [], []
+    for ws, we in dtb.windows(start, end, "month"):
+        try:
+            fc.append(backend.wind_forecast(ws, we))
+            g = backend.generation(ws, we)
+            act.append(g[[c for c in ("wind_onshore", "wind_offshore") if c in g]].sum(axis=1))
+        except Exception as exc:
+            print(f"  ! wind shortfall {ws.date()}: {type(exc).__name__}: {exc}", file=sys.stderr)
+    if not fc or not act:
+        return None
+    j = pd.DataFrame({"fc": pd.concat(fc).sort_index(),
+                      "act": pd.concat(act).sort_index()}).join(price.rename("px"), how="inner")
+    j = j[(j.index >= start) & (j.index < end)].dropna(subset=["fc", "act"])
+    if j.empty:
+        return None
+    below = j.px < 0
+    j["cut"] = ((j.fc - j.act).clip(lower=0)).where(below, 0.0)
+    key = dtb.period_of(j.index, "day")
+    return pd.DataFrame({
+        "wind_forecast_gwh": j.fc.groupby(key).sum() / 1000,
+        "wind_actual_gwh": j.act.groupby(key).sum() / 1000,
+        "wind_gap_gwh": (j.fc - j.act).groupby(key).sum() / 1000,     # signed, all hours
+        "wind_cut_gwh": j.cut.groupby(key).sum() / 1000,              # negative-price hours only
+        "negative_price_hours": below.groupby(key).sum(),
+    })
+
+
 def day_records(d: pd.DataFrame, source: str, flows: str,
                 demand: pd.DataFrame | None = None,
-                mv: pd.DataFrame | None = None) -> list[dict]:
+                mv: pd.DataFrame | None = None,
+                wind: pd.DataFrame | None = None) -> list[dict]:
     """One record per calendar day, with its per-border breakdown nested."""
     day = dtb.per_period(d, "day")
     per_bd = dtb.per_border_period(d, "day")
@@ -291,6 +339,7 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
                 }
         dm = demand.loc[date] if demand is not None and date in demand.index else None
         mrow = mv.loc[date] if mv is not None and date in mv.index else None
+        wrow = wind.loc[date] if wind is not None and date in wind.index else None
         out.append({
             "date": date,
             "source": source,
@@ -313,6 +362,8 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
             "rent_keur": _n(r["rent_kEUR"], 1),
             "borders": borders,
             **({k: _n(v) for k, v in mrow.items()} if mrow is not None else {}),
+            **({k: _n(v, 0 if k == "negative_price_hours" else 2)
+                for k, v in wrow.items()} if wrow is not None else {}),
         })
     return out
 
@@ -443,11 +494,13 @@ def main() -> None:
                             borders, "month")
     d = dtb.value(raw, pd.Timedelta(a.freq) / pd.Timedelta("1h"))
     demand = demand_daily(backend, start, end)
-    mv = market_values(backend, start, end, dtb._across_borders(d)["price_de"])
+    px_hourly = dtb._across_borders(d)["price_de"]
+    mv = market_values(backend, start, end, px_hourly)
+    wind = wind_shortfall(backend, start, end, px_hourly)
     if cache:
         cache.report()
 
-    merge_months(a.out, day_records(d, a.source, a.flows, demand, mv), borders)
+    merge_months(a.out, day_records(d, a.source, a.flows, demand, mv, wind), borders)
     system_costs(backend, a.out)
     example_day(backend, a.out, start, end)
     print(f"  -> {a.out}/")
