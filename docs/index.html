@@ -358,7 +358,7 @@ const RANGES = [
   { key: 0,   label: "All" },
 ];
 
-const state = { store: null, days: [], range: 30, ref: null };
+const state = { index: null, months: new Map(), days: [], range: 30, ref: null };
 
 /* Credit required per source. energy-charts asks for attribution to itself and
    passes SMARD's CC BY 4.0 through; ENTSO-E's platform is a different licence
@@ -973,9 +973,47 @@ function drawTable(days) {
  * wiring
  * ========================================================================== */
 
+/** Which month files a range of N days needs, newest first.
+ *  Derived from the manifest, so no data has to be downloaded to work it out. */
+function monthsFor(n) {
+  const all = state.index.months.map(m => m.month);
+  if (!n) return all;
+  const last = new Date(state.index.last_date + "T12:00:00Z");
+  const from = new Date(last.getTime() - (n - 1) * 864e5);
+  const cut = from.toISOString().slice(0, 7);
+  const need = all.filter(m => m >= cut);
+  // a range can start mid-month, so keep the month before the cut as well when the
+  // window opens before that month's first day
+  const i = all.indexOf(need[0]);
+  if (i > 0 && from.toISOString().slice(0, 10) < state.index.months[i].first) need.unshift(all[i - 1]);
+  return need;
+}
+
+async function ensureMonths(months) {
+  const missing = months.filter(m => !state.months.has(m));
+  if (!missing.length) return;
+  await Promise.all(missing.map(async m => {
+    const r = await fetch(`data/${m}.json`, { cache: "no-cache" });
+    if (!r.ok) throw new Error(`${m}.json: HTTP ${r.status}`);
+    state.months.set(m, (await r.json()).days || []);
+  }));
+}
+
+/** Every loaded day, in order. */
+function loadedDays() {
+  return [...state.months.keys()].sort()
+    .flatMap(m => state.months.get(m));
+}
+
 function slice() {
-  const all = state.store.days;
+  const all = loadedDays();
   return state.range ? all.slice(-state.range) : all;
+}
+
+async function setRange(n) {
+  state.range = n;
+  await ensureMonths(monthsFor(n));
+  render();
 }
 
 function render() {
@@ -1064,8 +1102,9 @@ function render() {
     : "Energy crossing the border each day, gross in each direction."; }
   document.getElementById("prov").textContent =
     `${flows.join(" + ")} exchanges via ${srcs.join(" + ")}. `
-    + `${state.store.days.length} days on file, last built `
-    + `${(state.store.generated_at || "").slice(0, 16).replace("T", " ")}.`;
+    + `${state.index.total_days} days on file (${state.index.first_date} to `
+    + `${state.index.last_date}), ${state.months.size} month file(s) loaded, last built `
+    + `${(state.index.generated_at || "").slice(0, 16).replace("T", " ")}.`;
 
   document.getElementById("attrib").innerHTML = srcs
     .map(s => ATTRIB[s] || `Source: ${s}.`).join(" ");
@@ -1083,17 +1122,17 @@ function render() {
 
 function buildRanges() {
   const host = document.getElementById("ranges");
-  const total = state.store.days.length;
+  const total = state.index.total_days;
   host.replaceChildren(...RANGES.filter(r => !r.key || total > 7).map(r => {
     const b = document.createElement("button");
     b.textContent = r.label;
     b.setAttribute("aria-pressed", String(r.key === state.range));
     b.disabled = r.key > total;
     if (b.disabled) b.style.opacity = .4;
-    b.onclick = () => {
-      state.range = r.key;
+    b.onclick = async () => {
       [...host.children].forEach(c => c.setAttribute("aria-pressed", String(c === b)));
-      render();
+      host.style.opacity = .6;              // hold the old render, no skeleton flash
+      try { await setRange(r.key); } finally { host.style.opacity = 1; }
     };
     return b;
   }));
@@ -1112,7 +1151,7 @@ addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120);
 
 // Sequential and plain, rather than a promise chain: the reference levels are a
 // hand-refreshed snapshot, so a miss there must not stop the page, while a missing
-// daily.json must show the error box.
+// a missing index must show the error box.
 async function boot() {
   try {
     const r = await fetch("data/reference_prices.json", { cache: "no-cache" });
@@ -1121,14 +1160,15 @@ async function boot() {
     state.ref = null;
   }
   try {
-    const r = await fetch("data/daily.json", { cache: "no-cache" });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const store = await r.json();
-    if (!store.days || !store.days.length) throw new Error("no days in the data file");
-    state.store = store;
-    if (store.days.length < state.range) state.range = 0;
+    const r = await fetch("data/index.json", { cache: "no-cache" });
+    if (!r.ok) throw new Error(`index.json: HTTP ${r.status}`);
+    state.index = await r.json();
+    if (!state.index.months || !state.index.months.length)
+      throw new Error("no month files listed in the index");
+    if (state.index.total_days < state.range) state.range = 0;
+    await ensureMonths(monthsFor(state.range));
     for (const id of ["hero", "filters", "cardBalance", "cardPrice", "cardVolume",
-                      "cardBorder", "cardTable", "cardRead"])   // the rest are data-dependent
+                      "cardBorder", "cardTable", "cardRead"])   // rest are data-dependent
       document.getElementById(id).hidden = false;
     buildRanges();
     render();
@@ -1137,8 +1177,8 @@ async function boot() {
     box.style.display = "block";
     box.innerHTML = `<b>No data to show.</b><br>`
       + `<span style="color:var(--ink-2)">${e.message}. Run `
-      + `<code>python3 build_data.py --date 2026-07 --end 2026-08</code> to fill `
-      + `<code>docs/data/daily.json</code>.</span>`;
+      + `<code>python3 build_data.py --date 2026-01 --end 2026-08</code> to fill `
+      + `<code>docs/data/</code>.</span>`;
   }
 }
 boot();

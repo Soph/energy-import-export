@@ -6,7 +6,7 @@ time unit, and reports it over a day or a range.
 
 ```
 de_trade_balance.py    the analysis and CLI report
-build_data.py          reshapes a range into docs/data/daily.json
+build_data.py          reshapes a range into docs/data/<month>.json + index.json
 docs/                  the dashboard GitHub Pages serves
 ```
 
@@ -38,6 +38,12 @@ cd docs && python3 -m http.server 8731              # then open localhost:8731
 `build_data.py` upserts by date, so re-running a day corrects it in place. Both
 sources revise the last few days after first publication, which is why the daily
 job re-fetches a short trailing window rather than only yesterday.
+
+Data is written one file per calendar month plus an `index.json` manifest. The page
+reads the manifest first, then fetches only the months its range needs — a 30-day
+view pulls two files (~140 KB) rather than the whole history, and switching to a
+longer range fetches just the months it is missing. Reference price levels live in
+`reference_prices.json`, hand-refreshed.
 
 ### Publishing it
 

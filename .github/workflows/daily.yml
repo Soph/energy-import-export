@@ -1,6 +1,6 @@
 name: Daily balance
 
-# Refreshes docs/data/daily.json and commits it. Pages serves docs/ straight from
+# Refreshes the monthly files under docs/data/ and commits them. Pages serves docs/ from
 # the branch, so the commit *is* the deploy -- there is nothing to publish here.
 #
 # Two things to know about the schedule:
@@ -73,7 +73,7 @@ jobs:
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/data/daily.json
+          git add docs/data
           if git diff --staged --quiet; then
             echo "no change"
           else

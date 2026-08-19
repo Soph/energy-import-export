@@ -3,10 +3,15 @@
 build_data.py -- fetch a date range and merge it into the JSON the dashboard reads.
 
 Everything analytical lives in de_trade_balance.py; this only reshapes its output
-into one record per day and upserts it into docs/data/daily.json, so a daily cron
-and a one-off backfill are the same code path.
+into one record per day and upserts it into docs/data/<YYYY-MM>.json, one file per
+calendar month, then rewrites docs/data/index.json. A daily cron and a one-off
+backfill are the same code path.
 
-    ./build_data.py                          # yesterday, into docs/data/daily.json
+Monthly files rather than one store: the page reads the index to learn what exists,
+then fetches only the months its selected range touches. A single file would make
+someone download every day ever recorded to look at the last week.
+
+    ./build_data.py                          # yesterday, into docs/data/
     ./build_data.py --date 2026-07           # all of July
     ./build_data.py --date 2026-07-17 --days 31
     ./build_data.py --source entsoe          # better data, but see the warning below
@@ -46,6 +51,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 
 import pandas as pd
@@ -53,7 +59,7 @@ import pandas as pd
 import de_trade_balance as dtb
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "docs", "data", "daily.json")
+OUT = os.path.join(HERE, "docs", "data")
 SCHEMA = 1
 
 
@@ -200,34 +206,78 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
     return out
 
 
-def merge(path: str, fresh: list[dict], borders_asked: list) -> dict:
-    """Upsert by date into whatever is already on disk."""
-    try:
-        with open(path) as fh:
-            store = json.load(fh)
-    except (OSError, ValueError):
-        store = {}
+def merge_months(outdir: str, fresh: list[dict], borders_asked: list) -> list[str]:
+    """Upsert the fetched days into one file per calendar month, then reindex.
 
-    by_date = {r["date"]: r for r in store.get("days", [])}
-    added = sum(1 for r in fresh if r["date"] not in by_date)
-    by_date.update({r["date"]: r for r in fresh})
+    Monthly files rather than one growing store: the page only needs the months its
+    selected range touches, and a single file would have the reader download every
+    day ever recorded to look at the last week. Upsert still happens per date, so a
+    re-fetch corrects days in place.
+    """
+    os.makedirs(outdir, exist_ok=True)
+    by_month: dict[str, list[dict]] = {}
+    for r in fresh:
+        by_month.setdefault(r["date"][:7], []).append(r)
 
-    store["schema"] = SCHEMA
-    store["generated_at"] = pd.Timestamp.now(tz=dtb.TZ).isoformat(timespec="seconds")
-    store["timezone"] = dtb.TZ
-    store["borders_requested"] = list(borders_asked)
-    store["units"] = {"gwh": "GWh", "keur": "thousand EUR", "px": "EUR/MWh"}
-    store["days"] = [by_date[k] for k in sorted(by_date)]
-    print(f"  {added} new day(s), {len(fresh) - added} updated, "
-          f"{len(store['days'])} total")
-    return store
+    touched = []
+    for month, rows in sorted(by_month.items()):
+        path = os.path.join(outdir, f"{month}.json")
+        try:
+            with open(path) as fh:
+                existing = {d["date"]: d for d in json.load(fh)["days"]}
+        except (OSError, ValueError, KeyError):
+            existing = {}
+        added = sum(1 for r in rows if r["date"] not in existing)
+        existing.update({r["date"]: r for r in rows})
+        _write(path, {"month": month, "days": [existing[k] for k in sorted(existing)]})
+        print(f"  {month}: {added} new, {len(rows) - added} updated, "
+              f"{len(existing)} in file")
+        touched.append(month)
+
+    reindex(outdir, borders_asked)
+    return touched
 
 
-def write(path: str, store: dict) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+def reindex(outdir: str, borders_asked: list) -> None:
+    """Rebuild the manifest from whatever month files are on disk.
+
+    The page reads this first to learn what exists, so it can work out which months
+    a range needs without downloading any of them.
+    """
+    months = []
+    for name in sorted(os.listdir(outdir)):
+        m = re.fullmatch(r"(\d{4}-\d{2})\.json", name)
+        if not m:
+            continue
+        try:
+            with open(os.path.join(outdir, name)) as fh:
+                days = json.load(fh)["days"]
+        except (OSError, ValueError, KeyError):
+            continue
+        if not days:
+            continue
+        months.append({"month": m.group(1), "days": len(days),
+                       "first": days[0]["date"], "last": days[-1]["date"],
+                       "sources": sorted({d.get("source") for d in days if d.get("source")})})
+    total = sum(x["days"] for x in months)
+    _write(os.path.join(outdir, "index.json"), {
+        "schema": SCHEMA,
+        "generated_at": pd.Timestamp.now(tz=dtb.TZ).isoformat(timespec="seconds"),
+        "timezone": dtb.TZ,
+        "borders_requested": list(borders_asked),
+        "units": {"gwh": "GWh", "keur": "thousand EUR", "px": "EUR/MWh", "gw": "GW"},
+        "months": months,
+        "total_days": total,
+        "first_date": months[0]["first"] if months else None,
+        "last_date": months[-1]["last"] if months else None,
+    })
+    print(f"  index: {len(months)} month file(s), {total} days")
+
+
+def _write(path: str, obj: dict) -> None:
     tmp = f"{path}.tmp"
     with open(tmp, "w") as fh:
-        json.dump(store, fh, indent=1, sort_keys=False)
+        json.dump(obj, fh, indent=1, sort_keys=False)
         fh.write("\n")
     os.replace(tmp, path)
 
@@ -249,7 +299,8 @@ def main() -> None:
                          "the only source that is both. See the note at the top of "
                          "this file before changing it")
     ap.add_argument("--token", default=os.environ.get("ENTSOE_API_TOKEN"))
-    ap.add_argument("--out", default=OUT, help=f"JSON store (default: {OUT})")
+    ap.add_argument("--out", default=OUT,
+                    help=f"directory for the monthly files (default: {OUT})")
     ap.add_argument("--no-cache", action="store_true")
     ap.add_argument("--refresh", action="store_true")
     a = ap.parse_args()
@@ -285,8 +336,8 @@ def main() -> None:
     if cache:
         cache.report()
 
-    write(a.out, merge(a.out, day_records(d, a.source, a.flows, demand, mv), borders))
-    print(f"  -> {a.out}")
+    merge_months(a.out, day_records(d, a.source, a.flows, demand, mv), borders)
+    print(f"  -> {a.out}/")
 
 
 if __name__ == "__main__":
