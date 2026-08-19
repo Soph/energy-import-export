@@ -576,7 +576,11 @@ class SmardBackend(Backend):
         if not stamps:
             raise LookupError("SMARD returned no rows")
 
-        idx = pd.to_datetime(stamps, format="%d.%m.%Y %H:%M")
+        # daily and coarser resolutions come back without a time component
+        try:
+            idx = pd.to_datetime(stamps, format="%d.%m.%Y %H:%M")
+        except ValueError:
+            idx = pd.to_datetime(stamps, format="%d.%m.%Y")
         # local wall-clock timestamps; infer the repeated hour when clocks go back
         idx = idx.tz_localize(TZ, ambiguous="infer", nonexistent="shift_forward")
 
