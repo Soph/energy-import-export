@@ -455,10 +455,13 @@ class EnergyChartsBackend(Backend):
 class SmardBackend(Backend):
     """Bundesnetzagentur's SMARD (smard.de). No auth, and gross flows.
 
-    The reason to prefer this over energy-charts for anything published: it is
-    the primary publisher, a public authority, and its data is CC BY 4.0 -- while
-    also giving each direction of each border separately, which energy-charts
-    nets away and ENTSO-E only licenses for private use. Cross-checked against
+    The reason to prefer this over energy-charts for anything published: it grants
+    CC BY 4.0 directly, while also giving each direction of each border separately,
+    which energy-charts nets away. Note the chain, since it is easy to state wrongly
+    -- SMARD takes its data *from* ENTSO-E and says so, but Bundesnetzagentur
+    publishes under its own mandate (§ 111d EnWG) and licenses it itself, so
+    ENTSO-E's re-use list governs platform users rather than anything taken from
+    here. Attribution must read "Bundesnetzagentur | SMARD.de". Cross-checked against
     ENTSO-E on 2026-07-18: gross MWh per direction agreed to within 3 MWh on both
     Danish borders, i.e. to rounding.
 

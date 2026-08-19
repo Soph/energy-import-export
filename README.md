@@ -71,9 +71,10 @@ branch to make the cron live.
 
 ## Which source to use
 
-**SMARD** (`--source smard`, the dashboard default). Bundesnetzagentur is the
-primary publisher, a public authority, its data is CC BY 4.0, and it carries each
-direction of each border separately. It is the only source that is both
+**SMARD** (`--source smard`, the dashboard default). Bundesnetzagentur publishes it
+under a statutory mandate (§ 111d EnWG) and grants
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) in its own right, and it
+carries each direction of each border separately. It is the only source that is both
 publishable and complete — cross-checked against ENTSO-E for 2026-07-18, all 11
 borders and both directions, agreeing to under 0.02 GWh. No account needed.
 
@@ -84,7 +85,7 @@ taxonomy.
 
 | Source | licence to republish | flows | Denmark |
 |---|---|---|---|
-| smard | CC BY 4.0, primary publisher | gross per direction | DK_1 / DK_2 split |
+| smard | CC BY 4.0 granted by BNetzA under § 111d EnWG | gross per direction | DK_1 / DK_2 split |
 | energy-charts | CC BY 4.0 (prices from SMARD) | netted, ~27% low | often unsplit |
 | entsoe | prices + scheduled exchanges **not** on the free-re-use list | gross per direction | split |
 
@@ -104,11 +105,18 @@ those series belong to the power exchanges rather than the TSOs, and ENTSO-E can
 sub-license what it does not hold rights to. The transparency mandate makes the
 data *visible*; it does not grant redistribution.
 
-SMARD, being the primary publisher and a public authority, licensed the same series
-openly — which is why the published page uses it. (energy-charts' non-SMARD bidding
-zones are marked private/internal use only, so don't widen `NEIGHBOURS` and then
-publish.) Checked against the 18 Oct 2023 revision of that list, which does get
-amended.
+SMARD carries the same series and licenses them openly, which is why the published
+page uses it. Worth being precise about why that works, because it is not that SMARD
+is upstream of ENTSO-E — it isn't. SMARD states plainly that it takes its data
+*from* ENTSO-E. But Bundesnetzagentur publishes under its own statutory mandate
+(§ 111d EnWG) and grants CC BY 4.0 as licensor, so ENTSO-E is the delivery channel
+rather than the licensor, and Article 2.5 — which binds Transparency Platform data
+users — is not the instrument that governs data taken from SMARD. Attribution must
+read exactly **"Bundesnetzagentur | SMARD.de"**.
+
+(energy-charts' non-SMARD bidding zones are marked private/internal use only, so
+don't widen `NEIGHBOURS` and then publish.) The ENTSO-E list checked was the
+18 Oct 2023 revision, which does get amended.
 
 Measured over July 2026, the two agree on `balance_at_de_price` to **0.0002%** and
 on `congestion_rent` to 0.6% — not luck, but because both reduce to net-only

@@ -36,8 +36,9 @@ sub-license rights it does not hold. energy-charts is cleanly licensed but nets
 opposite flows within each border-hour, so its gross volumes run ~27% low and
 Denmark arrives unsplit.
 
-SMARD is both: Bundesnetzagentur is the primary publisher and a public authority,
-its data is CC BY 4.0, and it carries each direction of each border separately.
+SMARD is both: Bundesnetzagentur grants CC BY 4.0 itself, under its own publication
+mandate in § 111d EnWG rather than as an ENTSO-E data user, and it carries each
+direction of each border separately.
 Cross-checked against ENTSO-E for 2026-07-18 -- all 11 borders, both directions,
 agreeing to under 0.02 GWh.
 
