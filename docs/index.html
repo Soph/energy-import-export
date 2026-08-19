@@ -1178,7 +1178,7 @@ async function boot() {
     box.innerHTML = `<b>No data to show.</b><br>`
       + `<span style="color:var(--ink-2)">${e.message}. Run `
       + `<code>python3 build_data.py --date 2026-01 --end 2026-08</code> to fill `
-      + `<code>docs/data/</code>.</span>`;
+      + `<code>data/</code>, and serve with <code>./serve.py</code>.</span>`;
   }
 }
 boot();
