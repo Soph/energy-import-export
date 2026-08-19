@@ -8,8 +8,8 @@ time unit, and reports it over a day or a range.
 de_trade_balance.py    the analysis and CLI report
 build_data.py          reshapes a range into data/<month>.json + data/index.json
 data/                  the generated series, one file per calendar month
-docs/                  the dashboard's HTML
-serve.py               serves docs/ + data/ the way Pages will
+index.html             the dashboard, one file, no dependencies
+serve.py               serves it locally, bound to localhost
 ```
 
 ## Quick start
@@ -37,10 +37,11 @@ python3 build_data.py --date 2026-07-18 --days 30   # fill data/ (SMARD)
 ./serve.py                                          # then open localhost:8731
 ```
 
-`serve.py` exists because the page and its data live in different directories: it
-serves `docs/` and maps `/data/...` to the repo-root `data/`, which is exactly the
-layout the deploy assembles. So a relative fetch resolves identically in dev and in
-production, and there is no separate path to remember.
+`index.html` and `data/` both sit at the root, so the page's relative fetches work
+the same locally as when published and there is no dev-only path. `serve.py` is a
+thin wrapper on the stdlib server that binds to localhost — `http.server` otherwise
+listens on every interface, which would hand `.git` to anyone on the network — and
+refuses dotted paths for the same reason.
 
 `build_data.py` upserts by date, so re-running a day corrects it in place. Both
 sources revise the last few days after first publication, which is why the daily
@@ -55,11 +56,11 @@ longer range fetches just the months it is missing. Reference price levels live 
 ### Publishing it
 
 Settings → Pages → Source: **GitHub Actions**. The workflow assembles the publish
-directory from `docs/` plus `data/` and uploads it, which is what allows the data to
-live at the repo root rather than inside the published folder — branch-based Pages
-can only serve `/` or `/docs`, so anything the page fetches would have to sit under
-`docs/`. There is still no build step and no CDN: the page is one HTML file with
-inline SVG charts and no dependencies.
+directory from `index.html` plus `data/` and uploads it — that is what frees the repo
+layout, since branch-based Pages can only serve `/` or `/docs` and would drag
+everything the page fetches into one of them. Publishing only those two also keeps
+the scripts and git history out of the served site. There is still no build step and
+no CDN: the page is one HTML file with inline SVG charts and no dependencies.
 
 `.github/workflows/daily.yml` refreshes the data every morning, commits it, and
 deploys.

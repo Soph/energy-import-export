@@ -3,9 +3,9 @@ name: Daily balance
 # Refreshes the monthly files under data/ and publishes the dashboard.
 #
 # Pages is deployed from an artifact rather than from a branch folder, which is what
-# lets the data live at data/ instead of inside docs/: the publish directory is
-# assembled here (docs/ plus data/) rather than having to be the repo layout. Set
-# Settings -> Pages -> Source to "GitHub Actions" for this to work.
+# frees the repo layout: index.html and data/ live at the root and the publish
+# directory is assembled here from just those two. Set Settings -> Pages -> Source
+# to "GitHub Actions" for this to work.
 #
 # Two things to know about the schedule:
 #   * GitHub only fires `schedule` on the repository's DEFAULT branch. While this
@@ -87,14 +87,13 @@ jobs:
             git push
           fi
 
-      # The assembly that keeps data out of docs/. serve.py does the same thing
-      # locally by mapping the request, so the page's relative paths are identical
-      # in both places.
+      # Only what the page needs, so the scripts and git history are not published.
+      # Locally the same layout works straight from the repo root -- see serve.py.
       - name: Assemble the site
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp -r docs/. _site/
+          cp index.html _site/
           cp -r data _site/data
           test -f _site/index.html && test -f _site/data/index.json
           du -sh _site

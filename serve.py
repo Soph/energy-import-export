@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-serve.py -- serve the dashboard locally exactly as GitHub Pages will serve it.
+serve.py -- serve the dashboard locally, the way GitHub Pages serves it.
 
-The page lives in docs/ and its data in data/, and at deploy time the two are
-assembled into one directory. This does the same assembly virtually, so a relative
-fetch of data/index.json resolves the same way locally as in production and nobody
-has to remember a different path for dev.
+index.html and data/ both sit at the repo root, so the page's relative fetch of
+data/index.json resolves without any mapping and this is a thin wrapper over the
+stdlib server. It exists for two reasons worth keeping:
+
+  * it binds to localhost, where http.server binds every interface -- serving the
+    repo root over the local network would hand out .git and anything else here
+  * it refuses dotted paths anyway, and sends no-store, because the data files
+    change under a running server
 
     ./serve.py                 # http://localhost:8731
     ./serve.py --port 9000
-
-A symlink from docs/data to ../data would also work, but not on every platform and
-not without leaking into git status, so mapping the request is the tidier option.
 """
 
 from __future__ import annotations
@@ -23,44 +24,34 @@ import os
 import socketserver
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SITE = os.path.join(HERE, "docs")
-DATA = os.path.join(HERE, "data")
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
-    """Serves docs/, with /data/... mapped to the repo-root data directory."""
+    """The repo root, minus anything hidden."""
 
-    def translate_path(self, path: str) -> str:
-        clean = path.split("?", 1)[0].split("#", 1)[0]
-        if clean.startswith("/data/"):
-            rel = clean[len("/data/"):]
-            # normalise first, then confine: a request for /data/../../etc must not escape
-            full = os.path.normpath(os.path.join(DATA, rel))
-            if os.path.commonpath([full, DATA]) == DATA:
-                return full
-        return super().translate_path(path)
+    def do_GET(self):
+        clean = self.path.split("?", 1)[0].split("#", 1)[0]
+        if any(part.startswith(".") for part in clean.split("/") if part):
+            self.send_error(404)
+            return
+        super().do_GET()
 
     def end_headers(self):
-        # the data files change under a running server; don't let the browser cache them
         self.send_header("Cache-Control", "no-store")
         super().end_headers()
-
-    def log_message(self, fmt, *args):
-        if "?" not in (args[0] if args else ""):
-            super().log_message(fmt, *args)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--port", type=int, default=8731)
     a = ap.parse_args()
-    if not os.path.isdir(DATA):
-        print(f"note: {DATA} does not exist yet -- run build_data.py first")
+    if not os.path.isdir(os.path.join(HERE, "data")):
+        print("note: data/ does not exist yet -- run build_data.py first")
 
-    handler = functools.partial(Handler, directory=SITE)
+    handler = functools.partial(Handler, directory=HERE)
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", a.port), handler) as srv:
-        print(f"docs/ + data/ -> http://localhost:{a.port}  (ctrl-c to stop)")
+    with socketserver.TCPServer(("127.0.0.1", a.port), handler) as srv:
+        print(f"http://localhost:{a.port}  (ctrl-c to stop)")
         try:
             srv.serve_forever()
         except KeyboardInterrupt:

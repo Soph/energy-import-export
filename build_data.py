@@ -59,8 +59,8 @@ import pandas as pd
 import de_trade_balance as dtb
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-# Repo-root data/, not docs/data/: docs/ is the published site, and the site is
-# assembled at deploy time rather than being the source layout.
+# Repo root: index.html sits beside data/, and the deploy assembles the published
+# site from just those two rather than the layout having to match what is served.
 OUT = os.path.join(HERE, "data")
 SCHEMA = 1
 
