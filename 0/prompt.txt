@@ -1,0 +1,468 @@
+can you let a few agents check the german used on the page, I think it's not great
+
+---
+
+<task-notification>
+<task-id>a9561985e713d76a6</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-soph-Work-own-energy-import-export/e31e5543-7a34-499c-9074-5fefc0bbe0fc/tasks/a9561985e713d76a6.output</output-file>
+<status>completed</status>
+<summary>Agent "Check German fluency" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I read the whole file. Here is the editorial report on the German.
+
+---
+
+# Tier 1 — must fix (breaks on first read)
+
+**1. Line 208 — the Act-one headline**
+&gt; „Ja. Strom, der nach Deutschland kommt, ist ein Mehrfaches davon wert, was Strom wert ist, der Deutschland verlässt."
+
+TRANSLATIONESE + unreadable as a headline. Two problems: *wert … wert* in one breath, and the relative clause *der Deutschland verlässt* is extraposed behind its own predicate — pure English clause order dressed in German. Nobody parses this on the first pass. Also `ein Mehrfaches` is the wrong collocation (see #12).
+
+Replace: **„Ja. Strom, der hereinkommt, ist ein Vielfaches dessen wert, was hinausgeht."**
+
+**2. Line 193 — „blöd" in the claim (and 203, 251, 444 where it echoes)**
+&gt; „Deutschland ist blöd – es verkauft seinen Strom billig und kauft ihn teuer zurück."
+
+Wrong register, and it sabotages the whole piece. *blöd* is what a twelve-year-old says about Hausaufgaben — "lame, annoying". Applied to a nation-state's energy policy it sounds cute, not accusatory. The reader thinks: nobody says that. And if the claim doesn't sound real, the six acts spent demolishing it look like shadow-boxing.
+
+What people actually write in comment threads and at the Stammtisch: *verschleudern* for the selling, and *dumm* / *bescheuert* / *Schwachsinn* / *Irrsinn* for the verdict. *dumm* is the one that also survives being quoted as a single word later („das Wort ‚dumm'").
+
+Replace: **„Deutschland ist dumm: Es verschleudert seinen Strom und kauft ihn teuer zurück."**
+Then propagate: line 203 `am Wort dumm`, line 251 `…der dabei dumm sein könnte`, line 444 `Falsch ist das Wort „dumm"`. Note *verschleudert* also earns the piece something: the claim now contains the accusation of waste, which Act four answers directly.
+
+**3. Line 320 — two broken constructions in one sentence**
+&gt; „…aus denselben veröffentlichten Reihen berechnet, aus denen auch die Datenansicht zeichnet – Sie können alles gegen die Tagestabelle dort prüfen."
+
+WRONG: *zeichnen* is transitive here and has no object — "aus denen die Datenansicht zeichnet" is not German. And *gegen etwas prüfen* is a raw calque of "check against"; German checks *anhand* or *gleicht mit … ab*.
+
+Replace: **„Jede Zahl hier ist aus denselben veröffentlichten Reihen berechnet, aus denen auch die Datenansicht ihre Grafiken zeichnet – Sie können alles mit der Tagestabelle dort abgleichen."**
+
+**4. Lines 423–426 — `swing`, three faults in one paragraph**
+&gt; „…und derselbe Zeitraum liest sich als das ${other}-Fache. Am Strom hat sich nichts geändert – nur daran, welche Megawattstunden Sie mitzählen. Die Behauptung ist zwischen dem ${lo}- und dem ${hi}-Fachen stark, und Sie haben ausgewählt, welches."
+
+- *liest sich als das X-Fache* — calque of "reads X× instead". UNIDIOMATIC.
+- *„nur daran, welche…"* — WRONG. The ellipsis leaves *daran* without a licensing verb; the sentence has no grammatical spine.
+- *„ist zwischen … stark"* — calque of "is X× strong". Not German at all. And *„welches"* dangles.
+
+Replace: **„Stellen Sie den ersten Regler um, und aus demselben Zeitraum wird das ${other}-Fache. Der Strom ist derselbe – geändert hat sich nur, welche Megawattstunden Sie mitzählen. Die Behauptung reicht vom ${lo}- bis zum ${hi}-Fachen, und welche Zahl es ist, haben Sie gerade selbst gewählt."**
+
+**5. Lines 438–443 — `ledgerNote`**
+&gt; „Die beiden mittleren Zahlen sind dieselbe wie die erste, geteilt durch die ${twh} TWh…"
+
+WRONG: plural subject, singular predicative *dieselbe*.
+
+&gt; „Sie müssen sie zuerst dafür einsetzen, … bevor sie gegen die Netzentgelte gerechnet werden darf."
+
+Pronoun soup: three *sie* with three different referents (Netzbetreiber / Differenz / Differenz) inside one sentence. And *gegen die Netzentgelte gerechnet* is WRONG terminology — the German term is *auf die Netzentgelte angerechnet*.
+
+Replace: **„Die beiden mittleren Zahlen sind die erste – nur geteilt durch die ${twh} TWh, die Deutschland im Zeitraum verbraucht hat. Die letzte ist überhaupt kein Verlust: Ist eine Grenze voll, werden beide Seiten zu unterschiedlichen Preisen geräumt, und diese Differenz geht an die Übertragungsnetzbetreiber beider Seiten. Sie müssen das Geld zuerst einsetzen, um zugesagte Kapazität zu sichern und neue zu bauen; erst danach darf es auf die Netzentgelte angerechnet werden. Etwa die Hälfte fällt in Deutschland an."**
+
+---
+
+# Tier 2 — clear translationese, fix before publishing
+
+**6. Line 301** — „Es ist, dass eine Stunde Strom aufgehört hat…" The *It is that…* cleft does not exist in German. Fix with a *sondern*: **„Das Interessante ist nicht der Handel – sondern dass eine Stunde Strom aufgehört hat, &lt;em&gt;einen&lt;/em&gt; Preis zu haben."** (The rest of that headline is good.)
+
+**7. Line 211** — „Aber &lt;em&gt;wie viel&lt;/em&gt; Mehrfaches – das hängt an zwei Entscheidungen … Treffen Sie sie selbst:" *wie viel Mehrfaches* is not German; and *Treffen Sie sie* stutters. The resumptive *– das hängt an…* is a genuinely native move, keep it. **„Aber &lt;em&gt;wie&lt;/em&gt; hoch das Vielfache ausfällt – das hängt an zwei Entscheidungen, und die sind nicht klein. Entscheiden Sie selbst:"**
+
+**8. Line 306** — „Der Ausfall ist genau eine Viertelstunde breit, und das kann Wetter nicht:" *breit* for a time window is the chart metaphor imported from English; and bare *Wetter* without article is WRONG. **„Der Einbruch ist genau eine Viertelstunde schmal – so etwas kann das Wetter nicht."** Also in the same paragraph: *„weil Weiterlaufen Geld kostet"* → *„weil Weiterlaufen sie Geld kostet"*, and *„das die Behauptung bemerkt hat"* → *„das die Behauptung aufgreift"* (a Behauptung cannot notice things in German).
+
+**9. Line 448** — „denn der Handel ist implizit in einer gekoppelten Auktion" Textbook Satzklammer failure: the predicate adjective belongs at the end. **„denn der Handel steckt implizit in einer einzigen gekoppelten Auktion"**
+
+**10. Line 251 — the pull quote** „…beschreibt also ein Muster in Preisen. … und es ist niemand darin, der blöd sein könnte." *ein Muster in Preisen* is "a pattern in prices" transliterated; *es ist niemand darin* is word-for-word "there is nobody in it". A pull quote has to hit. **„‚Billig verkauft, teuer gekauft' beschreibt ein Preismuster. Kein Geschäft. Und niemanden, der dabei dumm sein könnte."**
+
+**11. Line 279** — „Er ist auch die Art von Zahl, die gewaltig klingt" *die Art von Zahl* = "the kind of number", calque; and it clashes in gender with *der Saldo … Er*. **„Er ist auch eine dieser Zahlen, die gewaltig klingen – bis man sie durch den Strom teilt, den ein Land tatsächlich verbraucht:"**
+
+**12. `Mehrfaches` throughout (208, 211, 306, 454)** — German pairs *ein Vielfaches* with *wert sein / schwanken / sich verschieben*. *Mehrfaches* survives only in fixed comparatives (*um ein Mehrfaches höher*). Switch all four to *Vielfaches*. `apart: das ${r}-Fache` (416) is correct as is — keep.
+
+**13. Line 290** — „Eine Behauptung, die als dauerhafte Eigenschaft eines Landes auftritt … Diese tut es nicht – sie ist im Wesentlichen eine Sommerbeobachtung:" *auftritt* is wrong for "stated as"; *Diese tut es nicht* is a limp English echo; *Sommerbeobachtung* is a coinage where German already has the word. **„Eine Behauptung, die sich als dauerhafte Eigenschaft eines Landes ausgibt, sollte den Kalender überstehen. Diese hier nicht – sie ist im Wesentlichen ein Sommerphänomen:"**
+
+**14. Lines 427–434 — `basisNote`** Mostly decent, four spots:
+- „das Höchste, was durchgelaufen sein &lt;em&gt;kann&lt;/em&gt;, ist also der kleinere der beiden Flüsse" → **„mehr als der kleinere der beiden Flüsse &lt;em&gt;kann&lt;/em&gt; also nicht durchgelaufen sein"** (punchier, and drops the nominalised *das Höchste*).
+- „Zieht man es ab … Lässt man es drin" — antecedent is unclear (*Strom* is masculine, *das* points at a percentage). → **„Zieht man diesen Anteil ab … Lässt man ihn drin"**.
+- „keines ist die einzige Antwort" — WRONG agreement, the referent is *Lesart* (f.) → **„keine von beiden ist die einzige Antwort"**.
+- „und genau das ist der Punkt" — calque → **„und genau darum geht es"**. (Same fix applies to the tone of *„die Richtung ist der Sinn"*, #17.)
+
+**15. Line 241** — „keine deutsche Stelle mit einem Handelstisch … morgens zu exportieren und abends zurückzukaufen" *Handelstisch* is a literal rendering of "trading desk" that reads like furniture; *Stelle* is vague Beamtendeutsch where *Behörde* is meant. And the German throws away the English joke (breakfast/dinner) for colourless *morgens/abends*. Also *der Handel über die Grenzen* → the term of art is *der grenzüberschreitende Handel*. **„Im gekoppelten europäischen Day-Ahead-Markt ist der grenzüberschreitende Handel &lt;b&gt;implizit&lt;/b&gt;. Es gibt keine deutsche Behörde, die Strom handelt, und keine Entscheidung, beim Frühstück zu exportieren und zum Abendessen zurückzukaufen."**
+
+**16. Line 248** — „Eine einzige Auktion räumt das gesamte gekoppelte Gebiet gleichzeitig." Reads first as evacuating a territory. Use the market term. **„Eine einzige Auktion räumt das gesamte gekoppelte Marktgebiet in einem Zug."** And at the end of that paragraph, *„genau das bedeutet Markträumung"* mismatches the English ("what a clearing price means") — the sentence is about the uniform price: **„– denn der Preis ist für alle gleich; genau das heißt Räumungspreis."** (Also *„Wo beide auseinanderfallen"* → *„Wo die beiden Preise auseinanderfallen"*.)
+
+**17. Line 255** — „Dritter Teil · die Richtung ist der Sinn" *der Sinn* for "the point" doesn't land; it sounds metaphysical. **„Dritter Teil · auf die Richtung kommt es an"**
+
+**18. Line 257 — headline** „Zu importieren, wenn der eigene Strom teuer ist, ist der richtige Zug – nicht der Fehler." Grammatical, but the fronted *zu*-infinitive is a sentence, not a headline; *der Fehler* with definite article is odd. **„In den teuren Stunden zu importieren ist der richtige Zug, nicht der Fehler."** — or, more headline-like: **„Wer importiert, wenn der eigene Strom teuer ist, macht es richtig."**
+
+**19. Line 287** — „und die Differenz halbierte sich etwa." *etwa* in final position dangles. **„…, und die Differenz war etwa halb so groß."**
+
+**20. Lines 420–422 — `netExporter`** *„Beachten Sie:"* is Behördendeutsch imported from "Note that"; cut it. And there is a missing comma: German requires one before a comparative clause with a finite verb. **„In diesem Zeitraum war Deutschland Netto&lt;b&gt;exporteur&lt;/b&gt; (${g} GWh mehr hinaus als herein) – die Geschichte vom Zurückkaufen kann es also nicht sein."** (If you keep the original clause: *„…mehr zurückzukaufen, als verkauft wurde."*)
+
+**21. Line 454** — „in dem der Wert einer Stunde begonnen hat, sich täglich um ein Mehrfaches zu bewegen." *begonnen hat, sich … zu bewegen* is a heavy English aspect construction. **„in dem sich der Wert einer Stunde inzwischen jeden Tag um ein Vielfaches verschiebt."**
+
+---
+
+# Tier 3 — labels, captions, small stuff
+
+- **Line 455** `dayPriceAxis: "€/MWh geräumt"` — baffling as an axis label. → **„Räumungspreis, €/MWh"**.
+- **Line 465** `windAxis: "Minuten von einem Intervall unter 0 €"` — hard to parse. → **„Abstand in Minuten zur Viertelstunde unter 0 €"**.
+- **Line 409** `basisGross: "alles, was die Grenze querte"` — *queren* is literary/poetic and reads as an anglicism here. → **„alles, was über die Grenze ging"**.
+- **Line 466–467** `windCap` — „lief Wind ${pct} % unter seiner eigenen Day-Ahead-Prognose": German wants the article. → **„blieb die Windeinspeisung ${pct} % unter ihrer eigenen Day-Ahead-Prognose"**. Rest of the caption is good.
+- **Line 435–436** `ledger` — „der Saldo, wie üblich zitiert" is a calque → **„der Saldo, wie man ihn meist liest"**. „pro MWh deutschen Verbrauchs" is grammatical but stiff → **„je MWh Stromverbrauch"**. „davon sind Engpasserlöse der Netzbetreiber" → **„davon sind Engpasserlöse für die Netzbetreiber"**.
+- **Line 470** `footRange` — „Die Zahlen umfassen ${a} bis ${b}" → **„Die Zahlen reichen von ${a} bis ${b}, ${n} Tage."**
+- **Line 285** — „Fünfter Teil · und es bleibt nicht stehen": *stehen bleiben* means "to stop", which is not the sense. → **„· und es hält nicht still"**.
+- **Line 266** — „das es umgekehrt machte" (Konjunktiv reads as preterite) and „in der der Markt tatsächlich abgerechnet wird" (stacked relatives + passive). → **„Ein System, das umgekehrt vorgeht – exportieren bei Knappheit, importieren bei Überschuss –, hätte das Wort verdient. Hier ein echter Tag, in Viertelstunden, so wie der Markt tatsächlich abrechnet:"**
+- **Line 203** — „Es folgen:" is listy; „die zwei Entscheidungen" → German prefers **„die beiden"**; and the German drops the English *how big it looks*, which is the whole point of the dials. → **„Der Reihe nach: diese Zahl, die beiden Entscheidungen, die bestimmen, wie groß sie wirkt, und dann die vier Dinge, die am Wort ‚dumm' falsch sind."**
+- **Line 200** — „Man hört es über jedes Land mit viel Wind und Sonne." Comprehensible, but the sentence-initial *es* is weak. German would front the object: **„Den Satz hört man über jedes Land mit viel Wind und Sonne."** Also *„die den Satz sagen"* (202) is flat → *„die ihn nachsprechen"*.
+- **Line 184** — `theme` → „Ansicht". *Ansicht* means "view"; a light/dark toggle in German UIs is **„Darstellung"** (or „hell/dunkel").
+- **Line 329** — „Grenzkuppelflüsse" is a coinage (*Grenzkuppelstellen* are the points, not the flows). → **„grenzüberschreitende Stromflüsse"**. „räumt der Markt in Viertelstunden" → **„wird der Markt in Viertelstundenblöcken geräumt"**.
+- **Typography, line 461** — `seasonsRow2` uses an em dash `—`; every other German string uses the correct `–`. Make it consistent.
+- **Localisation gap (457, 470, 818)** — the page is scrupulous about decimal commas (good, and the code comment about it is right), but German readers get raw ISO dates: „2025-07-06, automatisch gewählt…". German prose wants **„6. Juli 2025"**. This is the one place where the careful locale work stops halfway.
+
+---
+
+# What is GOOD — keep it
+
+These read as German, not as translation. Do not touch them:
+
+- **Line 180** „Deutscher Strom, nachgerechnet" — better than the English. *nachgerechnet* is exactly right.
+- **Line 235** „Zweiter Teil · aber es gibt kein „es"" — a real localisation, not a translation: the *es* points at the *es* in the German claim. Excellent.
+- **Line 237** „Niemand in Deutschland hat etwas verkauft, und niemand hat etwas zurückgekauft." — the punchy short English sentence survived intact.
+- **Line 241** first sentence: „Das ist der eigentliche Fehler der Behauptung, und er liegt nicht in den Zahlen."
+- **Line 248** „Käufer in Deutschland zahlen den deutschen Preis dieses Intervalls, ganz gleich, wer den Strom erzeugt hat." — *ganz gleich, wer* is a native touch. Also *Engpasserlös* and *zum Zuge kommen* are the right words.
+- **Line 262** — the whole paragraph, in particular „Jede importierte Megawattstunde verdrängt ein teureres deutsches Kraftwerk und drückt damit den deutschen Preis nach unten." and „Exportiert wird in billigen Stunden, weil dann mehr Strom da ist, als das Land verbrauchen kann." The passive fronting in the second is a genuinely German instinct.
+- **Line 276** „Gemessen am deutschen Verbrauch liegt die Differenz unter einem Prozent der Stromrechnung." — a proper German headline.
+- **Line 306** „Dann schalten Erzeuger ab – nicht auf Anweisung, sondern weil Weiterlaufen Geld kostet." — the best sentence on the page.
+- **Line 314** „Das Fazit" · **Line 274** „die Größenordnung" · **Line 298** „was wirklich passiert" — all correctly headline-shaped.
+- **Line 444** „Das Muster ist echt. Falsch ist das Wort „…"." — the *Falsch ist…* fronting is exactly what a German editor would write.
+- **Line 447** „Falsch ist alles, was die Behauptung daraus macht:" — same, good.
+- **Line 452** „Was bleibt, ist kein Land, das über den Tisch gezogen wird." — *über den Tisch gezogen* is the perfect idiom for "fleeced". Keep verbatim.
+- **Lines 411–413, 419, 460, 462–464** — dial labels, `verdictTail`, `seasonsRow1`, `seasonsCap`: clean, terse, correct.
+- **Lines 471–473** — the error strings. Infinitive instructions (*build_data.py ausführen*) are exactly right for German technical copy.
+- **Percent spacing** — `${pct} %` with a space, against the English `${pct}%`. Correct German, and a sign someone was paying attention.
+- The **Sie register is consistent** throughout (`Treffen Sie`, `Stellen Sie`, `Sie mitzählen`, `Sie können`) — no slippage into *du* or into impersonal *man* where address was intended. The only register wart is the bureaucratic „Beachten Sie:" (#20).
+
+---
+
+# Verdict
+
+**It does not yet read as native German — but it is much closer than most translated pages, and the failures are concentrated.**
+
+The German is not machine-flat. Someone with real instincts wrote parts of it: the *Falsch ist…* frontings, „über den Tisch gezogen", „nachgerechnet", „nicht auf Anweisung, sondern weil Weiterlaufen Geld kostet", the localised „es gibt kein ‚es'". Subordinate-clause verb placement is right virtually everywhere; the classic Satzklammer error appears exactly once (#9). Terminology is largely correct German energy vocabulary (*Engpasserlöse*, *Übertragungsnetzbetreiber*, *Räumungspreis*, *Netzentgelte*), which is rare.
+
+What gives it away is three specific habits:
+
+1. **Nominal calques left in place** where German has its own phrase: *die Art von Zahl*, *ein Muster in Preisen*, *das ist der Punkt*, *gegen etwas prüfen*, *Handelstisch*, *liest sich als*, *ist X-fach stark*, *das Höchste, was … kann*. Each is individually small; together they are the German coat over English structure.
+2. **Long English noun-and-relative chains that were never re-thought as German**, which is why the two most important sentences on the page — the Act-one headline (#1) and the swing paragraph (#4) — are the two hardest to read. English tolerates a trailing relative clause; German has to restructure or split.
+3. **The claim itself is the wrong register** (#2). „Deutschland ist blöd" is not the sentence this argument is answering, and everything downstream inherits that softness.
+
+Fix Tier 1 and the page becomes publishable. Fix Tier 2 as well and a German reader will not notice it was translated. Tier 3 is polish, except the ISO dates, which a copy desk would catch immediately.
+
+One editorial note beyond the language: the German „Erster Teil / Zweiter Teil" is safe and fine, but the English says *Act*. If you want the theatrical framing to survive, **„Erster Akt"** works perfectly well in German and costs nothing.</result>
+<usage><subagent_tokens>64280</subagent_tokens><tool_uses>1</tool_uses><duration_ms>402520</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a8bfe86accc668cc4</task-id>
+<tool-use-id>toolu_01EVtntVwwBTh2vPAApPprv4</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-soph-Work-own-energy-import-export/e31e5543-7a34-499c-9074-5fefc0bbe0fc/tasks/a8bfe86accc668cc4.output</output-file>
+<status>completed</status>
+<summary>Agent "Check German typography" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I read the whole file (no edits, no commits) and also executed the `TXT` object to see exactly what each German template renders, so the `+`-join spacing is verified against actual output rather than by eye.
+
+---
+
+## 1. Quotation marks
+
+**Glyphs, where they are literal: all correct.** Every literal German quote is U+201E opening / U+201C closing, and every one is the right way round:
+
+- L235 `…aber es gibt kein „es“` — ✅
+- L251 `„&lt;b&gt;Billig verkauft, teuer gekauft&lt;/b&gt;“` — ✅
+- L444 `finalHead: "Das Muster ist echt. Falsch ist das Wort „blöd“."` — ✅ (period correctly outside the closing quote, since the quoted material is a word, not a sentence)
+
+**Defect — the `&lt;q lang="de"&gt;` renders with no quotation marks at all.**
+
+```
+104   .claim q { quotes: none; }
+193   &lt;q lang="de"&gt;Deutschland ist blöd – es verkauft seinen Strom billig und kauft ihn teuer zurück.&lt;/q&gt;
+```
+
+`quotes: none` makes `open-quote`/`close-quote` in the UA stylesheet's `q::before`/`q::after` resolve to nothing. So there is **no doubling** — there is the opposite: the headline claim, which the `.said` label explicitly announces as *die Behauptung*, is displayed unquoted in both languages. Two clean fixes:
+
+- **(a) deterministic, matches the rest of the page** — keep `quotes: none` and hard-code the marks, exactly as L251 and L444 already do:
+  `&lt;q lang="de"&gt;„Deutschland ist blöd – es verkauft seinen Strom billig und kauft ihn teuer zurück.“&lt;/q&gt;`
+- **(b)** delete `.claim q { quotes: none; }` and let the UA supply them. Chromium and Firefox ship `:lang(de)` quote pairs, so `&lt;q lang="de"&gt;` would get „…“ and `&lt;q lang="en"&gt;` “…” automatically. Safari's coverage has historically been English-only, so (a) is the safe choice.
+
+**English-side defect worth fixing while you are in there:** L235 uses ASCII straight quotes — `Act two · but there is no "it"` — where L249 and L380 use “ ”. Should be `there is no “it”`. Its German twin is correct.
+
+**Minor inconsistency:** L249 puts the quotes *inside* `&lt;b&gt;` (`&lt;b&gt;“sells low, buys high”&lt;/b&gt;`, bold marks); L251 puts them *outside* (`„&lt;b&gt;…&lt;/b&gt;“`, non-bold marks). Pick one.
+
+---
+
+## 2. Dashes
+
+19 en dashes (U+2013), 17 em dashes (U+2014). Every German parenthetical dash in the static markup is correctly an en dash with spaces — L193, 201, 211, 248, 251, 257, 266, 279, 290, 306, 320 — and L421, 424, 429, 433, 446, 466, 467 in `TXT.de`. **Two real defects, both in JS:**
+
+**2.1 — em dash inside a German string (L461)**
+
+```
+461     seasonsRow2: "Nettoposition (GWh) — unter der Linie heißt Export",
+```
+Rule: German parenthetical/appositive dash is the Halbgeviertstrich (en dash). Its English twin at L396 correctly uses the em dash.
+→ `seasonsRow2: "Nettoposition (GWh) – unter der Linie heißt Export",`
+
+**2.2 — em dash hard-coded in shared render code, so it lands in German output (L608)**
+
+```
+608   v += a.ratio ? ` — &lt;span class="big"&gt;${t.apart(num(a.ratio, 1))}&lt;/span&gt;` : ` — ${t.noRatio}`;
+```
+The German verdict renders as `… 91 € → 25 € — das 3,7-Fache, über den ganzen Zeitraum, 731 Tage.` — an em dash in German text. Because the dash is language-independent code, it needs to become a `TXT` entry (`dash: " — "` / `dash: " – "`) or a conditional on `state.lang`.
+
+**2.3 — em dash as the no-data placeholder (L485, L491)**
+
+```
+485   const num = (v, dp = 0) =&gt; v == null ? "—"
+491     if (v == null) return "—";
+```
+German table/typesetting convention for "no value" is the Halbgeviertstrich `–`. Low severity, but it is the only em dash the German reader can still see once 2.1 and 2.2 are fixed, so it is worth aligning.
+
+**Correct and pedantically impressive, do not touch:** L266 `– exportieren bei Knappheit, importieren bei Überschuss –, hätte das Wort verdient.` The comma that closes the relative clause `Ein System, das es umgekehrt machte` correctly follows the closing dash (Duden: a comma due at the insertion point goes *after* the closing Gedankenstrich). This is the rule most texts get wrong.
+
+---
+
+## 3. Space before % and units
+
+**The prose is right; the charts are wrong.** German German text uses a space:
+
+- L431 `In diesem Zeitraum sind das &lt;b&gt;${pct} %&lt;/b&gt; von allem, was ankam.` — ✅
+- L467 `lief Wind ${pct} % unter seiner eigenen Day-Ahead-Prognose` — ✅
+- L437 `bn: " Mrd."` + L493 `` `${sign}${n}${suffix} €` `` → `−1,05 Mrd. €` — ✅ space before both `Mrd.` and `€`
+- L465 `"Minuten von einem Intervall unter 0 €"`, L463 `${lv} € im ${lm}` — ✅
+- Units always spaced: `${g} GWh`, `${twh} TWh`, `${n} Tage`, `${h} Stunden`, `${num(...)} ct` — ✅
+
+Four places glue the `%` on, all in **shared render code that is used verbatim for German** (these are the `${}`-followed-by-literal-`%` cases you asked about):
+
+| Line | Code | German output | Fix |
+|---|---|---|---|
+| 684 | `el("text", {…}, t + "%")` | `0%`, `50%`, `100%` (day-chart share axis) | needs `" %"` in de |
+| 707 | `` `${lab} ${h.hour}: ${eur(h.price, 0)}, ${num(share(h))}% ${t.dayFuelFree}` `` | `günstigste 13:15: −5 €, 87% ohne Brennstoff` | `${num(share(h))} %` in de |
+| 775 | `el("text", {…}, num(t) + "%")` | wind-chart tick labels | needs `" %"` in de |
+| 791 | `num(v, 1) + "%"` | the highlighted value on the wind block | needs `" %"` in de |
+
+The English `&lt;b&gt;${pct}%&lt;/b&gt;` at L368 and `${pct}%` at L401 are correct *for English* — the divergence there is deliberate and should stay.
+
+**Typography defect affecting all of the above (L400-473, L493, L636):** there is not a single non-breaking space in the file (no U+00A0, no U+202F, no `&amp;nbsp;`). Every `9,46 %`, `1,05 Mrd. €`, `731 Tage`, `500 TWh` can break across a line. German typesetting wants a narrow no-break space (U+202F) or at minimum NBSP between a number and its unit and before `%`.
+
+---
+
+## 4. Number formatting
+
+Locale formatting is correct: `toLocaleString("de-DE")` gives `1.234.567,89` — decimal comma, point as thousands separator, both per Duden. **No hand-written decimal or grouped number exists in German prose** — the only literal figures are `unter 0 €` (L465), `Seit Oktober 2025` (L329), `CC BY 4.0` (L329), and the spelled-out `unter einem Prozent` (L276) / `ein halbes Prozent` (L468). All correct.
+
+Two real defects:
+
+**4.1 — the minus sign is inconsistent across the page.** `eur()` prepends U+2212 MINUS SIGN (L492), but `num()` returns whatever ICU gives, which for `de-DE` is **U+002D HYPHEN-MINUS** (verified). So the ledger shows `−1,05 Mrd. €` (true minus) while the seasons caption (L463 `${lv} €`) and every chart tick label (L670, 738, 775) show `-12,5` with a hyphen. Route negatives in `num()` through the same replacement `eur()` uses.
+
+**4.2 — ISO dates in German prose.** `${d}` and `covers[]` are raw `YYYY-MM-DD` strings:
+
+```
+457     dayCap: d =&gt; `${d}, automatisch gewählt als größte Preisspanne …`
+469       + `Ganzer Zeitraum, ${a} bis ${b}.`
+470     footRange: (a, b, n) =&gt; `Die Zahlen umfassen ${a} bis ${b}, ${n} Tage.`
+```
+renders `2025-07-06, automatisch gewählt …` and `Die Zahlen umfassen 2024-01-01 bis 2025-12-31, 731 Tage.` German convention (DIN 5008 / Duden) is `06.07.2025` or `6. Juli 2025`.
+
+**4.3 — month abbreviations lack the Abkürzungspunkt, and „Mär" is not standard (L345).**
+
+```
+345   de: ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"],
+```
+German abbreviations take a full stop: `Jan.`, `Feb.`, `Apr.`, `Sept.`, `Okt.`, `Nov.`, `Dez.`; `Mai`, `Juni`, `Juli`, `März` are not abbreviated at all. Dropping the stop is defensible for a cramped chart axis, but `mShort`/`mLabel` also feed **prose**: L415 `inPeriod: m =&gt; \`im ${m}\`` renders `im Mär 2025`, and L463 renders `von 12 € im Mär bis 41 € im Jul`. In running text that is wrong. Minimum fix: `"Mrz"` or `"März"` instead of `"Mär"`; ideally a separate prose set with stops.
+
+**Minor (L707):** `${lab} ${h.hour}: ${eur(h.price, 0)}` produces a double-colon reading — `günstigste 13:15: −5 €`. German would normally write `13:15 Uhr`.
+
+---
+
+## 5. Capitalisation — **clean**
+
+Nothing to touch. Verified:
+
+- Every noun capitalised, including the nominalisations: `das Höchste` (L429), `etwas wirklich Neues` (L306), `Das Interessante` (L301), `um ein Mehrfaches` (L306, 454), `ein Mehrfaches` (L208), `wie viel Mehrfaches` (L211), `das Ganze` (L452), `Weiterlaufen` (L306), `Zu importieren` as sentence-initial infinitive subject (L257).
+- `das ${r}-Fache` (L416), `um das ${r}-Fache` (L445), `dem ${lo}- und dem ${hi}-Fachen` (L425-426) — **correct.** Duden allows both `das 3fache` (closed, lowercase) and `das 3-Fache` (hyphenated, capital, because the second element is the noun). The hyphenated form demands the capital F, and it has it.
+- Anglicisms: `Day-Ahead-Markts` (L201), `Day-Ahead-Markt` (L241), `Day-Ahead-Preise` (L329), `Day-Ahead-Prognose` (L467) — all elements capitalised, correct.
+- Adjectives from proper nouns correctly lowercase: `deutschen`, `europäischen`, `deutsch war`.
+- `unter null` / `über null` correctly lowercase throughout (L306, 458, 466, 468) — capital `Null` would only be right for the freezing point.
+- `im Wesentlichen` (L290) — correct.
+- UI labels are consistently lowercase-initial with nouns still capitalised (`welcher Strom zählt`, `beim Import`, `die Viertelstunde`); `günstigste`/`teuerste` (L456) are adjectives in an elliptical label, so lowercase is right.
+
+---
+
+## 6. Compound hyphenation — **clean, no Deppenleerzeichen**
+
+- Closed compounds all correctly closed: `Nettoexporteur`, `Nettoposition`, `Engpasserlös(e)`, `Übertragungsnetzbetreiber`, `Grenzkuppelflüsse`, `Kuppelleitungen`, `Netzentgelte`, `Räumungspreis`, `Markträumung`, `Preisspanne`, `Preisdifferenz`, `Preismuster`, `Handelstisch`, `Sommerbeobachtung`, `Stromrechnung`, `Brennstoffkosten`, `Megawattstunde`, `Kilowattstunde`, `Tagestabelle`, `Datenansicht`, `Exportseite`, `mengengewichtet`, `auseinanderfallen`, `zurückzukaufen`, `mitzählen`.
+- Suspension hyphen correct: `Intraday- und Regelenergiegeschäfte` (L329), `dem 2,1- und dem 3,7-Fachen` (L425).
+- **One optional call:** `Viertelstunden-Auflösung` (L266). Duden's default is the closed `Viertelstundenauflösung`; the hyphen is permitted for legibility (D 23) but is the only hyphenated all-German compound on the page, and `Viertelstunden` appears unhyphenated at L329 and L466. Consider closing it up.
+
+---
+
+## 7. Commas — two genuine misses, plus three house-style calls
+
+**7.1 — Missing comma before a comparative subordinate clause (L421-422).**
+
+```
+421       + `(${g} GWh mehr hinaus als herein) – es kann also nicht darum gehen, mehr zurückzukaufen `
+422       + `als verkauft wurde.`,
+```
+`als verkauft wurde` is a subordinate clause with a finite verb; Duden requires the comma before `als`. The page gets this right twice elsewhere — L201 `größer, als die meisten vermuten`, L446 `teurer herein, als er hinausgeht`, L262 `mehr Strom da ist, als das Land verbrauchen kann` — so it is an internal inconsistency, not a house style.
+→ `…mehr zurückzukaufen, als verkauft wurde.`
+
+**7.2 — Missing comma before a free relative clause (L410), and its sibling has it.**
+
+```
+409     basisGross: "alles, was die Grenze querte",
+410     basisStripped: "nur was blieb oder deutsch war",
+```
+→ `basisStripped: "nur, was blieb oder deutsch war",`
+
+**Correct — verified, do not touch:** comma before `dass` (L301); comma before infinitive groups announced by a correlate or governed by a noun (L241 `keine Entscheidung, morgens zu exportieren`; L442 `dafür einsetzen, zugesagte Kapazität zu sichern`; L447 `darum gehen, mehr zurückzukaufen`); comma before `statt` + infinitive (L450 `den deutschen Preis, statt ihn zu heben`); relative clauses closed on both sides (L208, 248, 290, 306, 451-453, 462); `ganz gleich, wer den Strom erzeugt hat` (L248); `Zieht man es ab, bleibt …` / `Lässt man es drin, bekommt man …` (L431-433); optional-but-legal comma before coordinating `und` between main clauses (L211, 237, 241, 279, 287, 306, 423, 426, 441, 463); capital after a colon introducing a full sentence (L420 `Beachten Sie: In diesem Zeitraum…`, L440 `kein Verlust: Ist eine Grenze voll,…`, L306 `Neues: Mit genügend Wind…`).
+
+**House-style calls (your decision, all defensible as-is):**
+
+- **L248** `…hat &lt;em&gt;mindestens&lt;/em&gt; seinen Gebotspreis erhalten – denn der Preis ist einheitlich, …` — `denn` is a coordinating conjunction that takes an obligatory comma. Duden treats the Gedankenstrich as an addition to, not a substitute for, a required comma. Cleanest: `… erhalten, denn der Preis ist einheitlich`.
+- **L279** `…die gewaltig klingt – bis man sie durch den Strom teilt, …` — same shape: `bis` opens a subordinate clause whose comma is obligatory. Cleanest: `…die gewaltig klingt, bis man sie …`.
+- **L276** `Gemessen am deutschen Verbrauch liegt die Differenz …` — comma after a fronted participle group is optional in German (Duden D 116). Its English twin *has* the comma (L275 `Set against what Germany consumes, the gap …`), so adding it would restore parallelism.
+- **L248** `…einheitlich, genau das bedeutet Markträumung.` and **L417** `…bei oder unter null, ein Verhältnis wäre also sinnlos` — comma-joined main clauses without a conjunction. Legal in German (unlike English), just loose. No change needed.
+
+---
+
+## 8. ß / ss, umlauts, mojibake — **clean**
+
+Full non-ASCII inventory of the file is 15 distinct codepoints, all intentional: `ä ü ö ß Ü – — € · “ ” „ × − →`. **No mojibake, no wrong codepoints, no stray U+00A0 or soft hyphens.**
+
+All six `ß` correct (long vowel / diphthong): `größer`, `Größe`, `Größenordnung`, `größte`, `fließt`, `heißt`.
+All `ss` correct (short vowel): `verlässt`, `Lässt`, `müssen`, `Flüsse`, `Überschuss`, `Engpasserlös(e)`, `dass`, `Interessante`, `passiert`, `Gemessen`, `Preisspanne`, `umfassen`, `Grenzkuppelflüsse`.
+Note `Engpass` + `Erlöse` → `Engpasserlöse` is the correct join (L248, L436), and it is consistent across both occurrences.
+
+---
+
+## 9. Consistency of address — **clean**
+
+Polite `Sie` capitalised in all eight occurrences: L211 `Treffen Sie sie selbst` (with the object pronoun correctly lowercase), L320 `Sie können`, L420 `Beachten Sie:`, L423 `Stellen Sie`, L425 `Sie mitzählen`, L426 `Sie haben ausgewählt`. L441 `Sie müssen sie zuerst dafür einsetzen` is the 3rd-person plural referring to the TSOs, capitalised only because it is sentence-initial — correct, though the collision with the polite form is momentarily ambiguous. No lowercase `sie` where the polite form is meant.
+
+---
+
+## 10. `+`-join spacing — **clean**
+
+I evaluated the whole `TXT` object and printed every rendered string. **All 14 multi-line German templates join correctly** — no missing space, no doubled space, at any `+` boundary (L417/418, 420-422, 423-426, 427-434, 438-443, 446-454, 457-459, 462-464, 466-469, 472/473). Same for the English side. Nothing to fix here.
+
+---
+
+## 11. EN/DE pairs whose punctuation *structure* diverges
+
+Ordered roughly by how likely a clause went missing:
+
+1. **L400-402 vs L466-469 (`windCap`)** — the clearest translation drift. EN: `One block either side, with the price back above zero, it is **within half a per cent**.` DE: `…sind es **weniger als ein halbes Prozent**.` "Within half a per cent" (a bound) and "weniger als ein halbes Prozent" (a claim of magnitude) are not the same statement. Also EN's fronted `Across ${h} hours' worth of blocks…,` becomes a dash-parenthetical in DE (`– zusammen ${h} Stunden –`), which is fine, but DE adds a comma-enclosed insert EN doesn't have.
+2. **L302-305 vs L306** — EN closes with a relative clause: `The shortfall is fifteen minutes wide, which weather cannot do:`. DE converts it to a coordinated main clause and inserts an intensifier that is not in the English: `Der Ausfall ist **genau** eine Viertelstunde breit, und das kann Wetter nicht:`. Different clause type, added word.
+3. **L375-379 vs L438-443 (`ledgerNote`)** — EN is one sentence with a trailing relative clause (`…paid to the transmission operators on both sides, **who must** put it back into…`). DE breaks the sentence and restarts as a main clause (`…beider Seiten. **Sie müssen** sie zuerst dafür einsetzen, …`). Sentence boundary added; content preserved.
+4. **L360-361 vs L420-422 (`netExporter`)** — EN is one clause chain joined by `, so`. DE splits off an imperative frame with a colon (`Beachten Sie: …`) and replaces `, so` with ` – `. Plus the missing comma from §7.1.
+5. **L207 vs L208** — EN has zero internal commas (`Power arriving in Germany is worth several times what power leaving it is worth.`); DE needs four and ends with an extraposed relative clause (`…was Strom wert ist, der Deutschland verlässt.`). Punctuation is correct, but the extraposition is what forces the extra pair, and it reads heavier than the English.
+6. **L263-265 vs L266** — EN's dash-insert contains two full subordinate clauses (`exporting when power was scarce and importing when it was abundant`); DE compresses both to bare prepositional phrases joined by a comma (`exportieren bei Knappheit, importieren bei Überschuss`). Two `when`-clauses dropped — deliberate compression, but it is a structural loss.
+7. **L317-319 vs L320** — EN `…the data view draws, so you can check any of it…` (comma + `so`); DE `…zeichnet – Sie können alles…` (dash + main clause).
+8. **L358 vs L417 (`noRatio`)** — EN `…here, so a ratio would be meaningless` (conjunction); DE `…null, ein Verhältnis wäre also sinnlos` (asyndetic comma splice, legal in German).
+9. **L275 vs L276** — EN has the comma after the fronted phrase; DE omits it (§7 house-style call).
+10. **L249 vs L251** — quote marks inside vs outside the `&lt;b&gt;` (§1).
+11. **L368 vs L431** and **L396 vs L461** — `%` spacing and dash choice; the first pair is a correct deliberate divergence, the second is defect 2.1.
+
+---
+
+## Outside my remit but visible while reading
+
+Three grammar/agreement items I would not leave standing, though they are not orthography:
+
+- **L438** `Die beiden mittleren Zahlen sind **dieselbe** wie die erste` — number disagreement. Needs `sind dieselbe Zahl wie die erste` or `sind dieselben wie die erste`.
+- **L424** `Am Strom hat sich nichts geändert – **nur daran**, welche Megawattstunden Sie mitzählen.` — the ellipsis strands `daran` with no antecedent it can attach to (`an` ≠ `am Strom` in the required sense). Something like `Geändert hat sich nichts am Strom – nur, welche Megawattstunden Sie mitzählen.`
+- **L6-8** `&lt;title&gt;` and `&lt;meta name="description"&gt;` are English-only. `document.title` is swapped at L841, but the meta description never is, so a German reader's share preview and search snippet stay English.</result>
+<usage><subagent_tokens>105048</subagent_tokens><tool_uses>12</tool_uses><duration_ms>571247</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a26095fb107fc457c</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-soph-Work-own-energy-import-export/e31e5543-7a34-499c-9074-5fefc0bbe0fc/tasks/a26095fb107fc457c.output</output-file>
+<status>completed</status>
+<summary>Agent "Check German energy terminology" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I have enough verified material. Here is the report.
+
+## Verdict table
+
+| # | Term on page | Verdict | What the sector writes | Verified where |
+|---|---|---|---|---|
+| 1 | **Day-Ahead-Markt / -Preise** | **CORRECT** — keep the anglicism | SMARD: *"Die Großhandelspreise entsprechen den sogenannten stündlichen **Day-Ahead-Preisen**."* EU law: *"**Day-Ahead-Markt**"*, *"einheitliche Day-Ahead-Marktkopplung"* | SMARD Benutzerhandbuch p.52; [Reg. (EU) 2015/1222 DE](https://eur-lex.europa.eu/legal-content/DE/TXT/HTML/?uri=CELEX:32015R1222) Art. 2 |
+| | | | „Vortagesmarkt" is not used. „Spotmarkt" = umbrella for Day-Ahead **+** Intraday (wrong scope here). „Börsenstrompreis" is consumer-tariff framing. „Großhandelspreise" is SMARD's own headline label — a valid alternative. Hyphenation/capitalisation on the page is exactly right. | |
+| 2 | **Day-Ahead-Prognose** | **CORRECT** (better than SMARD's own) | SMARD writes *"Day-Ahead Prognosen"* — a missing hyphen. Your fully hyphenated form is what [Duden's Bindestrich rule](https://www.duden.de/sprachwissen/rechtschreibregeln/bindestrich) requires. | SMARD manual §on ÜNB forecasts |
+| 3 | **Engpasserlöse** | **CORRECT — this is the official term** | BNetzA publishes an *"**Engpasserlösbericht**"*; the report says *"III. Verwendung der **Engpasserlöse**"*, *"die Summe der Engpasserlöse des Jahres 2023 i.H.v. 1.558,22 Mio. €"* (18 occurrences). „Auktionserlöse" appears **zero** times. | [BNetzA Engpasserlösbericht 2023](https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Energie/Unternehmen_Institutionen/Versorgungssicherheit/ErloeseEngpassmanagement/Engpasserloesbericht2023.pdf) |
+| | | Plural is the citation form. Your singular *"als Engpasserlös"* (line 248) is grammatical but rarer — plural reads more native. | | |
+| 4 | **Übertragungsnetzbetreiber** | **CORRECT**; no ÜNB problem | The page never abbreviates, so nothing needs introducing. Context is right in both prose spots (rent does go to the two border TSOs). *Exception: line 436, see flag M6.* | BNetzA passim |
+| 5 | **Netzentgelte** | **CORRECT** | SMARD's own words: *"Diese Differenz wird über die **Netzentgelte** umgelegt."* | SMARD manual §4.2 |
+| 6 | **Nettoexporteur** | **CORRECT** | Trade press: *"Deutschland erstmals seit 2023 wieder Strom-**Nettoexporteur**"*; BNetzA quarterly wording *"Netto-Exportüberschuss"*. | [zfk](https://www.zfk.de/energie/strom/deutschland-strom-nettoexporteur-q1-2026), [WiWo](https://www.wiwo.de/unternehmen/energie/stromhandel-deutschland-erstmals-seit-2023-wieder-strom-nettoexporteur/100225845.html) |
+| 7 | **Nettoposition** | **CORRECT — best term on the page** | It is the *legal definition*: *"„Nettoposition" [bezeichnet] den Saldo der Stromexporte und -importe einer Gebotszone pro **Marktzeiteinheit**"*. Exactly right for a GWh row. | Reg. (EU) 2015/1222 Art. 2 |
+| 8 | **mengengewichtet** | **CORRECT** (lightly verified) | *"Der Durchschnittspreis wird **mengengewichtet**"* is the standard German phrasing; „volumengewichtet" also occurs but is the calque. Only found on commercial tariff sites, not a BNetzA/EPEX primary. | [balkonkraftwerk-kompendium](https://www.balkonkraftwerk-kompendium.de/dynamische-stromtarife/epex-spot-day-ahead-preise) |
+| 9 | **Viertelstunde** | **CORRECT** | SMARD uses *"Viertelstunde"* 48× (*"in der Einheit [MWh] je Viertelstunde"*). For the MTU the official word is **"Marktzeiteinheit"** (SMARD + Reg. 2015/1222); the *products* are **"Viertelstundenprodukte"** / **"15-Minuten-Produkte"**. | SMARD manual §3.2, §3.3 |
+| 10 | **Kuppelleitungen** | **CORRECT** | ÜNB usage: *"zahlreiche **Kuppelleitungen**, sogenannte Interkonnektoren"*. BNetzA's legal texts prefer *"Verbindungsleitungen"*. | [Amprion](https://www.amprion.net/Ueber-uns/Amprion-in-Europa/), [50Hertz](https://www.50hertz.com/de/Netz/Netzentwicklung/InterkonnektorenundPhasenschieber) |
+| 11 | **das 3,7-Fache** | **CORRECT** | Duden: with hyphen, `-Fache` **is** capitalised (*"des 5-Fachen"*); lowercase only without hyphen (*"das 7fache"*). Your suspended form *"zwischen dem 2,4- und dem 3,7-Fachen"* is also correct. | [Duden, Verbindungen mit „-fach"](https://www.duden.de/sprachwissen/sprachratgeber/Gross-oder-Kleinschreibung-bei-Verbindungen-mit-fach) |
+| 12 | **2,07 Mrd. €** | **CORRECT** | BNetzA writes *"1.558,22 Mio. €"* — number, space, abbreviation, space, symbol. Your `bn: " Mrd."` + `" €"` produces exactly this. „Mrd. Euro" is equally fine in running prose. | BNetzA Engpasserlösbericht 2023 |
+| 13 | **ct** (per kWh) | **CORRECT**, lowercase | BNetzA Monitoringbericht: *"40,05 **ct/kWh**"*. Lowercase `ct` is the convention. | [BNetzA Preisbestandteile und Tarife](https://www.bundesnetzagentur.de/DE/Vportal/Energie/PreiseAbschlaege/Tarife-table.html) |
+| 14 | **Markträumung** | **Real word, wrong register here** | Gabler/economics: *"Markträumung"*, *"geräumter Markt"* — legitimate but *academic* vocabulary. It appears **nowhere** in SMARD's manual (0 hits) or in Reg. 2015/1222. The energy-market word is **"Markträumungspreis"** (= Market Clearing Price). | [Gabler Gleichgewicht](https://wirtschaftslexikon.gabler.de/definition/gleichgewicht-33038), [next-kraftwerke Merit Order](https://www.next-kraftwerke.de/wissen/merit-order) |
+
+## Errors, prioritised
+
+**1. `Räumungspreis` — WRONG, worst item on the page.** Line 458: *"Rot ist ein positiver Räumungspreis"*. „Räumungspreis" is the discounted price in a **Räumungsverkauf** — a shop's closing-down sale. A German energy reader hits a retail false friend. → **`Markträumungspreis`** (verified real, = MCP). [Duden Räumungsverkauf](https://www.duden.de/rechtschreibung/Raeumungsverkauf)
+
+**2. `€/MWh geräumt` — WRONG as an axis label.** Line 455. Bare `geräumt` reads "cleared out / vacated". → **`Day-Ahead-Preis (€/MWh)`** or **`Markträumungspreis (€/MWh)`**.
+
+**3. `Grenzkuppelflüsse` — coinage, and it points at the wrong dataset.** Line 329. Targeted search found **no attested usage**; the real words are `Grenzkuppelstellen` (points), `Grenzkuppelleitungen` (lines), and for the flows themselves Amprion's own heading **"Grenzüberschreitende Lastflüsse"**. Worse: `build_data.py` defaults to `--flows scheduled`, i.e. SMARD's category **"Kommerzieller Außenhandel"** — but `Grenzkuppel-` implies flows over the wires, which is SMARD's *separate* category **"Physikalischer Stromfluss"**. → **`kommerzieller Außenhandel`** (SMARD's exact name, and matches your default) or neutral **`grenzüberschreitende Stromflüsse`**.
+
+**4. `Erzeugung ohne Brennstoffkosten` — factually wrong for this bucket, and there IS a better term.** Lines 455/459/456. `renewable_buckets = ['solar','wind','hydro_bio']`, and `hydro_bio = [1001226, 1004066, 1001228]` = Wasserkraft + **Biomasse** + Sonstige Erneuerbare. **Biomasse has fuel costs.** And your brief's premise is wrong: SMARD files **Pumpspeicher under *konventionelle* Erzeugung** (*"Energieträger: Kernenergie, Braunkohle, Steinkohle, Erdgas, **Pumpspeicher**, Sonstige Konventionelle"*), while its *"Erneuerbare Energieträger: Biomasse, Wasserkraft, Wind Offshore, Wind Onshore, Photovoltaik, Sonstige Erneuerbare"* is **exactly your bucket**. → **`Anteil der erneuerbaren Erzeugung`** — both accurate and idiomatic. (This also invalidates the English twin and the `STACK` comment "three zero-marginal-cost renewables".)
+
+**5. `Regelenergiegeschäfte` — conflates three distinct things.** Line 329. Verified distinctions: **Regelleistung** = capacity held; **Regelenergie** = energy activated (SMARD has categories *"Importierte/Exportierte Regelenergie"*); **Ausgleichsenergie** = the balancing-group imbalance, *settled at the reBAP / Ausgleichsenergiepreis (AEP)* — a separate SMARD category. Your English "balancing trades settle at other prices" is mostly the **Ausgleichsenergie** point. Also `-geschäfte` is not an attested collocation, and the current ÜNB/BNetzA umbrella is **Regelreserve** (SMARD: *"Kosten für Regelreserve"*). → **`Intraday-Handel, Regelreserve und Ausgleichsenergie werden zu anderen Preisen abgerechnet`**. [BNetzA Regelenergie](https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/Versorgungssicherheit/Netzengpassmanagement/Engpassmanagement/Regelenergie/start.html), [energie-lexikon Ausgleichsenergie](https://www.energie-lexikon.info/ausgleichsenergie.html)
+
+**6. `räumen` with a region/market as object — calque.** Line 248 *"Eine einzige Auktion räumt das gesamte gekoppelte Gebiet"*; line 329 *"räumt der Markt in Viertelstunden"*; line 440 *"räumen beide Seiten zu unterschiedlichen Preisen"*. `räumen` first means *evacuate/clear out*, so "eine Auktion räumt ein Gebiet" briefly reads as evacuation. → *"In einer einzigen Auktion werden Angebot und Nachfrage im gesamten gekoppelten Gebiet gleichzeitig zusammengeführt"*; footer → *"Seit Oktober 2025 wird der Day-Ahead-Markt in Viertelstundenprodukten gehandelt"*.
+
+**7. Chart labels that don't read as German axis labels.**
+- Line 460 `"Preisdifferenz, herein minus hinaus (€/MWh)"` → **`Preisdifferenz: Import minus Export (€/MWh)`**. `herein/hinaus` are colloquial motion adverbs; no German chart labels an axis that way.
+- Line 465 `"Minuten von einem Intervall unter 0 €"` → ambiguous. **`Abstand zur Viertelstunde mit Preis unter 0 € (Minuten)`**.
+- Line 421 `"(X GWh mehr hinaus als herein)"` → **`(Exportüberschuss von X GWh)`** — matches BNetzA's *"Netto-Exportüberschuss"*.
+- Line 461 uses an em dash `—`; the rest of your German correctly uses `–`. Inconsistent.
+
+**8. `Viertelstunden-Auflösung` (line 266) — permissible, not the usual form.** Sector writes `viertelstündliche Auflösung`, `Viertelstundenauflösung`, or SMARD's `viertelstundenscharf`. Cosmetic. *(Partially verified — I confirmed SMARD's `viertelstündlich`/`viertelstundenscharf`, but saw no primary source printing either hyphenation variant.)*
+
+## Meaning changes vs. the English twin (your priority)
+
+| Line | German says | English says | The drift |
+|---|---|---|---|
+| 458 | „positiver **Räumungspreis**" | "positive clearing price" | Becomes a **clearance-sale** price. |
+| 329 | „**Grenzkuppelflüsse**" | "cross-border flows" | German narrows to *physical* interconnector flows; the data is *scheduled commercial exchange*. |
+| 455/459 | „ohne **Brennstoffkosten**" | "with no fuel cost" | Both false — the bucket contains Biomasse. German has an exact right answer (`erneuerbare Erzeugung`) that English lacks. |
+| 248 | „genau das bedeutet **Markträumung**" | "that is what a **clearing price** means" | Moves the uniformity property from the *price* to the *process*. → *„genau das bedeutet ein einheitlicher Markträumungspreis"*. |
+| 329 | „**Regelenergie**geschäfte" | "balancing trades" | Names ÜNB-activated energy where the "settles at other prices" logic is **Ausgleichsenergie**. |
+| 436 | „Engpasserlöse der **Netzbetreiber**" | "congestion rent to the grid operators" | `Netzbetreiber` includes Verteilnetzbetreiber; congestion rent legally accrues to **ÜNB only**. Your `ledgerNote` (line 441) correctly says *Übertragungsnetzbetreiber* — only the tile label is loose. → **`der Übertragungsnetzbetreiber`**. |
+| 279 / 435 | „Der **Saldo** ist … negativ" | "The balance is … negative" | Correct as bookkeeping German, but in the German *energy* register `Saldo` defaults to **GWh**: SMARD writes *"Nettoexport (**Import-Export-Saldo**)"*, and Reg. 2015/1222 defines Nettoposition as *"den **Saldo** der Stromexporte und -importe"*. Since line 461 already uses `Nettoposition` for the GWh row, a German reader can read line 279 as volume. The ledger tile is safe (shows `Mrd. €`); the **prose sentence carries no unit**. → name the unit, or `die Handelsbilanz in Euro`. |
+
+Minor, no action needed: „Strom ist nicht unterscheidbar" for *fungible* drops the econ term (`fungibel` / `homogenes Gut`) but is arguably better for a lay reader.
+
+## Could not verify
+
+- **`Grenzkuppelflüsse`** — no attested usage found in a US-indexed search. Strong negative signal, not absolute proof. Treat as a coinage.
+- **`Regelenergiegeschäfte`** as a collocation — no attested hits; component terms verified individually.
+- **`Viertelstunden-Auflösung`** hyphenation — no primary source seen printing either variant.
+- **`mengengewichtet`** — verified only from commercial tariff sites, not BNetzA/EPEX primary.
+- **Preferred German for a *monetary* trade balance** (`Handelssaldo` / `Außenhandelssaldo` / `Zahlungssaldo`) — my recommendation is judgment, not citation. SMARD's attested term `Import-Export-Saldo` covers volumes only.
+
+Nothing was edited, committed, or opened in a browser. The file remains at `/Users/soph/Work/own/energy_import_export/index.html`; corroborating bucket definitions are in `/Users/soph/Work/own/energy_import_export/build_data.py` (`STACK`, `RENEWABLE`, and the `--flows` default at line 695).</result>
+<usage><subagent_tokens>123720</subagent_tokens><tool_uses>41</tool_uses><duration_ms>746604</duration_ms></usage>
+</task-notification>
