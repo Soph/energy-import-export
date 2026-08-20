@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.10.3-nightly.202608200613.91a7fd7fc",
+  "checkpoint_id": "01M0FPRV2B6S485R46VHRJA4NS",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "README.md",
+    "build_data.py",
+    "data/2026-01.json",
+    "data/2026-02.json",
+    "data/2026-03.json",
+    "data/2026-04.json",
+    "data/2026-05.json",
+    "data/2026-06.json",
+    "data/2026-07.json",
+    "data/2026-08.json",
+    "data/example_day.json",
+    "data/index.json",
+    "data/seasons.json",
+    "data/system_costs.json",
+    "data/wind_adjacency.json",
+    "de_trade_balance.py",
+    "index.html"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 102,
+    "cache_creation_tokens": 77007,
+    "cache_read_tokens": 18265162,
+    "output_tokens": 61096,
+    "api_call_count": 51
+  }
+}

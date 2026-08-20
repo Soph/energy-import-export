@@ -1,0 +1,48 @@
+Now can you take a look at: Review done — I read the whole pipeline (`de_trade_balance.py` docstrings, `build_data.py`, `index.html`, the workflow) and ran the dashboard in a headless browser at desktop and mobile widths. Here's the full picture.
+
+## What this is, and the verdict
+
+A dependency-free static dashboard over a Python pipeline that values Germany's cross-border day-ahead flows per border and MTU, built on SMARD because it's the only source that is both CC-BY-licensed and gross-per-direction. The craft level is unusually high: the licensing analysis drives the architecture, the wind panel is built around an identification test rather than a headline number, sign-clipping bias in the old curtailment metric was found and documented, writes are atomic, the page is one file with hand-rolled SVG and a real dark mode. The main gaps are (a) one known data trap that the next cron run will actually spring, (b) a handful of small front-end bugs, and (c) a story that has outgrown its title — the strongest finding in the repo (the seasons disagree) isn't on the page at all.
+
+## Technical findings
+
+**1. The daily cron will quietly ruin the example-day panel.** `write_adjacency` guards against a narrow run overwriting a wide record, and its docstring names "the same trap `example_day` still has" — but it's still unfixed. The current `example_day.json` says "widest intraday price spread **on record**: 672 EUR/MWh" (2026-05-01), which the current code can no longer produce: it writes "widest … **in the refreshed range**", and the cron's range is the last 3 days. The first scheduled run replaces the most dramatic day of the year with whatever Tuesday was. Fix is the same guard: keep the file unless the new spread beats the recorded one (or recompute the spread from the month files already on disk, which needs no extra fetch).
+
+**2. Sticky tooltip** (verified in the browser): hover any chart, scroll — the `position: fixed` tooltip stays at full opacity floating over unrelated panels until the pointer happens to leave a hit rect. On touch it's worse: a tap fires `pointerenter` and nothing ever dismisses it. One `scroll` listener calling `hideTip()` (and maybe a `pointerdown` outside) fixes both.
+
+**3. Leftover dead code in `render()`** — `index.html:1557` computes `ownPx` and never uses it; `index.html:1569-1577` sets `volHint` via a ternary whose else-branch is immediately repeated in `if (!hasT)`, next to a `const _unused = netted;`. Clearly debris from the label-fix commit; worth sweeping before it confuses a future edit.
+
+**4. Resolution: the analysis is hourly in a 15-minute market.** `align()` resamples everything to the `--freq` grid (default 60min) by mean, and the comment acknowledges day-ahead moved to 15-minute MTUs. For the balance and rent this is a small real error, not just smoothing — net position and price both vary within the hour, and the product of means isn't the mean of products. For the wind panel it's material: "hours priced below zero" misses quarter-hours below zero inside a positive-mean hour, and the panel's own § 51 EEG text explains that post-Feb-2025 plants respond to the *first negative quarter-hour* — a mechanism the hourly analysis literally cannot see. Running `build_data.py` at `--freq 15min` costs nothing on the published side (aggregation to daily happens in the pipeline) and would make the negative-hour counting match the market it describes.
+
+**5. Small ones:** a failed month fetch inside a range-button click is an unhandled rejection — the button silently does nothing (worth an error surface). The month files ship six daily wind fields (`wind_fc_neg_gwh` etc.) the page never reads — fine if intentional as an audit trail, dead payload otherwise. The hero's `paid/earned` ratio would print nonsense if `earned` ever goes negative (possible in a deeply negative-price window).
+
+## Presentation
+
+What works: leading with the €127/MWh gap instead of the balance was the right reframe; the "three facts" card defuses the bad-faith reading before it starts; the red/blue money language is consistent everywhere including tooltips; transit as the neutral pole is a genuinely good encoding decision; the wind chart showing the *adjacency test* rather than a volume is the best panel on the page — the shape is the argument, as the caption says. Labels state their basis, the extreme bar is the only one labeled, and the table view backs everything.
+
+What's weaker:
+
+- **The headline claim is under-evidenced on screen.** The subtitle says the price "swings several-fold within a day," but the only intraday evidence is one fixed example day. Everything else is daily aggregates. An average day-profile for the selected window (price by hour-of-day, with the importing/exporting hours shaded red/blue) would directly connect the hero to the charts and prove the claim for *this* window, not one hand-of-god day.
+- **"By border" is the orphan panel.** It's the only card with no takeaway sentence, the zone codes (DK1/NO2/SE4) are unexplained for anyone who isn't already in the field, and balance-only bars hide the difference between a quiet border and one with huge two-way churn that nets out. Even a hint line ("France is the biggest one-way supplier; the Netherlands mostly a corridor") would lift it to the standard of the rest.
+- **The wind card is the text-heaviest thing on the page** — three dense paragraphs, one of which is a § 51 EEG commissioning-date taxonomy. The congestion card already shows the right pattern: headline + `<details>` for the law. Fold the who-stopped paragraph the same way.
+- **The levels panel invites a question it doesn't answer**: the dynamic household tariff (€385) sits *above* the fixed new contract (€365), on a page arguing that timing is where the value is. There's presumably a good reason (fixed two-thirds plus an expensive spot month), but the reader who's followed your argument will trip exactly there — one clause in the hint would catch them.
+- Cosmetic: the balance axis prints "0.0M"; "Days arrivals worth more: 25 of 30" takes two reads to parse.
+
+## The story
+
+The honest observation first: **the page has outgrown its title.** "Germany's cross-border power balance" describes the original script. The dashboard's actual subject — visible in what the hero says, what the wind and example-day and who-pays panels do — is *what an hour of electricity is worth in Germany, and who feels it*. Trade is the evidence, not the subject. I'd either retitle in that direction ("The value of an hour of German power") or accept the drift consciously.
+
+The arc I'd propose, mostly by reordering what exists:
+
+1. **One market, two prices.** Hero (€127 apart, 4.1×), then immediately the example day — the mechanism explainer currently arrives sixth, after three panels that presuppose it. Show *how* a price happens before showing prices happening.
+2. **Trade follows the clock.** Price-when-importing/exporting, daily balance, volumes with the transit share ("Germany as a corridor"), by border. This is the original story, intact.
+3. **Supply answers the price.** Residual load, then wind-goes-missing-below-zero. Right now the wind panel interrupts the trade arc; as act three it becomes the payoff — the market doesn't just move power across borders, it switches generators off.
+4. **Who ends up paying.** Congestion ledger into who-actually-pays-what — both already end at the same place, the grid fee on a bill.
+
+And the **missing chapter is sitting in your backfill commit**: January and July are different systems. The price gap is largely a summer effect (€72 vs €120), Germany flips from net exporter to net importer, solar's cannibalisation *vanishes* in winter (+1.2 premium vs −50.5 discount), and congestion rent nearly doubles in January. That's the strongest finding the project has produced and it's currently invisible unless someone presses "All" and squints. A monthly-strip panel — gap, net position, solar market value by month — would carry it, and it also inoculates the page against its own 30-day default window telling a materially different story depending on when it's read (which the wind panel already had to defend against once).
+
+One housekeeping note: the gstack skill wanted to run first-time onboarding prompts (telemetry opt-in, proactive-mode choice, an available upgrade 0.11 → 1.68) — I skipped those since you weren't around to answer; they'll come up next time you use it interactively.
+
+---
+
+yes do all 5
