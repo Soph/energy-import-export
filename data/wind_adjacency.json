@@ -1,0 +1,110 @@
+{
+ "control_other_hours": {
+  "hours": 5075,
+  "deficit_gwh": -550.3,
+  "share_of_forecast_pct": -0.73
+ },
+ "note": "Wind deficit against day-ahead forecast, as a share of that forecast, by distance in hours from an hour whose day-ahead price was below zero. Lag 0 is the negative hour itself; other lags exclude hours that were themselves below zero, so they are a clean control. A shortfall one hour wide cannot be forecast error. by_month covers the negative-price hours only, over the same record.",
+ "by_month": [
+  {
+   "month": "2026-01",
+   "hours": 2,
+   "deficit_gwh": 2.4,
+   "forecast_gwh": 97.9,
+   "share_of_forecast_pct": 2.47
+  },
+  {
+   "month": "2026-02",
+   "hours": 7,
+   "deficit_gwh": 30.9,
+   "forecast_gwh": 177.7,
+   "share_of_forecast_pct": 17.36
+  },
+  {
+   "month": "2026-03",
+   "hours": 33,
+   "deficit_gwh": 67.2,
+   "forecast_gwh": 830.3,
+   "share_of_forecast_pct": 8.1
+  },
+  {
+   "month": "2026-04",
+   "hours": 123,
+   "deficit_gwh": 433.0,
+   "forecast_gwh": 1982.2,
+   "share_of_forecast_pct": 21.84
+  },
+  {
+   "month": "2026-05",
+   "hours": 77,
+   "deficit_gwh": 12.0,
+   "forecast_gwh": 466.0,
+   "share_of_forecast_pct": 2.57
+  },
+  {
+   "month": "2026-06",
+   "hours": 49,
+   "deficit_gwh": -26.1,
+   "forecast_gwh": 874.5,
+   "share_of_forecast_pct": -2.98
+  },
+  {
+   "month": "2026-07",
+   "hours": 79,
+   "deficit_gwh": 43.0,
+   "forecast_gwh": 1316.5,
+   "share_of_forecast_pct": 3.27
+  },
+  {
+   "month": "2026-08",
+   "hours": 26,
+   "deficit_gwh": 0.4,
+   "forecast_gwh": 204.1,
+   "share_of_forecast_pct": 0.2
+  }
+ ],
+ "negative_price_hours": 396,
+ "hours_total": 5471,
+ "covers": [
+  "2026-01-01",
+  "2026-08-16"
+ ],
+ "profile": {
+  "-3": {
+   "hours": 216,
+   "share_of_forecast_pct": -0.3,
+   "deficit_gwh": -9.5
+  },
+  "-2": {
+   "hours": 150,
+   "share_of_forecast_pct": 0.53,
+   "deficit_gwh": 11.5
+  },
+  "-1": {
+   "hours": 76,
+   "share_of_forecast_pct": 0.53,
+   "deficit_gwh": 5.7
+  },
+  "0": {
+   "hours": 396,
+   "share_of_forecast_pct": 9.46,
+   "deficit_gwh": 562.8
+  },
+  "1": {
+   "hours": 76,
+   "share_of_forecast_pct": 0.46,
+   "deficit_gwh": 6.0
+  },
+  "2": {
+   "hours": 150,
+   "share_of_forecast_pct": -0.46,
+   "deficit_gwh": -12.0
+  },
+  "3": {
+   "hours": 216,
+   "share_of_forecast_pct": -0.86,
+   "deficit_gwh": -32.3
+  }
+ },
+ "generated_at": "2026-08-20T13:56:36+02:00"
+}

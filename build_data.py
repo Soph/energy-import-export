@@ -266,26 +266,29 @@ def example_day(backend, outdir: str, start, end) -> None:
     print(f"  example_day: {pick} ({spread[pick]:.0f} EUR/MWh spread), {len(hours)} hours")
 
 
-def wind_shortfall(backend, start, end, price: pd.Series) -> pd.DataFrame | None:
-    """Per day: wind that did not run while prices were negative.
+def wind_shortfall(backend, start, end, price: pd.Series
+                   ) -> tuple[pd.DataFrame, dict] | tuple[None, None]:
+    """Per day: how far wind ran below its own day-ahead forecast, split by price sign.
 
-    Restricted to negative-price hours on purpose. Summing max(0, forecast - actual)
-    across every hour looks like a curtailment measure and is not one: forecast error
-    is roughly symmetric, so clipping the negative side accumulates ordinary noise
-    into a large positive number. Measured over Jan-Aug it produced its worst "missing"
-    day on a date with no negative-price hour at all, which is the tell.
+    Signed, never clipped. An earlier version summed max(0, forecast - actual) over
+    negative-price hours, which is not a measure of anything: forecast error is roughly
+    symmetric, so discarding the negative side accumulates ordinary noise into a large
+    positive number. Over Jan-Aug it reported 781 GWh where the signed deficit was
+    563 GWh -- a 39% inflation -- and on nine days it showed a positive "missing" bar
+    for days when wind ran *above* forecast in exactly the hours being counted. Under a
+    sign-flip null the clipped statistic returns ~500 GWh from pure noise, so most of
+    what it reported was its own one-sidedness.
 
-    What survives that test is the price-conditioned signal: actual wind runs about
-    9.5% under forecast when the price is below zero and matches forecast in every
-    band above it. Below zero the support premium is withdrawn, so generating costs
-    the operator money and the blades get feathered. This isolates that, and carries
-    the all-hours signed gap alongside so the near-zero baseline stays visible.
+    Both hour sets are carried so the page can state a like-for-like control: the same
+    signed measure, as a share of forecast, in negative-price hours against every other
+    hour. Comparing a clipped subset sum against a signed all-hours sum -- which the
+    page used to do -- is what let a 32 GWh claim be "supported" by a -142 GWh control.
 
-    It does not capture grid-ordered curtailment, which happens at any price and is
-    invisible to a price-conditioned test.
+    Returns the daily frame and the adjacency profile (see `adjacency`), which is the
+    evidence that actually identifies the effect.
     """
     if not (hasattr(backend, "wind_forecast") and hasattr(backend, "generation")):
-        return None
+        return None, None
     fc, act = [], []
     for ws, we in dtb.windows(start, end, "month"):
         try:
@@ -295,69 +298,126 @@ def wind_shortfall(backend, start, end, price: pd.Series) -> pd.DataFrame | None
         except Exception as exc:
             print(f"  ! wind shortfall {ws.date()}: {type(exc).__name__}: {exc}", file=sys.stderr)
     if not fc or not act:
-        return None
+        return None, None
     j = pd.DataFrame({"fc": pd.concat(fc).sort_index(),
                       "act": pd.concat(act).sort_index()}).join(price.rename("px"), how="inner")
     j = j[(j.index >= start) & (j.index < end)].dropna(subset=["fc", "act"])
     if j.empty:
-        return None
+        return None, None
+
+    j["deficit"] = j.fc - j.act                 # signed: positive means wind ran short
     below = j.px < 0
-    j["cut"] = ((j.fc - j.act).clip(lower=0)).where(below, 0.0)
     key = dtb.period_of(j.index, "day")
-    return pd.DataFrame({
+    daily = pd.DataFrame({
         "wind_forecast_gwh": j.fc.groupby(key).sum() / 1000,
         "wind_actual_gwh": j.act.groupby(key).sum() / 1000,
-        "wind_gap_gwh": (j.fc - j.act).groupby(key).sum() / 1000,     # signed, all hours
-        "wind_cut_gwh": j.cut.groupby(key).sum() / 1000,              # negative-price hours only
+        # the two disjoint hour sets, each with its own forecast base so any window can
+        # be expressed as a share rather than a bare volume
+        "wind_fc_neg_gwh": j.fc.where(below, 0.0).groupby(key).sum() / 1000,
+        "wind_def_neg_gwh": j.deficit.where(below, 0.0).groupby(key).sum() / 1000,
+        "wind_fc_pos_gwh": j.fc.where(~below, 0.0).groupby(key).sum() / 1000,
+        "wind_def_pos_gwh": j.deficit.where(~below, 0.0).groupby(key).sum() / 1000,
         "negative_price_hours": below.groupby(key).sum(),
     })
+    return daily, adjacency(j, below)
 
 
-def wind_shortfall(backend, start, end, price: pd.Series) -> pd.DataFrame | None:
-    """Per day: wind that did not run while prices were negative.
+def adjacency(j: pd.DataFrame, below: pd.Series, lags=(-3, -2, -1, 0, 1, 2, 3)) -> dict:
+    """The deficit as a share of forecast, by distance in hours from a negative price.
 
-    Restricted to negative-price hours on purpose. Summing max(0, forecast - actual)
-    across every hour looks like a curtailment measure and is not one: forecast error
-    is roughly symmetric, so clipping the negative side accumulates ordinary noise
-    into a large positive number. Measured over Jan-Aug it produced its worst "missing"
-    day on a date with no negative-price hour at all, which is the tell.
+    This is the test that identifies the effect, and it is the one the page was missing.
+    A badly-forecast windy episode is smooth in time: it cannot produce a shortfall one
+    hour wide. A price-triggered shutdown can, and does -- the deficit is around 9% of
+    forecast in the negative hour and collapses to under 1% an hour either side.
 
-    What survives that test is the price-conditioned signal: actual wind runs about
-    9.5% under forecast when the price is below zero and matches forecast in every
-    band above it. Below zero the support premium is withdrawn, so generating costs
-    the operator money and the blades get feathered. This isolates that, and carries
-    the all-hours signed gap alongside so the near-zero baseline stays visible.
-
-    It does not capture grid-ordered curtailment, which happens at any price and is
-    invisible to a price-conditioned test.
+    Neighbouring hours that are themselves below zero are excluded from the lags, so the
+    control is uncontaminated rather than quietly counting the same hours again.
     """
-    if not (hasattr(backend, "wind_forecast") and hasattr(backend, "generation")):
-        return None
-    fc, act = [], []
-    for ws, we in dtb.windows(start, end, "month"):
-        try:
-            fc.append(backend.wind_forecast(ws, we))
-            g = backend.generation(ws, we)
-            act.append(g[[c for c in ("wind_onshore", "wind_offshore") if c in g]].sum(axis=1))
-        except Exception as exc:
-            print(f"  ! wind shortfall {ws.date()}: {type(exc).__name__}: {exc}", file=sys.stderr)
-    if not fc or not act:
-        return None
-    j = pd.DataFrame({"fc": pd.concat(fc).sort_index(),
-                      "act": pd.concat(act).sort_index()}).join(price.rename("px"), how="inner")
-    j = j[(j.index >= start) & (j.index < end)].dropna(subset=["fc", "act"])
-    if j.empty:
-        return None
-    below = j.px < 0
-    j["cut"] = ((j.fc - j.act).clip(lower=0)).where(below, 0.0)
-    key = dtb.period_of(j.index, "day")
-    return pd.DataFrame({
-        "wind_forecast_gwh": j.fc.groupby(key).sum() / 1000,
-        "wind_actual_gwh": j.act.groupby(key).sum() / 1000,
-        "wind_gap_gwh": (j.fc - j.act).groupby(key).sum() / 1000,     # signed, all hours
-        "wind_cut_gwh": j.cut.groupby(key).sum() / 1000,              # negative-price hours only
-        "negative_price_hours": below.groupby(key).sum(),
-    })
+    idx = j.index
+    pos = pd.Series(range(len(idx)), index=idx)
+    neg_at = pos[below].to_numpy()
+    prof = {}
+    for k in lags:
+        want = neg_at + k
+        want = want[(want >= 0) & (want < len(idx))]
+        rows = j.iloc[want]
+        if k != 0:                                    # keep the control clean
+            rows = rows[rows.px >= 0]
+        if rows.empty or rows.fc.sum() <= 0:
+            continue
+        prof[str(k)] = {
+            "hours": int(len(rows)),
+            "share_of_forecast_pct": _n(rows.deficit.sum() / rows.fc.sum() * 100, 2),
+            "deficit_gwh": _n(rows.deficit.sum() / 1000, 1),
+        }
+    # Per month over the same full record. The panel is range-independent, so its
+    # seasonal caveat has to be too -- derived from whatever months the reader happened
+    # to load, it credited July and never mentioned the April episode that carries the
+    # result.
+    neg = j[below]
+    mk = neg.index.strftime("%Y-%m")
+    by_month = []
+    for m, g in neg.groupby(mk):
+        if g.fc.sum() <= 0:
+            continue
+        by_month.append({
+            "month": m,
+            "hours": int(len(g)),
+            "deficit_gwh": _n(g.deficit.sum() / 1000, 1),
+            "forecast_gwh": _n(g.fc.sum() / 1000, 1),
+            "share_of_forecast_pct": _n(g.deficit.sum() / g.fc.sum() * 100, 2),
+        })
+
+    other = j[~below]
+    return {
+        # The broad control, answering a different question than the lags: is the
+        # forecast simply biased low? It is not -- outside negative-price hours wind runs
+        # slightly ABOVE forecast, so the deficit is not a general bias showing through.
+        "control_other_hours": {
+            "hours": int(len(other)),
+            "deficit_gwh": _n(other.deficit.sum() / 1000, 1),
+            "share_of_forecast_pct": _n(
+                other.deficit.sum() / other.fc.sum() * 100, 2) if other.fc.sum() > 0 else None,
+        },
+        "note": ("Wind deficit against day-ahead forecast, as a share of that forecast, "
+                 "by distance in hours from an hour whose day-ahead price was below "
+                 "zero. Lag 0 is the negative hour itself; other lags exclude hours "
+                 "that were themselves below zero, so they are a clean control. A "
+                 "shortfall one hour wide cannot be forecast error. by_month covers the "
+                 "negative-price hours only, over the same record."),
+        "by_month": by_month,
+        "negative_price_hours": int(below.sum()),
+        "hours_total": int(len(j)),
+        "covers": [str(idx[0].date()), str(idx[-1].date())],
+        "profile": prof,
+    }
+
+
+def write_adjacency(outdir: str, adj: dict | None) -> None:
+    """Write the adjacency profile, but never let a narrow run overwrite a wide one.
+
+    This statistic is only meaningful over a long record, and the default range is
+    yesterday. Without this guard the daily cron would recompute it from a single day
+    and publish that -- the same trap `example_day` still has, where "widest spread in
+    the refreshed range" becomes trivially true on a one-day range.
+    """
+    if not adj or not adj.get("profile"):
+        return
+    path = os.path.join(outdir, "wind_adjacency.json")
+    try:
+        with open(path) as fh:
+            old = json.load(fh)
+    except (OSError, ValueError):
+        old = None
+    if old and old.get("negative_price_hours", 0) > adj["negative_price_hours"]:
+        print(f"  wind_adjacency: kept ({old['negative_price_hours']} negative hours on "
+              f"file beats this run's {adj['negative_price_hours']})")
+        return
+    adj["generated_at"] = pd.Timestamp.now(tz=dtb.TZ).isoformat(timespec="seconds")
+    _write(path, adj)
+    lag0 = adj["profile"].get("0", {}).get("share_of_forecast_pct")
+    print(f"  wind_adjacency: {adj['negative_price_hours']} negative hours, "
+          f"lag 0 = {lag0}% of forecast")
 
 
 def day_records(d: pd.DataFrame, source: str, flows: str,
@@ -571,12 +631,13 @@ def main() -> None:
     demand = demand_daily(backend, start, end)
     px_hourly = dtb._across_borders(d)["price_de"]
     mv = market_values(backend, start, end, px_hourly)
-    wind = wind_shortfall(backend, start, end, px_hourly)
+    wind, adj = wind_shortfall(backend, start, end, px_hourly)
     if cache:
         cache.report()
 
     merge_months(a.out, day_records(d, a.source, a.flows, demand, mv, wind), borders)
     system_costs(backend, a.out)
+    write_adjacency(a.out, adj)
     example_day(backend, a.out, start, end)
     print(f"  -> {a.out}/")
 

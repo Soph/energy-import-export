@@ -304,21 +304,36 @@
     <div class="plot" id="plotResidualDaily"></div>
   </section>
 
-  <section class="card" id="cardCut" hidden>
+  <section class="card" id="cardWind" hidden>
     <div class="card-head">
       <div class="grow">
-        <h2>Wind that chose not to run</h2>
-        <p class="hint" id="cutHint"></p>
+        <h2>Wind goes missing below zero</h2>
+        <p class="hint" id="windHint"></p>
+      </div>
+      <div class="key">
+        <span><i style="background:var(--out)"></i>the negative hour</span>
+        <span><i style="background:var(--thru);opacity:.55"></i>control hours</span>
       </div>
     </div>
-    <div class="plot" id="plotCut"></div>
-    <p class="read">Only the market-driven half is visible here. When the price is
-    below zero the support premium is withdrawn, so generating costs the operator money
-    and the blades are feathered — a decision, and one that shows up as a deficit
-    against the day-ahead forecast. Curtailment ordered by the grid operator, because
-    northern wind cannot reach southern demand, happens at any price and leaves no
-    trace in this comparison; it sits in the redispatch spending under
+    <div class="plot" id="plotWind"></div>
+    <p class="read">The shape is the argument. Weather is smooth in time, so a
+    badly-forecast windy spell cannot produce a shortfall one hour wide — it would slope
+    in and out across the neighbouring hours. A shutdown triggered by the hour's own
+    price can, and this one does: the deficit collapses by an order of magnitude the hour
+    either side, and the control hours scatter around zero in both directions.
+    <span id="windControl"></span></p>
+    <p class="read">What this cannot tell you is <em>who</em> stopped. Below zero a
+    plant selling into the market loses money on every megawatt-hour, so feathering the
+    blades is the owner's own call — but only for plants whose support premium is
+    actually withdrawn, which under § 51 EEG depends on commissioning date: never for
+    plants older than 2016, after six, four or one consecutive negative hours for later
+    vintages, and from the first negative quarter-hour only for plants commissioned since
+    February 2025. Curtailment <em>ordered</em> by the grid operator, because northern
+    wind cannot reach southern demand, lands in the same high-wind hours and looks
+    identical here. Price-conditioning cannot separate the two; the ordered part is
+    counted in the redispatch spending under
     <a href="#cardCosts">both sides of the ledger</a>.</p>
+    <p class="read" id="windSeason"></p>
   </section>
 
   <section class="card" id="cardVolume" hidden>
@@ -500,6 +515,7 @@ const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov
 // value through UTC and can land the label on the previous day.
 const dLabel = s => `${+s.slice(8, 10)} ${MONTHS[+s.slice(5, 7) - 1]}`;
 const dLong  = s => `${dLabel(s)} ${s.slice(0, 4)}`;
+const dMonth = s => `${MONTHS[+s.slice(5, 7) - 1]} ${s.slice(0, 4)}`;
 
 const num = (v, dp = 0) => v == null ? "—"
   // collapse -0 and float dust to a clean zero: an axis reading "-0" is noise
@@ -914,51 +930,74 @@ function drawResidualDaily(host, days) {
  *  carries the control that makes it trustworthy: the same forecast is unbiased across
  *  all hours, so a shortfall concentrated below zero is a decision, not noise.
  */
-function drawCut(host, days) {
-  const pts = days.filter(d => d.wind_cut_gwh != null);
-  if (!pts.length) { host.replaceChildren(); return false; }
+/** The wind deficit by distance in hours from a negative price.
+ *
+ *  This replaced a per-day bar chart, for two reasons. The daily series is dominated by
+ *  forecast noise -- 30 of 228 days run the other way -- and, worse, the effect is
+ *  episodic: it needs wind on the system to be visible, so it lands almost entirely in
+ *  high-wind negative-price episodes. Any window shorter than the record flips sign with
+ *  the range button (-4.07% over the default 30 days, +9.46% over the record), which is
+ *  a property of the sample, not of the thing being measured.
+ *
+ *  So this is a full-record panel, deliberately ignoring the range control, and it plots
+ *  the one test that identifies the effect rather than its volume. A shortfall exactly
+ *  one hour wide cannot be forecast error -- weather is smooth in time.
+ */
+function drawWind(host, adj) {
+  const prof = adj?.profile;
+  if (!prof) { host.replaceChildren(); return false; }
+  const lags = ["-3", "-2", "-1", "0", "1", "2", "3"].filter(k => prof[k]);
+  if (lags.length < 3) { host.replaceChildren(); return false; }
 
-  const PH = 120, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b;
+  const PH = 150, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b + 14;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": "Wind output missing against forecast during negative-price hours, by day" });
+    "aria-label": "Wind deficit against day-ahead forecast, per cent of forecast, by "
+      + "distance in hours from an hour priced below zero" });
   const x0 = PAD.l, x1 = W - PAD.r, y0 = PAD.t, y1 = PAD.t + PH;
-  const hi = Math.max(...days.map(d => d.wind_cut_gwh ?? 0), 1);
-  const y = scale(0, hi * 1.1, y1, y0);
 
-  for (const t of ticks(0, hi, 3)) {
+  const vals = lags.map(k => prof[k].share_of_forecast_pct);
+  const hi = Math.max(...vals, 1), lo = Math.min(...vals, 0);
+  const pad = (hi - lo) * .12;
+  const y = scale(lo - pad, hi + pad, y1, y0);
+
+  for (const t of ticks(lo - pad, hi + pad, 4)) {
     svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
                             x1: x0, x2: x1, y1: y(t), y2: y(t) }));
-    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" }, num(t)));
+    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" },
+                  num(t, 0) + "%"));
   }
-  svg.append(el("text", { x: x0 - 8, y: y0 - 2, "text-anchor": "end" }, "GWh"));
 
-  const band = (x1 - x0) / days.length;
-  const bw = barW(band);
-  const labels = labelIndices(days.length, x1 - x0);
-  const worst = days.reduce((a, b) => (b.wind_cut_gwh ?? 0) > (a.wind_cut_gwh ?? 0) ? b : a, days[0]);
-
-  days.forEach((d, i) => {
-    const cx = x0 + band * (i + .5), v = d.wind_cut_gwh ?? 0;
-    if (v > 0)
-      svg.append(el("path", { d: barPath(cx - bw / 2, y(v), bw, y(0) - y(v), RAD, true),
-                              fill: "var(--thru)" }));
+  const band = (x1 - x0) / lags.length;
+  const bw = Math.min(46, barW(band));
+  lags.forEach((k, i) => {
+    const v = prof[k].share_of_forecast_pct, cx = x0 + band * (i + .5);
+    const zero = k === "0";
+    const h = Math.abs(y(v) - y(0));
+    svg.append(el("path", {
+      d: barPath(cx - bw / 2, Math.min(y(v), y(0)), bw, h, RAD, v >= 0),
+      // the negative hour is the finding; its neighbours are the control, so they
+      // stay neutral rather than competing for attention
+      fill: zero ? "var(--out)" : "var(--thru)",
+      opacity: zero ? 1 : .55,
+    }));
+    svg.append(el("text", { class: "val", x: cx, y: v >= 0 ? y(v) - 6 : y(v) + 14,
+                            "text-anchor": "middle" }, num(v, 1) + "%"));
+    svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" },
+                  zero ? "the hour" : (k > 0 ? "+" : "") + k + " h"));
     const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PH });
-    const html = `<div class="t-date">${dLong(d.date)}</div>`
-      + `<div class="t-row"><span>Did not run, below €0</span><span>${num(v, 1)} GWh</span></div>`
-      + `<div class="t-row"><span>Hours below €0</span><span>${num(d.negative_price_hours, 0)}</span></div>`
-      + `<div class="t-sep"></div>`
-      + `<div class="t-row"><span>Wind forecast</span><span>${num(d.wind_forecast_gwh, 0)} GWh</span></div>`
-      + `<div class="t-row"><span>Wind actual</span><span>${num(d.wind_actual_gwh, 0)} GWh</span></div>`;
+    const html = `<div class="t-date">${zero ? "Hours priced below €0"
+                    : Math.abs(+k) + " hour" + (Math.abs(+k) === 1 ? "" : "s")
+                      + (+k > 0 ? " after" : " before") + ", price at or above €0"}</div>`
+      + `<div class="t-row"><span>Deficit vs forecast</span><span>${num(v, 2)}%</span></div>`
+      + `<div class="t-row"><span>Volume</span><span>${num(prof[k].deficit_gwh, 1)} GWh</span></div>`
+      + `<div class="t-row"><span>Hours counted</span><span>${num(prof[k].hours, 0)}</span></div>`;
     hit.addEventListener("pointerenter", e => showTip(e, html));
     hit.addEventListener("pointermove", e => showTip(e, html));
     hit.addEventListener("pointerleave", hideTip);
     svg.append(hit);
-    if (d === worst && v > 0)
-      svg.append(el("text", { class: "val", x: cx, y: y(v) - 6, "text-anchor": "middle" },
-                    num(v, 0) + " GWh"));
-    if (labels.has(i))
-      svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" }, dLabel(d.date)));
   });
+  svg.append(el("text", { class: "tick", x: (x0 + x1) / 2, y: H - 2, "text-anchor": "middle" },
+                "distance from an hour priced below €0"));
   host.replaceChildren(svg);
   return true;
 }
@@ -1422,19 +1461,52 @@ function render() {
     document.getElementById("resDailyHint").textContent = hint;
   }
 
-  const cutCard = document.getElementById("cardCut");
-  cutCard.hidden = false;                      // unhide before measuring
-  cutCard.hidden = !drawCut(document.getElementById("plotCut"), days);
-  if (!cutCard.hidden) {
-    const sum = f => days.reduce((a, d) => a + (d[f] ?? 0), 0);
-    const cut = sum("wind_cut_gwh"), fc = sum("wind_forecast_gwh"), gap = sum("wind_gap_gwh");
-    const dayCount = days.filter(d => (d.wind_cut_gwh ?? 0) > 0.5).length;
-    document.getElementById("cutHint").textContent =
-      `Wind output missing against its own day-ahead forecast, counted only in hours the `
-      + `price was below zero: ${num(cut, 0)} GWh over this window, on ${dayCount} of `
-      + `${days.length} days. The same forecast is off by ${num(gap, 0)} GWh across all `
-      + `hours together — near nothing on ${num(fc, 0)} GWh forecast — so this is not `
-      + `forecast error piling up, it is turbines being switched off.`;
+  // Full record, not the selected window -- see drawWind. Uses whole loaded months for
+  // the seasonal line only, which is why that sentence names its own basis.
+  const windCard = document.getElementById("cardWind");
+  windCard.hidden = false;                     // unhide before measuring
+  windCard.hidden = !drawWind(document.getElementById("plotWind"), state.wind);
+  if (!windCard.hidden) {
+    const a = state.wind, p0 = a.profile["0"];
+    const near = ["-1", "1"].map(k => a.profile[k]).filter(Boolean);
+    const worst = near.length
+      ? Math.max(...near.map(v => Math.abs(v.share_of_forecast_pct))) : null;
+    document.getElementById("windHint").textContent =
+      `In the ${num(a.negative_price_hours, 0)} hours priced below zero, wind ran `
+      + `${num(p0.share_of_forecast_pct, 1)}% under its own day-ahead forecast — `
+      + `${num(p0.deficit_gwh, 0)} GWh. In the hour either side, with the price back at `
+      + `or above zero, the same forecast is off by ${worst == null ? "almost nothing"
+          : "at most " + num(worst, 1) + "%"}. Measured over the whole record, `
+      + `${a.covers[0]} to ${a.covers[1]}, and not affected by the range above.`;
+  }
+
+  if (!windCard.hidden && state.wind.control_other_hours?.share_of_forecast_pct != null) {
+    // Answers the other obvious objection -- that the forecast is simply biased low.
+    // It runs the other way, which is a stronger statement than "near nothing".
+    const c = state.wind.control_other_hours;
+    document.getElementById("windControl").textContent =
+      `Nor is the forecast simply pitched low: across the other `
+      + `${num(c.hours, 0)} hours of the record wind ran `
+      + `${num(Math.abs(c.share_of_forecast_pct), 1)}% `
+      + `${c.share_of_forecast_pct < 0 ? "above" : "below"} it.`;
+  }
+  if (!windCard.hidden && state.wind.by_month?.length) {
+    // Episodic, not a steady toll: the deficit needs wind on the system, and summer's
+    // negative hours are solar-driven middays with little wind in them. From the panel's
+    // own file rather than the loaded months -- read off the loaded months it credited
+    // July and never mentioned the April episode that carries the whole result.
+    const ms = state.wind.by_month;
+    const top = ms.slice().sort((x, y) => y.deficit_gwh - x.deficit_gwh)[0];
+    const neg = ms.filter(m => m.share_of_forecast_pct < 0).length;
+    document.getElementById("windSeason").textContent =
+      `It is episodic rather than a steady toll: the deficit needs wind on the system to `
+      + `be visible at all, and summer's negative hours are solar-driven middays with `
+      + `little wind in them. ${dMonth(top.month + "-01")} alone carries `
+      + `${num(top.deficit_gwh, 0)} GWh of the ${num(state.wind.profile["0"].deficit_gwh, 0)}, `
+      + `at ${num(top.share_of_forecast_pct, 0)}% of its forecast, while `
+      + `${neg} of the ${ms.length} months run the other way. A window shorter than the `
+      + `record can show no effect, or the opposite one — over the last 30 days it is `
+      + `negative — which is why this panel does not follow the range above.`;
   }
 
   drawVolume(document.getElementById("plotVolume"), days);
@@ -1583,6 +1655,12 @@ async function boot() {
     state.costs = r.ok ? await r.json() : null;
   } catch (e) {
     state.costs = null;
+  }
+  try {
+    const r = await fetch("data/wind_adjacency.json", { cache: "no-cache" });
+    state.wind = r.ok ? await r.json() : null;
+  } catch (e) {
+    state.wind = null;
   }
   try {
     const r = await fetch("data/index.json", { cache: "no-cache" });
