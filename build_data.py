@@ -200,8 +200,11 @@ def system_costs(backend, outdir: str) -> None:
 # Grouped into five, cheap-to-dear, because a merit order is an *ordered* category
 # and eight-plus technologies in one stack stops being readable. Nuclear is omitted
 # rather than bucketed: Germany's last reactors closed in 2023 and the series is zero.
-# Cheap-to-dear, and grouped so the fuel boundary is a horizontal line in the stack:
-# three zero-marginal-cost renewables, then storage, then the two that burn something.
+# Cheap-to-dear, and grouped so the renewable/conventional line is horizontal in the stack.
+# Note what this split is and is not: the first three are SMARD's own "Erneuerbare
+# Energietraeger" list, which includes Biomasse -- a combustion plant that buys fuel, and
+# about 11% of the bucket. So this is a renewable/conventional boundary, NOT a
+# zero-marginal-cost one, and anything labelled "no fuel cost" would be wrong.
 # Pumped storage is deliberately its own bucket rather than filed under hydro -- it is not
 # renewable generation, it re-emits energy something else made earlier, and calling it
 # renewable would undercut the one distinction this panel is drawing. SMARD's Pumpspeicher
@@ -215,7 +218,8 @@ STACK = {
     "coal":      [1001223, 1004069],                     # lignite, hard coal
     "gas_other": [1004071, 1001227],                     # gas, other conventional
 }
-# Which buckets carry no fuel cost. Used for the renewable share the page quotes.
+# The renewable buckets, matching SMARD's own category list. Used for the renewable
+# share the pages quote. Deliberately not called "fuel-free": Biomasse burns.
 RENEWABLE = ("solar", "wind", "hydro_bio")
 
 

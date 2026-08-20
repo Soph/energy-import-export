@@ -1137,7 +1137,10 @@ function drawWind(host, adj) {
 // Cheap-to-dear bottom-up, as before -- vertical position still carries the merit order.
 // What changed is the hue: the colour ramp used to encode merit-order position, which
 // vertical position already encodes, so the hue channel was spending itself on nothing.
-// It now carries the fuel boundary instead. Cool = nothing burns and the marginal cost is
+// It now carries the renewable boundary instead. Cool = renewable, warm = conventional.
+// Not a zero-marginal-cost boundary: hydro_bio contains Biomasse, which burns fuel and is
+// about 11% of that group, so a "no fuel cost" reading of the cool block would be wrong.
+// The old comment claimed exactly that, and the marginal cost is
 // about zero; warm = a fuel bill, which is what actually sets the price. Within each
 // family the steps still darken with cost, and the strongest contrast in the whole stack
 // is the boundary between the two families, because that is the line worth seeing.
@@ -1774,7 +1777,7 @@ function render() {
       + `€${num(dear.price, 0)}. `
       + `The mix turns over completely across the day — what sets the price is only ever `
       + `the last unit that had to run. ${renShare(cheap)}% of what ran in that cheapest `
-      + `block came from something with no fuel bill, against ${renShare(dear)}% in the `
+      + `block was renewable, against ${renShare(dear)}% in the `
       + `dearest; over the whole day, ${renShare(d.hours)}%.`;
     document.getElementById("dayNote").textContent =
       `Chosen automatically — ${d.chosen_because}. ${d.note} Where the stack rises above `
