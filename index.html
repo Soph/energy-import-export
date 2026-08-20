@@ -18,9 +18,9 @@
     --surface:    #fcfcfb;
     --ink:        #0b0b0b;
     --ink-2:      #52514e;
-    --muted:      #898781;
+    --muted:      #726f66;
     --grid:       #e1e0d9;
-    --axis:       #c3c2b7;
+    --axis:       #94928a;
     --hairline:   rgba(11, 11, 11, .10);
     --out:        #e34948;   /* imports / deficit */
     --in:         #2a78d6;   /* exports / surplus */
@@ -37,7 +37,7 @@
        A categorical set would also have fought the red/blue money language above.
        Validated --ordinal in both modes: monotone lightness, adjacent dL >= 0.06,
        light end clear of the surface. */
-    --m1: #86b6ef; --m2: #5598e7; --m3: #2a78d6; --m4: #1c5cab; --m5: #104281;
+    --m1: #47a3a6; --m2: #3c8a8e; --m3: #327175; --m4: #26585d; --m5: #193f45;
     --shadow:     0 1px 2px rgba(11,11,11,.04), 0 8px 24px -12px rgba(11,11,11,.10);
   }
   @media (prefers-color-scheme: dark) {
@@ -49,13 +49,13 @@
       --ink-2:    #c3c2b7;
       --muted:    #898781;
       --grid:     #2c2c2a;
-      --axis:     #383835;
+      --axis:     #6e6c66;
       --hairline: rgba(255,255,255,.10);
       --out:      #e66767;
       --in:       #3987e5;
       --zero:     #383835;
       --thru:     #6e6c66;
-      --m1: #b7d3f6; --m2: #86b6ef; --m3: #5598e7; --m4: #2a78d6; --m5: #1c5cab;
+      --m1: #7ed4d8; --m2: #5ab5ba; --m3: #44989c; --m4: #357b7f; --m5: #2a5e62;
       --shadow:   none;
     }
   }
@@ -67,13 +67,13 @@
     --ink-2:    #c3c2b7;
     --muted:    #898781;
     --grid:     #2c2c2a;
-    --axis:     #383835;
+    --axis:     #6e6c66;
     --hairline: rgba(255,255,255,.10);
     --out:      #e66767;
     --in:       #3987e5;
     --zero:     #383835;
     --thru:     #6e6c66;
-    --m1: #b7d3f6; --m2: #86b6ef; --m3: #5598e7; --m4: #2a78d6; --m5: #1c5cab;
+    --m1: #7ed4d8; --m2: #5ab5ba; --m3: #44989c; --m4: #357b7f; --m5: #2a5e62;
     --shadow:   none;
   }
 
@@ -155,6 +155,7 @@
   /* chart text wears text tokens, never the series color */
   text { fill: var(--muted); font-size: 11px; }
   text.val { fill: var(--ink-2); font-size: 11px; font-weight: 600; }
+  text.val.idle { fill: var(--muted); font-weight: 400; font-style: italic; }
   text.tick { font-variant-numeric: tabular-nums; }
   .gridline { stroke: var(--grid); stroke-width: 1; }
   .axisline { stroke: var(--axis); stroke-width: 1; }
@@ -442,9 +443,9 @@
          it came from, and the licence and required credit differ per source -->
     <p id="attrib"></p>
     <p>Three caveats worth carrying: this is day-ahead only, so intraday and balancing
-    trades are missing; the balance is what the volume was worth at each side's zonal
-    price, not a payment anyone makes, since cross-border trade in the coupled market is
-    implicit; and congestion rent is revenue to the transmission operators on both sides
+    trades are missing; the balance is what the crossing volume was worth at the German
+    price in both directions, not a payment anyone makes, since cross-border trade in the
+    coupled market is implicit; and congestion rent is revenue to the transmission operators on both sides
     of a border, not a loss.</p>
   </footer>
 </div>
@@ -574,6 +575,31 @@ function showTip(evt, html) {
   tip.style.top = Math.max(tip.offsetHeight + 4, evt.clientY - pad) + "px";
 }
 const hideTip = () => { tip.style.opacity = 0; };
+/** The day tooltip, shared by the balance, price, volume and residual charts.
+ *
+ *  Leads with the transit-free basis because that is what the price chart plots --
+ *  it used to print the gross basis instead, so the tooltip and the line under the
+ *  cursor disagreed by up to 136 EUR/MWh. Both are shown: the gross pair is the
+ *  honest denominator and the stripped pair is a bound, so neither stands alone.
+ */
+/** The two price rows, on whichever basis the day actually has.
+ *
+ *  A day can carry the gross pair without the transit-free pair. Falling back with `??`
+ *  would print the gross number under the stripped label -- so name the basis instead of
+ *  substituting quietly, and only offer the second row when there are two to compare.
+ */
+function pxRows(d) {
+  const own = d.imp_px_own != null || d.exp_px_own != null;
+  const row = (label, v) =>
+    `<div class="t-row"><span>${label}</span><span>${v == null ? "—" : num(v, 1)}</span></div>`;
+  if (!own)
+    return row("Price when importing", d.imp_px_de) + row("Price when exporting", d.exp_px_de);
+  return row("Price when importing", d.imp_px_own)
+       + row("Price when exporting", d.exp_px_own)
+       + `<div class="t-row"><span>&nbsp;&nbsp;same, counting transit</span>`
+       + `<span>${num(d.imp_px_de, 1)} / ${num(d.exp_px_de, 1)}</span></div>`;
+}
+
 function tipRows(d) {
   return `<div class="t-date">${dLong(d.date)}</div>
     <div class="t-row"><span>Balance</span><span>${money(d.bal_de_keur, 2)}</span></div>
@@ -581,8 +607,7 @@ function tipRows(d) {
     <div class="t-row"><span>Imported</span><span>${num(d.import_gwh, 1)} GWh</span></div>
     <div class="t-row"><span>Exported</span><span>${num(d.export_gwh, 1)} GWh</span></div>
     <div class="t-row"><span>of which in transit</span><span>${num(d.transit_gwh, 1)} GWh</span></div>
-    <div class="t-row"><span>Price when importing</span><span>${num(d.imp_px_de, 1)}</span></div>
-    <div class="t-row"><span>Price when exporting</span><span>${num(d.exp_px_de, 1)}</span></div>
+    ${pxRows(d)}
     <div class="t-row"><span>Congestion rent</span><span>${money(d.rent_keur, 2)}</span></div>`;
 }
 
@@ -603,7 +628,7 @@ const barW = (band, per = 1) =>
 function drawBalance(host, days) {
   const W = host.clientWidth || 720, H = PLOT_H + PAD.t + PAD.b;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
-                          role: "img", "aria-label": "Daily balance, thousand euro" });
+                          role: "img", "aria-label": "Daily balance, million euro" });
   const x0 = PAD.l, x1 = W - PAD.r, y0 = PAD.t, y1 = PAD.t + PLOT_H;
 
   const vals = days.map(d => d.bal_de_keur ?? 0);
@@ -662,6 +687,9 @@ function drawPrice(host, days) {
                           role: "img", "aria-label": "Volume-weighted price when importing and when exporting, euro per megawatt hour" });
   const x0 = PAD.l, x1 = W - R, y0 = TOP, y1 = TOP + PLOT_H;
 
+  // Prefer the transit-free basis: transit is bought and sold in the same hour at the
+  // same price, so including it pulls both curves together. But it is a bound, not a
+  // measurement -- see the hint under this chart.
   const ownBasis = days.some(d => d.imp_px_own != null);
   const fI = ownBasis ? "imp_px_own" : "imp_px_de", fE = ownBasis ? "exp_px_own" : "exp_px_de";
   const all = days.flatMap(d => [d[fI], d[fE]]).filter(v => v != null);
@@ -680,22 +708,28 @@ function drawPrice(host, days) {
     svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" }, num(t)));
   }
 
-  // the wash between the curves: the day's spread, ~10% opacity, never a block
-  const top = days.map((d, i) => [x(i), d[fI]]).filter(p => p[1] != null);
-  const bot = days.map((d, i) => [x(i), d[fE]]).filter(p => p[1] != null);
-  if (top.length > 1 && bot.length > 1) {
-    const path = top.map(p => `${p[0]} ${y(p[1])}`).join("L") + "L"
-               + [...bot].reverse().map(p => `${p[0]} ${y(p[1])}`).join("L");
-    svg.append(el("path", { d: `M${path}Z`, fill: "var(--out)", opacity: .10 }));
-  }
+  // The wash between the curves: the day's spread, ~10% opacity, never a block.
+  // One polygon per unbroken run of days where BOTH prices exist. Filtering the two
+  // edges independently -- which this did -- bridges each one's gaps separately, so
+  // the fill asserted a spread across the 34 days where one leg was never measured,
+  // and closed with a diagonal wedge wherever the two edges started on different days.
+  let run = [];
+  const flushBand = () => {
+    if (run.length > 1) {
+      const d = run.map(q => `${q[0]} ${y(q[1])}`).join("L") + "L"
+              + [...run].reverse().map(q => `${q[0]} ${y(q[2])}`).join("L");
+      svg.append(el("path", { d: `M${d}Z`, fill: "var(--out)", opacity: .10 }));
+    }
+    run = [];
+  };
+  days.forEach((d, i) => {
+    if (d[fI] == null || d[fE] == null) { flushBand(); return; }
+    run.push([x(i), d[fI], d[fE]]);
+  });
+  flushBand();
 
   // segmented so a null day breaks the line rather than inventing a value
-  // Prefer the transit-free basis: transit is bought and sold in the same hour at
-  // the same price, so including it pulls both curves toward each other and
-  // understates the gap this chart exists to show.
-  const own = days.some(d => d.imp_px_own != null);
-  const F_IMP = own ? "imp_px_own" : "imp_px_de", F_EXP = own ? "exp_px_own" : "exp_px_de";
-  for (const [field, colour] of [[F_IMP, "var(--out)"], [F_EXP, "var(--in)"]]) {
+  for (const [field, colour] of [[fI, "var(--out)"], [fE, "var(--in)"]]) {
     let seg = [];
     const flush = () => {
       if (seg.length > 1) svg.append(el("path", {
@@ -1075,8 +1109,10 @@ function drawCosts(host, costs) {
     const html = `<div class="t-date">${r.month}</div>`
       + `<div class="t-row"><span>Rent earned on borders</span><span>€${num(r.rent / 1e6, 1)}M</span></div>`
       + `<div class="t-row"><span>Spent on grid security</span><span>€${num(r.spend / 1e6, 1)}M</span></div>`
-      + `<div class="t-sep"></div>`
-      + `<div class="t-row"><span>Net</span><span>€${num((r.rent - r.spend) / 1e6, 1)}M</span></div>`;
+;
+    // No net row. These are a border-level income and a Germany-wide cost, and the
+    // rent is both TSOs' share -- subtracting them is exactly the sum this chart's
+    // own docstring refuses to draw.
     hit.addEventListener("pointerenter", e => showTip(e, html));
     hit.addEventListener("pointermove", e => showTip(e, html));
     hit.addEventListener("pointerleave", hideTip);
@@ -1196,6 +1232,17 @@ function drawBorders(host, days) {
   const bh = 14;
   rows.forEach(([name, t], i) => {
     const yTop = 8 + i * ROW + (ROW - bh) / 2 - 2, up = t.bal >= 0;
+    // A border can carry no traffic at all in a window -- SE_4 does for every day of
+    // the default 30. Its bar has zero area, so it vanishes, and money(0) picks its
+    // sign from `k < 0` and prints "+EUR0k": a dormant border presented as a balanced
+    // one. Say idle, and skip the bar rather than drawing nothing and labelling it.
+    if (!t.imp && !t.exp) {
+      svg.append(el("text", { x: L - 10, y: yTop + bh - 2, "text-anchor": "end" },
+                    name.replace("_", "")));
+      svg.append(el("text", { class: "val idle", x: zero + 8, y: yTop + bh - 2,
+                              "text-anchor": "start" }, "no flow this window"));
+      return;
+    }
     // horizontal bar: rotate the same path so the rounding lands on the data end
     svg.append(el("path", {
       d: barPath(0, 0, bh, w(t.bal), RAD, !up),
