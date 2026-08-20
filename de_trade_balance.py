@@ -140,7 +140,8 @@ TZ = "Europe/Berlin"
 HOME = "DE_LU"
 
 # Bidding zones sharing a border with DE-LU. NO_2 is the NordLink cable,
-# SE_4 is Hansa PowerBridge/Baltic Cable, DK_1 and DK_2 are separate zones.
+# SE_4 is the Baltic Cable (Hansa PowerBridge was cancelled in 2024, so there is no
+# second DE-SE4 link), DK_1 and DK_2 are separate zones.
 NEIGHBOURS = ["AT", "BE", "CH", "CZ", "DK_1", "DK_2", "FR", "NL", "NO_2", "PL", "SE_4"]
 
 

@@ -241,9 +241,11 @@
 
   <section class="card" id="cardRead" hidden>
     <p class="read">Three facts that stop the numbers above being read as a verdict.
-    <b>Every trade cleared at a price its seller had bid</b>, so nothing here was sold
-    below cost and nothing was bought unwillingly — a uniform-price auction cannot do
-    either. <b>The cheap hours are cheap because wind and solar are running</b>; without
+    <b>Every seller received at least what it asked and every buyer paid at most what it
+    offered</b>, so nothing here was bought or sold unwillingly — that is what a uniform
+    clearing price guarantees: everyone who clears is paid the same market price, not
+    their own bid, so most sellers receive more than they asked for. (Block orders are
+    the small exception; they can be accepted against their own limit.) <b>The cheap hours are cheap because wind and solar are running</b>; without
     them those hours would price like the expensive ones, and German consumers would pay
     more, not less. <b>And importing in the dear hours lowers the German price</b> rather
     than raising it, because the imported megawatt-hour displaces a more expensive German
@@ -262,7 +264,9 @@
       <div class="grow">
         <h2>Daily balance</h2>
         <p class="hint">The value of what left minus the value of what arrived, both priced
-        at the German hourly price. A valuation, not a cash flow.</p>
+        at the German day-ahead price. A valuation, not a cash flow. (Since October 2025
+        that price is set in quarter-hour blocks; everything here is averaged to the hour,
+        so the swings shown are gentler than the ones the market actually cleared.)</p>
       </div>
       <div class="key">
         <span><i style="background:var(--out)"></i>arrivals worth more</span>
@@ -400,8 +404,15 @@
           Buyers in the dearer zone pay their own zonal price and sellers in the cheaper
           zone receive theirs; the gap on each megawatt-hour that crossed is collected by
           the coupling mechanism and paid to the two transmission operators on that
-          border, normally split evenly. Nobody is billed for it separately — it is
-          already inside the price the dearer zone paid.</p>
+          border, normally split evenly. Nobody is billed for it separately — it is the
+          wedge between what the dearer zone paid and what the cheaper zone received, and
+          both sides bear part of it.</p>
+          <p>One border here is not like the others. Switzerland sits outside the coupled
+          day-ahead market, so its capacity is auctioned explicitly instead and no
+          coupling mechanism collects the spread. The Swiss figure in the chart above is
+          still price difference times flow, but what the operators actually earn there is
+          auction revenue, generally a good deal less. It is about an eighth of the rent
+          shown, so read the total as the coupled borders plus a Swiss approximation.</p>
           <p><b>Out:</b> the operators cannot keep it. Article 19 of Regulation (EU)
           2019/943 puts it to two priority uses first — guaranteeing that the capacity
           they sold stays firm, including compensation when it does not, and maintaining
@@ -416,18 +427,24 @@
           the operator intervenes. In redispatch it orders one power station down and
           another up on the far side of the bottleneck, and compensates both for the
           change. The same budget covers stations held in reserve outside the market for
-          exactly this, loads paid to be interruptible, and countertrading — buying and
+          exactly this, contracted load reductions, and countertrading — buying and
           selling across a border to relieve a constraint.</p>
-          <p><b>In:</b> from every electricity customer. The operators recover it through
-          network charges, passed to the distribution operators and on to consumers,
-          spread across all German users by a mechanism descended from the § 19 StromNEV
-          levy. Domestic and industrial alike, in proportion to network use.</p>
+          <p><b>In:</b> from every electricity customer. It sits in the transmission
+          operators' cost base and is recovered through their network charges — since 2023
+          a single nationwide transmission tariff, equalised between the four operators
+          rather than charged by region — then rolled into distribution tariffs and on to
+          bills. Not evenly, though: energy-intensive and atypical consumers can have
+          their network fees cut sharply under § 19(2) StromNEV, and the shortfall that
+          creates is refinanced by a separate surcharge on everyone else. Those same
+          reliefs are why the industrial bar in the panel below sits so far under the
+          household one.</p>
         </div>
       </div>
       <p class="read">So both ends of this chart reach the same place: the grid fee on a
       bill. Rent can only lower it after the capacity obligations are met; redispatch
-      raises it. And that fee is part of the fixed two-thirds of a household bill in the
-      panel below — the part that does not move when the wholesale price does.</p>
+      raises it. And that fee sits in the roughly three-fifths of a household bill in the
+      panel below that is levies, network charges and tax — mostly fixed, though the VAT
+      inside it rides on the whole bill and so does move with the wholesale price.</p>
     </details>
   </section>
 
@@ -1194,7 +1211,8 @@ function drawLevels(host, days, ref) {
 
   const rows = [
     hh && ["Household, dynamic tariff", hh.dynamic_eur_mwh,
-           "modelled, " + hh.month + " — tracks the hourly price", "var(--thru)"],
+           "modelled, " + hh.month + " — its wholesale part tracks the day-ahead price",
+           "var(--thru)"],
     hh && ["Household, new contract", hh.new_eur_mwh,
            hc ? `modelled, ${hh.month} — only €${Math.round(hc.procurement_sales_margin_eur_mwh)} of it moves with wholesale`
               : "modelled, " + hh.month, "var(--thru)"],
@@ -1348,7 +1366,7 @@ function drawSummary(days) {
      `${money(bal / days.length, 2)}/day — a value gap, not a loss`],
     ["Net import", `${num(imp - exp, 0)} GWh`, `${num(imp, 0)} in, ${num(exp, 0)} out`],
     ...(thru ? [["In transit", `${num(thru, 0)} GWh`,
-                `${Math.round(thru / (imp || 1) * 100)}% of arrivals passed straight through`]] : []),
+                `at most ${Math.round(thru / (imp || 1) * 100)}% of arrivals offset by exports`]] : []),
     ["Days arrivals worth more", `${deficit} of ${days.length}`, "at the German price"],
     ["Congestion rent", money(sum("rent_keur"), 1), "to the grid operators"],
   ];
@@ -1523,10 +1541,13 @@ function render() {
       + `At ${cheap.hour} solar alone ran to ${num(cheap.solar, 0)} GW and the price fell to `
       + `€${num(cheap.price, Math.abs(cheap.price) < 10 ? 1 : 0)}; by ${dear.hour} it reached `
       + `€${num(dear.price, 0)}. `
-      + `Nothing about the stack changed except which unit had to run last.`;
+      + `The mix turns over completely across the day — what sets the price is only ever `
+      + `the last unit that had to run.`;
     document.getElementById("dayNote").textContent =
       `Chosen automatically — ${d.chosen_because}. ${d.note} Where the stack rises above `
-      + `the demand line, the surplus left the country.`;
+      + `the demand line the surplus is being exported or stored — the line is grid load, `
+      + `so it leaves out power generated and consumed on site, and the gap is not a `
+      + `reading of the export figure above.`;
   }
 
   drawBorders(document.getElementById("plotBorder"), days);
@@ -1568,9 +1589,11 @@ function render() {
   const hasT = days.some(d => d.transit_gwh != null);
   document.getElementById("volHint").textContent = hasT
     ? `Energy crossing the border each day, gross in each direction. `
-      + `${Math.round(gt / (gi || 1) * 100)}% of what came in left again by another `
-      + `border in the same hour — Germany as a corridor, not a buyer. Only the `
-      + `coloured ends are power this country actually used or generated.`
+      + `In each hour, up to ${Math.round(gt / (gi || 1) * 100)}% of what came in could `
+      + `have left again by another border — Germany as a corridor as much as a buyer. `
+      + `That middle band is a ceiling, not a measurement: electricity is fungible, so `
+      + `nothing marks an arriving megawatt-hour as bound for an export rather than for `
+      + `German demand.`
     : legacyVolHint(days, netted);
   if (!hasT) document.getElementById("volHint").textContent = legacyVolHint(days, netted);
   const _unused = netted
