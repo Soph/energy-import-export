@@ -8,8 +8,14 @@
   "solar",
   "wind",
   "hydro_bio",
+  "storage",
   "coal",
   "gas_other"
+ ],
+ "renewable_buckets": [
+  "solar",
+  "wind",
+  "hydro_bio"
  ],
  "hours": [
   {
@@ -18,7 +24,8 @@
    "load_gw": 43.76,
    "solar": 0.02,
    "wind": 20.17,
-   "hydro_bio": 7.86,
+   "hydro_bio": 5.63,
+   "storage": 2.23,
    "coal": 6.83,
    "gas_other": 6.31
   },
@@ -28,7 +35,8 @@
    "load_gw": 43.09,
    "solar": 0.02,
    "wind": 20.1,
-   "hydro_bio": 7.71,
+   "hydro_bio": 5.6,
+   "storage": 2.11,
    "coal": 6.81,
    "gas_other": 6.13
   },
@@ -38,7 +46,8 @@
    "load_gw": 42.61,
    "solar": 0.02,
    "wind": 19.86,
-   "hydro_bio": 8.07,
+   "hydro_bio": 5.56,
+   "storage": 2.51,
    "coal": 6.79,
    "gas_other": 5.91
   },
@@ -48,7 +57,8 @@
    "load_gw": 42.23,
    "solar": 0.02,
    "wind": 19.65,
-   "hydro_bio": 7.99,
+   "hydro_bio": 5.59,
+   "storage": 2.4,
    "coal": 6.63,
    "gas_other": 5.82
   },
@@ -58,7 +68,8 @@
    "load_gw": 41.84,
    "solar": 0.02,
    "wind": 19.56,
-   "hydro_bio": 7.46,
+   "hydro_bio": 5.57,
+   "storage": 1.9,
    "coal": 6.31,
    "gas_other": 5.76
   },
@@ -68,7 +79,8 @@
    "load_gw": 41.22,
    "solar": 0.02,
    "wind": 19.54,
-   "hydro_bio": 7.41,
+   "hydro_bio": 5.51,
+   "storage": 1.89,
    "coal": 6.29,
    "gas_other": 5.74
   },
@@ -78,7 +90,8 @@
    "load_gw": 40.61,
    "solar": 0.02,
    "wind": 19.32,
-   "hydro_bio": 7.22,
+   "hydro_bio": 5.52,
+   "storage": 1.71,
    "coal": 6.29,
    "gas_other": 5.73
   },
@@ -88,7 +101,8 @@
    "load_gw": 40.07,
    "solar": 0.01,
    "wind": 18.99,
-   "hydro_bio": 6.79,
+   "hydro_bio": 5.46,
+   "storage": 1.33,
    "coal": 6.24,
    "gas_other": 5.73
   },
@@ -98,7 +112,8 @@
    "load_gw": 39.58,
    "solar": 0.02,
    "wind": 18.64,
-   "hydro_bio": 6.55,
+   "hydro_bio": 5.46,
+   "storage": 1.08,
    "coal": 6.22,
    "gas_other": 5.74
   },
@@ -108,7 +123,8 @@
    "load_gw": 39.36,
    "solar": 0.01,
    "wind": 18.29,
-   "hydro_bio": 6.43,
+   "hydro_bio": 5.47,
+   "storage": 0.96,
    "coal": 6.19,
    "gas_other": 5.75
   },
@@ -118,7 +134,8 @@
    "load_gw": 39.11,
    "solar": 0.01,
    "wind": 17.83,
-   "hydro_bio": 6.33,
+   "hydro_bio": 5.46,
+   "storage": 0.87,
    "coal": 6.16,
    "gas_other": 5.73
   },
@@ -128,7 +145,8 @@
    "load_gw": 39.26,
    "solar": 0.01,
    "wind": 17.39,
-   "hydro_bio": 6.23,
+   "hydro_bio": 5.47,
+   "storage": 0.76,
    "coal": 6.14,
    "gas_other": 5.74
   },
@@ -138,7 +156,8 @@
    "load_gw": 39.05,
    "solar": 0.02,
    "wind": 17.04,
-   "hydro_bio": 7.49,
+   "hydro_bio": 5.49,
+   "storage": 2.0,
    "coal": 6.17,
    "gas_other": 5.72
   },
@@ -148,7 +167,8 @@
    "load_gw": 38.75,
    "solar": 0.02,
    "wind": 16.75,
-   "hydro_bio": 7.4,
+   "hydro_bio": 5.51,
+   "storage": 1.89,
    "coal": 6.26,
    "gas_other": 5.69
   },
@@ -158,7 +178,8 @@
    "load_gw": 38.83,
    "solar": 0.01,
    "wind": 16.54,
-   "hydro_bio": 7.16,
+   "hydro_bio": 5.51,
+   "storage": 1.65,
    "coal": 6.24,
    "gas_other": 5.68
   },
@@ -168,7 +189,8 @@
    "load_gw": 38.85,
    "solar": 0.02,
    "wind": 16.35,
-   "hydro_bio": 7.49,
+   "hydro_bio": 5.51,
+   "storage": 1.98,
    "coal": 6.21,
    "gas_other": 5.68
   },
@@ -178,7 +200,8 @@
    "load_gw": 39.02,
    "solar": 0.01,
    "wind": 16.13,
-   "hydro_bio": 6.7,
+   "hydro_bio": 5.56,
+   "storage": 1.14,
    "coal": 6.24,
    "gas_other": 5.8
   },
@@ -188,7 +211,8 @@
    "load_gw": 38.74,
    "solar": 0.03,
    "wind": 15.87,
-   "hydro_bio": 6.6,
+   "hydro_bio": 5.59,
+   "storage": 1.01,
    "coal": 6.23,
    "gas_other": 5.82
   },
@@ -198,7 +222,8 @@
    "load_gw": 38.87,
    "solar": 0.01,
    "wind": 15.6,
-   "hydro_bio": 7.12,
+   "hydro_bio": 5.6,
+   "storage": 1.52,
    "coal": 6.24,
    "gas_other": 5.81
   },
@@ -208,7 +233,8 @@
    "load_gw": 39.12,
    "solar": 0.01,
    "wind": 15.27,
-   "hydro_bio": 7.07,
+   "hydro_bio": 5.62,
+   "storage": 1.46,
    "coal": 6.29,
    "gas_other": 5.76
   },
@@ -218,7 +244,8 @@
    "load_gw": 39.26,
    "solar": 0.01,
    "wind": 15.03,
-   "hydro_bio": 6.9,
+   "hydro_bio": 5.69,
+   "storage": 1.21,
    "coal": 6.3,
    "gas_other": 5.73
   },
@@ -228,7 +255,8 @@
    "load_gw": 39.0,
    "solar": 0.02,
    "wind": 14.88,
-   "hydro_bio": 6.4,
+   "hydro_bio": 5.7,
+   "storage": 0.7,
    "coal": 6.32,
    "gas_other": 5.72
   },
@@ -238,7 +266,8 @@
    "load_gw": 38.93,
    "solar": 0.03,
    "wind": 14.72,
-   "hydro_bio": 6.45,
+   "hydro_bio": 5.67,
+   "storage": 0.78,
    "coal": 6.3,
    "gas_other": 5.69
   },
@@ -248,7 +277,8 @@
    "load_gw": 38.59,
    "solar": 0.14,
    "wind": 14.59,
-   "hydro_bio": 6.41,
+   "hydro_bio": 5.69,
+   "storage": 0.72,
    "coal": 6.3,
    "gas_other": 5.45
   },
@@ -258,7 +288,8 @@
    "load_gw": 38.51,
    "solar": 0.49,
    "wind": 15.03,
-   "hydro_bio": 7.62,
+   "hydro_bio": 5.73,
+   "storage": 1.89,
    "coal": 6.32,
    "gas_other": 5.23
   },
@@ -268,7 +299,8 @@
    "load_gw": 38.57,
    "solar": 1.29,
    "wind": 14.78,
-   "hydro_bio": 7.79,
+   "hydro_bio": 5.75,
+   "storage": 2.04,
    "coal": 6.28,
    "gas_other": 5.07
   },
@@ -278,7 +310,8 @@
    "load_gw": 38.87,
    "solar": 2.46,
    "wind": 14.41,
-   "hydro_bio": 7.95,
+   "hydro_bio": 5.76,
+   "storage": 2.19,
    "coal": 6.09,
    "gas_other": 5.02
   },
@@ -288,7 +321,8 @@
    "load_gw": 39.17,
    "solar": 4.09,
    "wind": 14.19,
-   "hydro_bio": 7.37,
+   "hydro_bio": 5.76,
+   "storage": 1.61,
    "coal": 5.85,
    "gas_other": 4.99
   },
@@ -298,7 +332,8 @@
    "load_gw": 39.45,
    "solar": 6.29,
    "wind": 14.0,
-   "hydro_bio": 7.69,
+   "hydro_bio": 5.72,
+   "storage": 1.97,
    "coal": 5.36,
    "gas_other": 4.76
   },
@@ -308,7 +343,8 @@
    "load_gw": 39.99,
    "solar": 8.98,
    "wind": 13.87,
-   "hydro_bio": 6.96,
+   "hydro_bio": 5.72,
+   "storage": 1.24,
    "coal": 5.07,
    "gas_other": 4.72
   },
@@ -318,7 +354,8 @@
    "load_gw": 40.76,
    "solar": 12.09,
    "wind": 13.48,
-   "hydro_bio": 6.01,
+   "hydro_bio": 5.66,
+   "storage": 0.34,
    "coal": 4.67,
    "gas_other": 4.65
   },
@@ -328,7 +365,8 @@
    "load_gw": 41.99,
    "solar": 15.46,
    "wind": 12.89,
-   "hydro_bio": 5.66,
+   "hydro_bio": 5.64,
+   "storage": 0.01,
    "coal": 4.27,
    "gas_other": 4.53
   },
@@ -338,7 +376,8 @@
    "load_gw": 42.28,
    "solar": 19.28,
    "wind": 12.03,
-   "hydro_bio": 5.56,
+   "hydro_bio": 5.53,
+   "storage": 0.03,
    "coal": 3.38,
    "gas_other": 3.88
   },
@@ -348,7 +387,8 @@
    "load_gw": 42.95,
    "solar": 23.04,
    "wind": 10.96,
-   "hydro_bio": 5.49,
+   "hydro_bio": 5.47,
+   "storage": 0.01,
    "coal": 3.0,
    "gas_other": 3.71
   },
@@ -358,7 +398,8 @@
    "load_gw": 43.6,
    "solar": 26.96,
    "wind": 10.12,
-   "hydro_bio": 5.5,
+   "hydro_bio": 5.46,
+   "storage": 0.04,
    "coal": 2.78,
    "gas_other": 3.54
   },
@@ -368,7 +409,8 @@
    "load_gw": 43.96,
    "solar": 30.76,
    "wind": 9.46,
-   "hydro_bio": 5.49,
+   "hydro_bio": 5.46,
+   "storage": 0.04,
    "coal": 2.64,
    "gas_other": 3.46
   },
@@ -378,7 +420,8 @@
    "load_gw": 44.58,
    "solar": 33.25,
    "wind": 8.01,
-   "hydro_bio": 5.33,
+   "hydro_bio": 5.32,
+   "storage": 0.01,
    "coal": 2.58,
    "gas_other": 3.2
   },
@@ -388,7 +431,8 @@
    "load_gw": 45.14,
    "solar": 35.93,
    "wind": 7.26,
-   "hydro_bio": 5.25,
+   "hydro_bio": 5.24,
+   "storage": 0.01,
    "coal": 2.53,
    "gas_other": 3.06
   },
@@ -399,6 +443,7 @@
    "solar": 38.2,
    "wind": 7.13,
    "hydro_bio": 5.19,
+   "storage": 0.01,
    "coal": 2.54,
    "gas_other": 3.0
   },
@@ -409,6 +454,7 @@
    "solar": 40.0,
    "wind": 7.08,
    "hydro_bio": 5.15,
+   "storage": 0.01,
    "coal": 2.52,
    "gas_other": 2.99
   },
@@ -418,7 +464,8 @@
    "load_gw": 44.4,
    "solar": 41.96,
    "wind": 5.72,
-   "hydro_bio": 4.99,
+   "hydro_bio": 4.98,
+   "storage": 0.01,
    "coal": 2.38,
    "gas_other": 2.98
   },
@@ -428,7 +475,8 @@
    "load_gw": 44.18,
    "solar": 43.51,
    "wind": 5.38,
-   "hydro_bio": 4.89,
+   "hydro_bio": 4.88,
+   "storage": 0.01,
    "coal": 2.34,
    "gas_other": 2.99
   },
@@ -439,6 +487,7 @@
    "solar": 44.43,
    "wind": 4.52,
    "hydro_bio": 4.83,
+   "storage": 0.01,
    "coal": 2.29,
    "gas_other": 2.96
   },
@@ -448,7 +497,8 @@
    "load_gw": 44.51,
    "solar": 44.78,
    "wind": 3.78,
-   "hydro_bio": 4.83,
+   "hydro_bio": 4.82,
+   "storage": 0.01,
    "coal": 2.24,
    "gas_other": 2.95
   },
@@ -459,6 +509,7 @@
    "solar": 46.52,
    "wind": 3.58,
    "hydro_bio": 4.75,
+   "storage": 0.01,
    "coal": 2.22,
    "gas_other": 2.88
   },
@@ -469,6 +520,7 @@
    "solar": 47.15,
    "wind": 3.34,
    "hydro_bio": 4.74,
+   "storage": 0.01,
    "coal": 2.22,
    "gas_other": 2.85
   },
@@ -478,7 +530,8 @@
    "load_gw": 44.14,
    "solar": 47.63,
    "wind": 2.78,
-   "hydro_bio": 4.74,
+   "hydro_bio": 4.73,
+   "storage": 0.01,
    "coal": 2.23,
    "gas_other": 2.85
   },
@@ -488,7 +541,8 @@
    "load_gw": 43.82,
    "solar": 47.85,
    "wind": 2.31,
-   "hydro_bio": 4.7,
+   "hydro_bio": 4.69,
+   "storage": 0.01,
    "coal": 2.22,
    "gas_other": 2.84
   },
@@ -498,7 +552,8 @@
    "load_gw": 42.86,
    "solar": 48.11,
    "wind": 1.96,
-   "hydro_bio": 4.67,
+   "hydro_bio": 4.62,
+   "storage": 0.05,
    "coal": 2.23,
    "gas_other": 2.84
   },
@@ -508,7 +563,8 @@
    "load_gw": 41.87,
    "solar": 48.61,
    "wind": 1.82,
-   "hydro_bio": 4.67,
+   "hydro_bio": 4.6,
+   "storage": 0.07,
    "coal": 2.23,
    "gas_other": 2.88
   },
@@ -518,7 +574,8 @@
    "load_gw": 42.06,
    "solar": 48.41,
    "wind": 1.9,
-   "hydro_bio": 4.68,
+   "hydro_bio": 4.6,
+   "storage": 0.09,
    "coal": 2.23,
    "gas_other": 2.88
   },
@@ -528,7 +585,8 @@
    "load_gw": 41.81,
    "solar": 48.07,
    "wind": 1.78,
-   "hydro_bio": 4.69,
+   "hydro_bio": 4.59,
+   "storage": 0.1,
    "coal": 2.22,
    "gas_other": 2.86
   },
@@ -538,7 +596,8 @@
    "load_gw": 41.62,
    "solar": 47.88,
    "wind": 1.82,
-   "hydro_bio": 4.64,
+   "hydro_bio": 4.55,
+   "storage": 0.1,
    "coal": 2.23,
    "gas_other": 2.87
   },
@@ -548,7 +607,8 @@
    "load_gw": 41.11,
    "solar": 47.46,
    "wind": 1.85,
-   "hydro_bio": 4.62,
+   "hydro_bio": 4.54,
+   "storage": 0.08,
    "coal": 2.23,
    "gas_other": 2.86
   },
@@ -558,7 +618,8 @@
    "load_gw": 40.57,
    "solar": 46.84,
    "wind": 1.86,
-   "hydro_bio": 4.58,
+   "hydro_bio": 4.52,
+   "storage": 0.06,
    "coal": 2.2,
    "gas_other": 2.86
   },
@@ -568,7 +629,8 @@
    "load_gw": 39.29,
    "solar": 46.05,
    "wind": 1.83,
-   "hydro_bio": 4.59,
+   "hydro_bio": 4.53,
+   "storage": 0.06,
    "coal": 2.21,
    "gas_other": 2.86
   },
@@ -578,7 +640,8 @@
    "load_gw": 39.97,
    "solar": 45.19,
    "wind": 1.86,
-   "hydro_bio": 4.57,
+   "hydro_bio": 4.51,
+   "storage": 0.06,
    "coal": 2.21,
    "gas_other": 2.85
   },
@@ -588,7 +651,8 @@
    "load_gw": 39.7,
    "solar": 45.31,
    "wind": 1.97,
-   "hydro_bio": 4.56,
+   "hydro_bio": 4.51,
+   "storage": 0.05,
    "coal": 2.22,
    "gas_other": 2.85
   },
@@ -598,7 +662,8 @@
    "load_gw": 39.41,
    "solar": 45.21,
    "wind": 2.1,
-   "hydro_bio": 4.54,
+   "hydro_bio": 4.5,
+   "storage": 0.04,
    "coal": 2.2,
    "gas_other": 2.84
   },
@@ -609,6 +674,7 @@
    "solar": 44.76,
    "wind": 2.43,
    "hydro_bio": 4.5,
+   "storage": 0.01,
    "coal": 2.21,
    "gas_other": 2.87
   },
@@ -618,7 +684,8 @@
    "load_gw": 38.59,
    "solar": 43.88,
    "wind": 2.64,
-   "hydro_bio": 4.54,
+   "hydro_bio": 4.53,
+   "storage": 0.01,
    "coal": 2.21,
    "gas_other": 2.87
   },
@@ -628,7 +695,8 @@
    "load_gw": 38.14,
    "solar": 42.75,
    "wind": 2.66,
-   "hydro_bio": 4.53,
+   "hydro_bio": 4.52,
+   "storage": 0.01,
    "coal": 2.22,
    "gas_other": 2.86
   },
@@ -638,7 +706,8 @@
    "load_gw": 38.4,
    "solar": 42.3,
    "wind": 3.04,
-   "hydro_bio": 4.53,
+   "hydro_bio": 4.52,
+   "storage": 0.01,
    "coal": 2.24,
    "gas_other": 2.88
   },
@@ -648,7 +717,8 @@
    "load_gw": 38.03,
    "solar": 41.37,
    "wind": 3.32,
-   "hydro_bio": 4.61,
+   "hydro_bio": 4.55,
+   "storage": 0.06,
    "coal": 2.27,
    "gas_other": 2.9
   },
@@ -658,7 +728,8 @@
    "load_gw": 38.6,
    "solar": 39.99,
    "wind": 3.82,
-   "hydro_bio": 4.67,
+   "hydro_bio": 4.61,
+   "storage": 0.06,
    "coal": 2.34,
    "gas_other": 2.9
   },
@@ -668,7 +739,8 @@
    "load_gw": 38.19,
    "solar": 38.08,
    "wind": 4.57,
-   "hydro_bio": 4.73,
+   "hydro_bio": 4.64,
+   "storage": 0.08,
    "coal": 2.42,
    "gas_other": 2.92
   },
@@ -678,7 +750,8 @@
    "load_gw": 38.37,
    "solar": 36.46,
    "wind": 5.67,
-   "hydro_bio": 4.77,
+   "hydro_bio": 4.71,
+   "storage": 0.06,
    "coal": 2.42,
    "gas_other": 2.89
   },
@@ -688,7 +761,8 @@
    "load_gw": 38.94,
    "solar": 34.89,
    "wind": 6.99,
-   "hydro_bio": 4.87,
+   "hydro_bio": 4.8,
+   "storage": 0.07,
    "coal": 2.42,
    "gas_other": 2.89
   },
@@ -698,7 +772,8 @@
    "load_gw": 40.62,
    "solar": 34.69,
    "wind": 8.83,
-   "hydro_bio": 4.99,
+   "hydro_bio": 4.97,
+   "storage": 0.02,
    "coal": 2.42,
    "gas_other": 2.92
   },
@@ -708,7 +783,8 @@
    "load_gw": 40.54,
    "solar": 32.27,
    "wind": 9.28,
-   "hydro_bio": 5.09,
+   "hydro_bio": 5.07,
+   "storage": 0.02,
    "coal": 2.44,
    "gas_other": 2.92
   },
@@ -718,7 +794,8 @@
    "load_gw": 41.51,
    "solar": 29.55,
    "wind": 9.95,
-   "hydro_bio": 5.25,
+   "hydro_bio": 5.11,
+   "storage": 0.14,
    "coal": 2.44,
    "gas_other": 2.94
   },
@@ -728,7 +805,8 @@
    "load_gw": 41.67,
    "solar": 26.14,
    "wind": 10.58,
-   "hydro_bio": 5.31,
+   "hydro_bio": 5.2,
+   "storage": 0.11,
    "coal": 2.58,
    "gas_other": 3.01
   },
@@ -738,7 +816,8 @@
    "load_gw": 42.06,
    "solar": 22.34,
    "wind": 10.97,
-   "hydro_bio": 5.5,
+   "hydro_bio": 5.41,
+   "storage": 0.09,
    "coal": 3.13,
    "gas_other": 3.56
   },
@@ -748,7 +827,8 @@
    "load_gw": 42.51,
    "solar": 18.67,
    "wind": 11.27,
-   "hydro_bio": 6.16,
+   "hydro_bio": 5.54,
+   "storage": 0.62,
    "coal": 3.8,
    "gas_other": 3.88
   },
@@ -758,7 +838,8 @@
    "load_gw": 42.99,
    "solar": 15.0,
    "wind": 11.29,
-   "hydro_bio": 8.61,
+   "hydro_bio": 5.72,
+   "storage": 2.88,
    "coal": 4.27,
    "gas_other": 4.07
   },
@@ -768,7 +849,8 @@
    "load_gw": 43.38,
    "solar": 11.53,
    "wind": 11.2,
-   "hydro_bio": 10.35,
+   "hydro_bio": 5.96,
+   "storage": 4.39,
    "coal": 4.51,
    "gas_other": 4.27
   },
@@ -778,7 +860,8 @@
    "load_gw": 43.83,
    "solar": 8.48,
    "wind": 10.96,
-   "hydro_bio": 9.12,
+   "hydro_bio": 6.17,
+   "storage": 2.95,
    "coal": 4.66,
    "gas_other": 4.74
   },
@@ -788,7 +871,8 @@
    "load_gw": 44.34,
    "solar": 5.94,
    "wind": 10.64,
-   "hydro_bio": 11.16,
+   "hydro_bio": 6.33,
+   "storage": 4.83,
    "coal": 4.84,
    "gas_other": 4.96
   },
@@ -798,7 +882,8 @@
    "load_gw": 44.8,
    "solar": 3.94,
    "wind": 10.36,
-   "hydro_bio": 12.09,
+   "hydro_bio": 6.51,
+   "storage": 5.58,
    "coal": 5.0,
    "gas_other": 5.12
   },
@@ -808,7 +893,8 @@
    "load_gw": 44.85,
    "solar": 2.5,
    "wind": 10.01,
-   "hydro_bio": 12.66,
+   "hydro_bio": 6.82,
+   "storage": 5.84,
    "coal": 5.09,
    "gas_other": 5.21
   },
@@ -818,7 +904,8 @@
    "load_gw": 45.34,
    "solar": 1.36,
    "wind": 10.05,
-   "hydro_bio": 12.88,
+   "hydro_bio": 6.84,
+   "storage": 6.04,
    "coal": 5.15,
    "gas_other": 5.34
   },
@@ -828,7 +915,8 @@
    "load_gw": 45.04,
    "solar": 0.63,
    "wind": 10.73,
-   "hydro_bio": 13.16,
+   "hydro_bio": 6.94,
+   "storage": 6.22,
    "coal": 5.18,
    "gas_other": 5.41
   },
@@ -838,7 +926,8 @@
    "load_gw": 45.08,
    "solar": 0.29,
    "wind": 11.87,
-   "hydro_bio": 13.19,
+   "hydro_bio": 7.0,
+   "storage": 6.19,
    "coal": 5.19,
    "gas_other": 5.47
   },
@@ -848,7 +937,8 @@
    "load_gw": 45.51,
    "solar": 0.17,
    "wind": 12.49,
-   "hydro_bio": 13.35,
+   "hydro_bio": 7.05,
+   "storage": 6.3,
    "coal": 5.19,
    "gas_other": 5.49
   },
@@ -858,7 +948,8 @@
    "load_gw": 45.2,
    "solar": 0.16,
    "wind": 13.08,
-   "hydro_bio": 13.51,
+   "hydro_bio": 7.14,
+   "storage": 6.37,
    "coal": 5.18,
    "gas_other": 5.65
   },
@@ -868,7 +959,8 @@
    "load_gw": 45.33,
    "solar": 0.12,
    "wind": 14.08,
-   "hydro_bio": 13.42,
+   "hydro_bio": 7.11,
+   "storage": 6.31,
    "coal": 5.19,
    "gas_other": 5.76
   },
@@ -878,7 +970,8 @@
    "load_gw": 44.67,
    "solar": 0.07,
    "wind": 15.01,
-   "hydro_bio": 13.09,
+   "hydro_bio": 7.04,
+   "storage": 6.05,
    "coal": 5.18,
    "gas_other": 5.84
   },
@@ -888,7 +981,8 @@
    "load_gw": 44.56,
    "solar": 0.03,
    "wind": 16.11,
-   "hydro_bio": 12.54,
+   "hydro_bio": 6.88,
+   "storage": 5.66,
    "coal": 5.16,
    "gas_other": 5.89
   },
@@ -898,7 +992,8 @@
    "load_gw": 43.8,
    "solar": 0.05,
    "wind": 16.8,
-   "hydro_bio": 12.06,
+   "hydro_bio": 6.66,
+   "storage": 5.4,
    "coal": 5.16,
    "gas_other": 5.84
   },
@@ -908,7 +1003,8 @@
    "load_gw": 43.05,
    "solar": 0.03,
    "wind": 17.62,
-   "hydro_bio": 11.76,
+   "hydro_bio": 6.5,
+   "storage": 5.26,
    "coal": 5.15,
    "gas_other": 5.8
   },
@@ -918,7 +1014,8 @@
    "load_gw": 42.6,
    "solar": 0.02,
    "wind": 18.18,
-   "hydro_bio": 11.33,
+   "hydro_bio": 6.29,
+   "storage": 5.04,
    "coal": 5.11,
    "gas_other": 5.74
   },
@@ -928,7 +1025,8 @@
    "load_gw": 42.06,
    "solar": 0.02,
    "wind": 18.73,
-   "hydro_bio": 10.14,
+   "hydro_bio": 6.16,
+   "storage": 3.98,
    "coal": 5.08,
    "gas_other": 5.69
   },
@@ -938,7 +1036,8 @@
    "load_gw": 41.09,
    "solar": 0.02,
    "wind": 19.32,
-   "hydro_bio": 10.15,
+   "hydro_bio": 5.9,
+   "storage": 4.26,
    "coal": 5.06,
    "gas_other": 5.36
   },
@@ -948,7 +1047,8 @@
    "load_gw": 39.92,
    "solar": 0.02,
    "wind": 19.88,
-   "hydro_bio": 9.25,
+   "hydro_bio": 5.83,
+   "storage": 3.43,
    "coal": 5.05,
    "gas_other": 5.14
   },
@@ -958,7 +1058,8 @@
    "load_gw": 39.38,
    "solar": 0.02,
    "wind": 20.31,
-   "hydro_bio": 8.57,
+   "hydro_bio": 5.75,
+   "storage": 2.82,
    "coal": 5.04,
    "gas_other": 4.96
   },
@@ -968,7 +1069,8 @@
    "load_gw": 39.12,
    "solar": 0.02,
    "wind": 20.6,
-   "hydro_bio": 8.38,
+   "hydro_bio": 5.7,
+   "storage": 2.68,
    "coal": 5.03,
    "gas_other": 4.87
   }

@@ -200,13 +200,23 @@ def system_costs(backend, outdir: str) -> None:
 # Grouped into five, cheap-to-dear, because a merit order is an *ordered* category
 # and eight-plus technologies in one stack stops being readable. Nuclear is omitted
 # rather than bucketed: Germany's last reactors closed in 2023 and the series is zero.
+# Cheap-to-dear, and grouped so the fuel boundary is a horizontal line in the stack:
+# three zero-marginal-cost renewables, then storage, then the two that burn something.
+# Pumped storage is deliberately its own bucket rather than filed under hydro -- it is not
+# renewable generation, it re-emits energy something else made earlier, and calling it
+# renewable would undercut the one distinction this panel is drawing. SMARD's Pumpspeicher
+# module reports discharge only (charging is a separate consumption series), so it never
+# arrives negative.
 STACK = {
     "solar":     [1004068],
     "wind":      [1004067, 1001225],
-    "hydro_bio": [1001226, 1004070, 1004066, 1001228],   # hydro, storage, biomass, other RES
+    "hydro_bio": [1001226, 1004066, 1001228],            # hydro, biomass, other RES
+    "storage":   [1004070],                              # pumped storage, discharging
     "coal":      [1001223, 1004069],                     # lignite, hard coal
     "gas_other": [1004071, 1001227],                     # gas, other conventional
 }
+# Which buckets carry no fuel cost. Used for the renewable share the page quotes.
+RENEWABLE = ("solar", "wind", "hydro_bio")
 
 
 def example_day(backend, outdir: str, start, end) -> None:
@@ -279,6 +289,7 @@ def example_day(backend, outdir: str, start, end) -> None:
                  "is not public, so the stack shows volumes, not costs."),
         "source": "Bundesnetzagentur | SMARD.de",
         "buckets": list(STACK),
+        "renewable_buckets": list(RENEWABLE),
         "hours": hours,
     })
     print(f"  example_day: {pick} ({spread[pick]:.0f} EUR/MWh spread), {len(hours)} hours")

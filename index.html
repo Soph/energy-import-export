@@ -38,6 +38,7 @@
        Validated --ordinal in both modes: monotone lightness, adjacent dL >= 0.06,
        light end clear of the surface. */
     --m1: #47a3a6; --m2: #3c8a8e; --m3: #327175; --m4: #26585d; --m5: #193f45;
+    --st: #b9c0c6; --f1: #b07d28; --f2: #7d4f1f;   /* storage, then what burns */
     --shadow:     0 1px 2px rgba(11,11,11,.04), 0 8px 24px -12px rgba(11,11,11,.10);
   }
   @media (prefers-color-scheme: dark) {
@@ -56,6 +57,7 @@
       --zero:     #383835;
       --thru:     #6e6c66;
       --m1: #7ed4d8; --m2: #5ab5ba; --m3: #44989c; --m4: #357b7f; --m5: #2a5e62;
+      --st: #5a6570; --f1: #e0ac5c; --f2: #a86c33;
       --shadow:   none;
     }
   }
@@ -74,6 +76,7 @@
     --zero:     #383835;
     --thru:     #6e6c66;
     --m1: #7ed4d8; --m2: #5ab5ba; --m3: #44989c; --m4: #357b7f; --m5: #2a5e62;
+    --st: #5a6570; --f1: #e0ac5c; --f2: #a86c33;
     --shadow:   none;
   }
 
@@ -142,7 +145,17 @@
   .card > h2 { font-size: 15px; font-weight: 600; margin: 0; }
   .card > p.hint { color: var(--ink-2); font-size: 13px; margin: 3px 0 0; }
   .card-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-  .card-head .grow { flex: 1; min-width: 180px; }
+  /* Head stacks: title, paragraph, then the legend as its own full-width row directly
+     above the plot. Two reasons over sitting the legend beside the title. A legend belongs
+     next to what it explains, and beside the title it was several hundred pixels from its
+     own chart. And a wide legend used to compete with the text for the same row -- the day
+     panel's is seven items and 787px, which starved the hint to its 180px floor, wrapped
+     it into sixteen lines and left a 350px dead zone. Stacking removes the competition,
+     so the measure below is a reading decision rather than a consequence of the legend. */
+  .card-head { flex-direction: column; align-items: stretch; }
+  .card-head .grow { min-width: 0; }
+  /* Full width would be ~130 characters. Cap the measure for reading, not for layout. */
+  .card-head .hint { max-width: 74ch; }
   .plot { margin-top: 14px; }
   .plot svg { display: block; width: 100%; height: auto; overflow: visible; }
 
@@ -1069,13 +1082,33 @@ function drawWind(host, adj) {
  *  surplus that gets exported is visible, and the price strip below lets the reader
  *  see the collapse happen under the solar bulge without being told.
  */
+// Cheap-to-dear bottom-up, as before -- vertical position still carries the merit order.
+// What changed is the hue: the colour ramp used to encode merit-order position, which
+// vertical position already encodes, so the hue channel was spending itself on nothing.
+// It now carries the fuel boundary instead. Cool = nothing burns and the marginal cost is
+// about zero; warm = a fuel bill, which is what actually sets the price. Within each
+// family the steps still darken with cost, and the strongest contrast in the whole stack
+// is the boundary between the two families, because that is the line worth seeing.
+// Pumped storage sits between them in its own neutral: it burns nothing, but it is not
+// renewable generation either -- it re-emits energy something else made earlier.
 const STACK_ORDER = [
-  ["solar", "solar", "var(--m1)"],
-  ["wind", "wind", "var(--m2)"],
-  ["hydro_bio", "hydro, storage, biomass", "var(--m3)"],
-  ["coal", "lignite & hard coal", "var(--m4)"],
-  ["gas_other", "gas & other thermal", "var(--m5)"],
+  ["solar", "solar", "var(--m1)", true],
+  ["wind", "wind", "var(--m2)", true],
+  ["hydro_bio", "hydro & biomass", "var(--m3)", true],
+  ["storage", "pumped storage", "var(--st)", false],
+  ["coal", "lignite & hard coal", "var(--f1)", false],
+  ["gas_other", "gas & other thermal", "var(--f2)", false],
 ];
+const RENEWABLE_KEYS = STACK_ORDER.filter(r => r[3]).map(r => r[0]);
+
+/** Share of generation from the zero-fuel-cost buckets, for one interval or a whole day.
+ *  Reads the split off STACK_ORDER so the sentence cannot drift from the colours. */
+function renShare(h) {
+  const rows = Array.isArray(h) ? h : [h];
+  const pick = keys => rows.reduce((a, r) => a + keys.reduce((b, k) => b + (r[k] ?? 0), 0), 0);
+  const all = pick(STACK_ORDER.map(r => r[0]));
+  return all > 0 ? Math.round(pick(RENEWABLE_KEYS) / all * 100) : 0;
+}
 
 function drawDay(host, day) {
   if (!day?.hours?.length) { host.replaceChildren(); return false; }
@@ -1247,12 +1280,17 @@ function drawSeasons(host, seasons) {
   const band = (x1 - x0) / ms.length;
   const bw = Math.min(34, barW(band));
 
+  // SVG text is not clipped to the viewBox, so an over-long row title paints past the
+  // card edge rather than wrapping. Carry a short form and pick by the width available.
+  const roomy = (x1 - x0) > 330;
   const rows = [
-    { key: "price_gap", title: "Price gap, importing minus exporting hours (€/MWh)",
-      diverging: false },
-    { key: "net_import_gwh", title: "Net position (GWh)", diverging: true },
-    { key: "solar_vs_market", title: "Solar's capture price vs the month's average (€/MWh)",
-      diverging: true },
+    { key: "price_gap", diverging: false,
+      title: roomy ? "Price gap, importing minus exporting hours (€/MWh)"
+                   : "Price gap (€/MWh)" },
+    { key: "net_import_gwh", diverging: true, title: "Net position (GWh)" },
+    { key: "solar_vs_market", diverging: true,
+      title: roomy ? "Solar's capture price vs the month's average (€/MWh)"
+                   : "Solar vs month average (€/MWh)" },
   ];
 
   rows.forEach((row, r) => {
@@ -1341,8 +1379,7 @@ function drawLevels(host, days, ref) {
 
   const rows = [
     hh && ["Household, dynamic tariff", hh.dynamic_eur_mwh,
-           "modelled, " + hh.month + " — its wholesale part tracks the day-ahead price",
-           "var(--thru)"],
+           "modelled, " + hh.month + " — wholesale part only", "var(--thru)"],
     hh && ["Household, new contract", hh.new_eur_mwh,
            hc ? `modelled, ${hh.month} — only €${Math.round(hc.procurement_sales_margin_eur_mwh)} of it moves with wholesale`
               : "modelled, " + hh.month, "var(--thru)"],
@@ -1675,7 +1712,9 @@ function render() {
       + `€${num(cheap.price, Math.abs(cheap.price) < 10 ? 1 : 0)}; by ${dear.hour} it reached `
       + `€${num(dear.price, 0)}. `
       + `The mix turns over completely across the day — what sets the price is only ever `
-      + `the last unit that had to run.`;
+      + `the last unit that had to run. ${renShare(cheap)}% of what ran in that cheapest `
+      + `block came from something with no fuel bill, against ${renShare(dear)}% in the `
+      + `dearest; over the whole day, ${renShare(d.hours)}%.`;
     document.getElementById("dayNote").textContent =
       `Chosen automatically — ${d.chosen_because}. ${d.note} Where the stack rises above `
       + `the demand line the surplus is being exported or stored — the line is grid load, `
