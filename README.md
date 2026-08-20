@@ -7,7 +7,8 @@ time unit, and reports it over a day or a range.
 ```
 de_trade_balance.py    the analysis and CLI report
 build_data.py          reshapes a range into data/<month>.json + data/index.json
-data/                  the generated series, one file per calendar month
+data/                  the generated series: one file per calendar month, plus
+                       the whole-record files the range-independent panels use
 index.html             the dashboard, one file, no dependencies
 serve.py               serves it locally, bound to localhost
 ```
@@ -50,8 +51,33 @@ job re-fetches a short trailing window rather than only yesterday.
 Data is written one file per calendar month plus an `index.json` manifest. The page
 reads the manifest first, then fetches only the months its range needs — a 30-day
 view pulls two files (~140 KB) rather than the whole history, and switching to a
-longer range fetches just the months it is missing. Reference price levels live in
-`data/reference_prices.json`, hand-refreshed.
+longer range fetches just the months it is missing.
+
+Four panels deliberately ignore the range control, and each ships its own file, because
+each is only meaningful over the whole record:
+
+| File | Panel | Why it is not windowed |
+|---|---|---|
+| `seasons.json` | January and July are different systems | it *is* the comparison across months |
+| `wind_adjacency.json` | Wind goes missing below zero | the effect is episodic; a short window shows nothing, or the opposite |
+| `system_costs.json` | Congestion, both sides | the cost series lags ~3 months, so recent months have no partner |
+| `example_day.json` | How one day's price happens | one worked day, chosen as the widest spread on record |
+| `reference_prices.json` | Price levels | hand-refreshed retail snapshot |
+
+`example_day.json` and `wind_adjacency.json` are written under a guard: a narrow run
+cannot overwrite a wider one. Without it the daily job — whose range is three days —
+would replace "the widest spread on record" with the widest of last Tuesday to Thursday.
+
+**Resolution.** The default analysis grid is `--freq 15min`, matching the market: SDAC
+has cleared in quarter-hour MTUs since October 2025, and SMARD serves every series used
+here at `quarterhour`. Asking for hourly data is not free smoothing — the hourly series
+*is* the mean of four real prices. Measured over two days in August, every single hour
+had four different quarter-hour prices, averaging €26/MWh apart and reaching €79; one
+hour ran from €7.9 to €87.2 and arrives hourly as a flat €44.5. Averaging first also
+hides part-negative hours, which is exactly what the curtailment panel conditions on:
+at hourly resolution it counted 26 negative hours in a fortnight where quarter-hour
+resolution finds 28.75 hours' worth. Volumes are identical either way (a useful check
+that the MWh-per-interval scaling is right); congestion rent moves about 1.2%.
 
 ### Publishing it
 

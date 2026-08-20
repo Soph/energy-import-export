@@ -1,0 +1,92 @@
+{
+ "note": "One row per complete calendar month. price_gap is the volume-weighted day-ahead price in importing hours minus exporting hours, on the transit-free basis. day_ahead_mean is the mean of daily means, so every day counts equally. solar_vs_market is solar's generation-weighted capture price against that mean -- negative is the cannibalisation discount. Positive net_import_gwh means Germany was a net importer.",
+ "source": "Bundesnetzagentur | SMARD.de",
+ "licence": "CC BY 4.0",
+ "generated_at": "2026-08-20T15:41:37+02:00",
+ "months": [
+  {
+   "month": "2026-01",
+   "days": 31,
+   "price_gap": 72.2,
+   "px_importing": 140.3,
+   "px_exporting": 68.1,
+   "net_import_gwh": -616.0,
+   "day_ahead_mean": 110.1,
+   "solar_mv": 110.3,
+   "solar_vs_market": 0.3,
+   "rent_meur": 185.6
+  },
+  {
+   "month": "2026-02",
+   "days": 28,
+   "price_gap": 48.0,
+   "px_importing": 125.5,
+   "px_exporting": 77.5,
+   "net_import_gwh": -1313.0,
+   "day_ahead_mean": 96.6,
+   "solar_mv": 78.0,
+   "solar_vs_market": -18.6,
+   "rent_meur": 139.8
+  },
+  {
+   "month": "2026-03",
+   "days": 31,
+   "price_gap": 108.3,
+   "px_importing": 150.5,
+   "px_exporting": 42.2,
+   "net_import_gwh": 280.0,
+   "day_ahead_mean": 99.2,
+   "solar_mv": 55.9,
+   "solar_vs_market": -43.3,
+   "rent_meur": 178.9
+  },
+  {
+   "month": "2026-04",
+   "days": 30,
+   "price_gap": 128.3,
+   "px_importing": 129.0,
+   "px_exporting": 0.7,
+   "net_import_gwh": 668.0,
+   "day_ahead_mean": 78.5,
+   "solar_mv": 19.1,
+   "solar_vs_market": -59.4,
+   "rent_meur": 152.2
+  },
+  {
+   "month": "2026-05",
+   "days": 31,
+   "price_gap": 130.7,
+   "px_importing": 142.7,
+   "px_exporting": 12.0,
+   "net_import_gwh": 1662.0,
+   "day_ahead_mean": 97.5,
+   "solar_mv": 37.9,
+   "solar_vs_market": -59.6,
+   "rent_meur": 110.2
+  },
+  {
+   "month": "2026-06",
+   "days": 30,
+   "price_gap": 137.4,
+   "px_importing": 161.3,
+   "px_exporting": 23.8,
+   "net_import_gwh": 2329.0,
+   "day_ahead_mean": 109.5,
+   "solar_mv": 63.7,
+   "solar_vs_market": -45.8,
+   "rent_meur": 119.1
+  },
+  {
+   "month": "2026-07",
+   "days": 31,
+   "price_gap": 120.4,
+   "px_importing": 156.6,
+   "px_exporting": 36.3,
+   "net_import_gwh": 281.0,
+   "day_ahead_mean": 105.4,
+   "solar_mv": 54.1,
+   "solar_vs_market": -51.3,
+   "rent_meur": 101.7
+  }
+ ]
+}

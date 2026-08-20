@@ -325,32 +325,45 @@ def wind_shortfall(backend, start, end, price: pd.Series
 
     j["deficit"] = j.fc - j.act                 # signed: positive means wind ran short
     below = j.px < 0
+    # fc and act are MW, so a sum over intervals is only MWh at hourly resolution --
+    # at 15min each reading covers a quarter of an hour. Getting this wrong inflates
+    # every volume by 4 while leaving the percentages right, which is exactly the shape
+    # of bug that hides.
+    step = (j.index.to_series().diff().dropna().median().total_seconds() / 60
+            if len(j) > 1 else 60.0)
+    hrs = step / 60.0
     key = dtb.period_of(j.index, "day")
     daily = pd.DataFrame({
-        "wind_forecast_gwh": j.fc.groupby(key).sum() / 1000,
-        "wind_actual_gwh": j.act.groupby(key).sum() / 1000,
-        # the two disjoint hour sets, each with its own forecast base so any window can
-        # be expressed as a share rather than a bare volume
-        "wind_fc_neg_gwh": j.fc.where(below, 0.0).groupby(key).sum() / 1000,
-        "wind_def_neg_gwh": j.deficit.where(below, 0.0).groupby(key).sum() / 1000,
-        "wind_fc_pos_gwh": j.fc.where(~below, 0.0).groupby(key).sum() / 1000,
-        "wind_def_pos_gwh": j.deficit.where(~below, 0.0).groupby(key).sum() / 1000,
-        "negative_price_hours": below.groupby(key).sum(),
+        "wind_forecast_gwh": j.fc.groupby(key).sum() * hrs / 1000,
+        "wind_actual_gwh": j.act.groupby(key).sum() * hrs / 1000,
+        # Only the raw daily observations. The negative/positive split used to ship here
+        # too, as a per-window control -- but the panel establishes that per-window is
+        # meaningless for this effect, so the split is only computed over the full record,
+        # in wind_adjacency.json. Nothing read these six fields.
+        "negative_price_intervals": below.groupby(key).sum(),
     })
-    return daily, adjacency(j, below)
+    return daily, adjacency(j, below, step)
 
 
-def adjacency(j: pd.DataFrame, below: pd.Series, lags=(-3, -2, -1, 0, 1, 2, 3)) -> dict:
-    """The deficit as a share of forecast, by distance in hours from a negative price.
+def adjacency(j: pd.DataFrame, below: pd.Series, step_minutes: float) -> dict:
+    """The deficit as a share of forecast, by distance in time from a negative price.
 
-    This is the test that identifies the effect, and it is the one the page was missing.
-    A badly-forecast windy episode is smooth in time: it cannot produce a shortfall one
-    hour wide. A price-triggered shutdown can, and does -- the deficit is around 9% of
-    forecast in the negative hour and collapses to under 1% an hour either side.
+    This is the test that identifies the effect. A badly-forecast windy episode is smooth
+    in time: it cannot produce a shortfall one market interval wide. A price-triggered
+    shutdown can, and does.
 
-    Neighbouring hours that are themselves below zero are excluded from the lags, so the
-    control is uncontaminated rather than quietly counting the same hours again.
+    Lags are expressed in *minutes*, not index steps, so the chart means the same thing
+    whichever resolution the run used -- at quarter-hour resolution an offset of one step
+    is 15 minutes, and labelling that "1 h" would quietly overstate how sharp the
+    discontinuity is. The window either side is held at one hour and filled with whatever
+    steps that takes.
+
+    Neighbouring intervals that are themselves below zero are excluded from the lags, so
+    the control is uncontaminated rather than quietly counting the same intervals again.
     """
+    hrs = step_minutes / 60.0            # MW -> MWh for one interval
+    per_hour = max(1, int(round(60.0 / step_minutes)))
+    lags = list(range(-per_hour, per_hour + 1))
     idx = j.index
     pos = pd.Series(range(len(idx)), index=idx)
     neg_at = pos[below].to_numpy()
@@ -364,60 +377,122 @@ def adjacency(j: pd.DataFrame, below: pd.Series, lags=(-3, -2, -1, 0, 1, 2, 3)) 
         if rows.empty or rows.fc.sum() <= 0:
             continue
         prof[str(k)] = {
-            "hours": int(len(rows)),
+            "minutes": int(round(k * step_minutes)),
+            "intervals": int(len(rows)),
             "share_of_forecast_pct": _n(rows.deficit.sum() / rows.fc.sum() * 100, 2),
-            "deficit_gwh": _n(rows.deficit.sum() / 1000, 1),
+            "deficit_gwh": _n(rows.deficit.sum() * hrs / 1000, 1),
         }
-    # Per month over the same full record. The panel is range-independent, so its
-    # seasonal caveat has to be too -- derived from whatever months the reader happened
-    # to load, it credited July and never mentioned the April episode that carries the
-    # result.
+
+    # Per month over the same full record, so the panel's seasonal caveat is on the same
+    # basis as its headline rather than on whatever months a reader happened to load.
     neg = j[below]
-    mk = neg.index.strftime("%Y-%m")
     by_month = []
-    for m, g in neg.groupby(mk):
+    for m, g in neg.groupby(neg.index.strftime("%Y-%m")):
         if g.fc.sum() <= 0:
             continue
         by_month.append({
             "month": m,
-            "hours": int(len(g)),
-            "deficit_gwh": _n(g.deficit.sum() / 1000, 1),
-            "forecast_gwh": _n(g.fc.sum() / 1000, 1),
+            "intervals": int(len(g)),
+            "deficit_gwh": _n(g.deficit.sum() * hrs / 1000, 1),
+            "forecast_gwh": _n(g.fc.sum() * hrs / 1000, 1),
             "share_of_forecast_pct": _n(g.deficit.sum() / g.fc.sum() * 100, 2),
         })
 
     other = j[~below]
     return {
-        # The broad control, answering a different question than the lags: is the
-        # forecast simply biased low? It is not -- outside negative-price hours wind runs
-        # slightly ABOVE forecast, so the deficit is not a general bias showing through.
-        "control_other_hours": {
-            "hours": int(len(other)),
-            "deficit_gwh": _n(other.deficit.sum() / 1000, 1),
+        "control_other_intervals": {
+            "intervals": int(len(other)),
+            "hours_equiv": _n(len(other) * step_minutes / 60, 0),
+            "deficit_gwh": _n(other.deficit.sum() * hrs / 1000, 1),
             "share_of_forecast_pct": _n(
                 other.deficit.sum() / other.fc.sum() * 100, 2) if other.fc.sum() > 0 else None,
         },
-        "note": ("Wind deficit against day-ahead forecast, as a share of that forecast, "
-                 "by distance in hours from an hour whose day-ahead price was below "
-                 "zero. Lag 0 is the negative hour itself; other lags exclude hours "
-                 "that were themselves below zero, so they are a clean control. A "
-                 "shortfall one hour wide cannot be forecast error. by_month covers the "
-                 "negative-price hours only, over the same record."),
-        "by_month": by_month,
-        "negative_price_hours": int(below.sum()),
-        "hours_total": int(len(j)),
-        "covers": [str(idx[0].date()), str(idx[-1].date())],
+        "note": ("Wind deficit against day-ahead forecast, as a share of that forecast, by "
+                 "distance in minutes from a market interval whose day-ahead price was "
+                 "below zero. Lag 0 is the negative interval itself; other lags exclude "
+                 "intervals that were themselves below zero, so they are a clean control. "
+                 "A shortfall one interval wide cannot be forecast error. by_month covers "
+                 "the negative-price intervals only, over the same record."),
         "profile": prof,
+        "by_month": by_month,
+        "step_minutes": _n(step_minutes, 0),
+        "negative_intervals": int(below.sum()),
+        "negative_hours_equiv": _n(below.sum() * step_minutes / 60, 1),
+        "intervals_total": int(len(j)),
+        "covers": [str(idx[0].date()), str(idx[-1].date())],
     }
+
+
+def seasons(outdir: str) -> None:
+    """Monthly aggregates, for the panel that shows January and July are different systems.
+
+    Read back from the month files rather than from this run's range, so it always covers
+    the whole record -- the same reason `system_costs` reads the rent from disk. Complete
+    months only: a half-finished month would plot as a low bar rather than a missing one,
+    which is the more misleading of the two.
+
+    This is the project's strongest finding and it was invisible on the page: the price gap
+    is largely a summer effect, Germany flips from net exporter to net importer, and solar's
+    cannibalisation discount disappears entirely in winter.
+    """
+    months = []
+    for name in sorted(os.listdir(outdir)):
+        m = re.fullmatch(r"(\d{4}-\d{2})\.json", name)
+        if not m:
+            continue
+        try:
+            with open(os.path.join(outdir, name)) as fh:
+                days = json.load(fh)["days"]
+        except (OSError, ValueError, KeyError):
+            continue
+        key = m.group(1)
+        if len(days) != pd.Period(key).days_in_month:
+            continue                                    # incomplete month
+        tot = lambda f: sum((d.get(f) or 0) for d in days)
+        wavg = lambda pf, vf: (sum((d.get(pf) or 0) * (d.get(vf) or 0) for d in days)
+                               / tot(vf)) if tot(vf) else None
+        imp_px, exp_px = wavg("imp_px_own", "stayed_gwh"), wavg("exp_px_own", "from_de_plants_gwh")
+        solar_mv = wavg("solar_mv", "solar_gwh")
+        # mean of daily means: every day carries equal weight, which is what "an average
+        # day that month" means. Not volume-weighted, and it is labelled as such.
+        da = sum(d["price_de_mean"] for d in days if d.get("price_de_mean") is not None) / len(days)
+        months.append({
+            "month": key,
+            "days": len(days),
+            "price_gap": _n(imp_px - exp_px, 1) if None not in (imp_px, exp_px) else None,
+            "px_importing": _n(imp_px, 1),
+            "px_exporting": _n(exp_px, 1),
+            "net_import_gwh": _n(tot("net_import_gwh"), 0),
+            "day_ahead_mean": _n(da, 1),
+            "solar_mv": _n(solar_mv, 1),
+            "solar_vs_market": _n(solar_mv - da, 1) if solar_mv is not None else None,
+            "rent_meur": _n(tot("rent_keur") / 1000, 1),
+        })
+    if not months:
+        return
+    _write(os.path.join(outdir, "seasons.json"), {
+        "note": ("One row per complete calendar month. price_gap is the volume-weighted "
+                 "day-ahead price in importing hours minus exporting hours, on the "
+                 "transit-free basis. day_ahead_mean is the mean of daily means, so every "
+                 "day counts equally. solar_vs_market is solar's generation-weighted "
+                 "capture price against that mean -- negative is the cannibalisation "
+                 "discount. Positive net_import_gwh means Germany was a net importer."),
+        "source": "Bundesnetzagentur | SMARD.de",
+        "licence": "CC BY 4.0",
+        "generated_at": pd.Timestamp.now(tz=dtb.TZ).isoformat(timespec="seconds"),
+        "months": months,
+    })
+    flips = sum(1 for a, b in zip(months, months[1:])
+                if (a["net_import_gwh"] or 0) * (b["net_import_gwh"] or 0) < 0)
+    print(f"  seasons: {len(months)} complete month(s), {flips} net-position flip(s)")
 
 
 def write_adjacency(outdir: str, adj: dict | None) -> None:
     """Write the adjacency profile, but never let a narrow run overwrite a wide one.
 
     This statistic is only meaningful over a long record, and the default range is
-    yesterday. Without this guard the daily cron would recompute it from a single day
-    and publish that -- the same trap `example_day` still has, where "widest spread in
-    the refreshed range" becomes trivially true on a one-day range.
+    yesterday. Without this guard the daily cron would recompute it from a single day and
+    publish that. `example_day` carries the same guard for the same reason.
     """
     if not adj or not adj.get("profile"):
         return
@@ -427,14 +502,15 @@ def write_adjacency(outdir: str, adj: dict | None) -> None:
             old = json.load(fh)
     except (OSError, ValueError):
         old = None
-    if old and old.get("negative_price_hours", 0) > adj["negative_price_hours"]:
-        print(f"  wind_adjacency: kept ({old['negative_price_hours']} negative hours on "
-              f"file beats this run's {adj['negative_price_hours']})")
+    if old and old.get("negative_hours_equiv", 0) > adj["negative_hours_equiv"]:
+        print(f"  wind_adjacency: kept ({old['negative_hours_equiv']}h of negative prices "
+              f"on file beats this run's {adj['negative_hours_equiv']}h)")
         return
     adj["generated_at"] = pd.Timestamp.now(tz=dtb.TZ).isoformat(timespec="seconds")
     _write(path, adj)
     lag0 = adj["profile"].get("0", {}).get("share_of_forecast_pct")
-    print(f"  wind_adjacency: {adj['negative_price_hours']} negative hours, "
+    print(f"  wind_adjacency: {adj['negative_intervals']} negative intervals "
+          f"({adj['negative_hours_equiv']}h) at {adj['step_minutes']}min, "
           f"lag 0 = {lag0}% of forecast")
 
 
@@ -515,7 +591,7 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
             "rent_keur": _n(r["rent_kEUR"], 1),
             "borders": borders,
             **({k: _n(v) for k, v in mrow.items()} if mrow is not None else {}),
-            **({k: _n(v, 0 if k == "negative_price_hours" else 2)
+            **({k: _n(v, 0 if k == "negative_price_intervals" else 2)
                 for k, v in wrow.items()} if wrow is not None else {}),
         })
     return out
@@ -606,7 +682,9 @@ def main() -> None:
     ap.add_argument("--end", help="last day, inclusive; same forms as --date")
     ap.add_argument("--days", type=int, help="length in days instead of --end")
     ap.add_argument("--flows", choices=["scheduled", "physical"], default="scheduled")
-    ap.add_argument("--freq", default="60min")
+    ap.add_argument("--freq", default="15min",
+                    help="analysis grid (default 15min, the market's own MTU since "
+                         "Oct 2025; 60min averages four real prices into one)")
     ap.add_argument("--borders", help="comma-separated subset")
     ap.add_argument("--source", choices=["smard", "energy-charts", "entsoe", "demo"],
                     default=os.environ.get("DE_TRADE_SOURCE", "smard"),
@@ -633,7 +711,12 @@ def main() -> None:
     if a.source == "demo":
         backend = dtb.DemoBackend()
     elif a.source == "smard":
-        backend = dtb.SmardBackend(cache=cache)
+        # Ask SMARD for the resolution we are actually going to analyse at. Requesting
+        # hourly and then resampling to 15min would forward-fill one number into four
+        # slots -- the shape of quarter-hour data with none of the content.
+        sub_hourly = pd.Timedelta(a.freq) < pd.Timedelta("1h")
+        backend = dtb.SmardBackend(cache=cache,
+                                   res="quarterhour" if sub_hourly else "hour")
     elif a.source == "entsoe":
         if not a.token:
             sys.exit("Set ENTSOE_API_TOKEN or pass --token.")
@@ -656,6 +739,7 @@ def main() -> None:
     merge_months(a.out, day_records(d, a.source, a.flows, demand, mv, wind), borders)
     system_costs(backend, a.out)
     write_adjacency(a.out, adj)
+    seasons(a.out)
     example_day(backend, a.out, start, end)
     print(f"  -> {a.out}/")
 

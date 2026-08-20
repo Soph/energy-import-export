@@ -524,12 +524,21 @@ class SmardBackend(Backend):
                   "CH": "Schweiz", "CZ": "Tschechien", "BE": "Belgien",
                   "NO_2": "Norwegen 2"}
 
-    def __init__(self, timeout: int = 90, cache: Cache | None = None):
+    def __init__(self, timeout: int = 90, cache: Cache | None = None,
+                 res: str = "hour"):
         import requests
         self.s = requests.Session()
         self.s.headers["User-Agent"] = "de_trade_balance/1.0 (+github)"
         self.timeout = timeout
         self.cache = cache
+        # Resolution to ask SMARD for. Everything here is served at "quarterhour" too,
+        # and asking for "hour" is not free smoothing: day-ahead has cleared in
+        # quarter-hour blocks since October 2025, so the hourly series is the mean of
+        # four real prices. Measured over 2026-08-10..11 every single hour had four
+        # different quarter prices, spread 26 EUR/MWh on average and up to 79 -- one hour
+        # ran 7.9 to 87.2 and arrives as a flat 44.5. Averaging first also hides
+        # part-negative hours, which is exactly what the curtailment panel conditions on.
+        self.res = res
         self._batch: dict = {}      # window -> {module id: Series}
 
     @staticmethod
@@ -543,10 +552,11 @@ class SmardBackend(Backend):
             return float("nan")
         return float(s.replace(".", "").replace(",", "."))
 
-    def _fetch(self, modules: list, start, end, resolution="hour",
+    def _fetch(self, modules: list, start, end, resolution: str | None = None,
                region: str | None = None) -> dict:
         """POST once for many modules; returns {column label: Series} in local time."""
         region = region or self.REGION
+        resolution = resolution or self.res
         body = {"request_form": [{
             "format": "CSV", "moduleIds": list(modules), "region": region,
             "timestamp_from": self._ms(start), "timestamp_to": self._ms(end),

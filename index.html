@@ -155,6 +155,7 @@
   /* chart text wears text tokens, never the series color */
   text { fill: var(--muted); font-size: 11px; }
   text.val { fill: var(--ink-2); font-size: 11px; font-weight: 600; }
+  text.rowtitle { fill: var(--ink-2); font-size: 11.5px; font-weight: 600; }
   text.val.idle { fill: var(--muted); font-weight: 400; font-style: italic; }
   text.tick { font-variant-numeric: tabular-nums; }
   .gridline { stroke: var(--grid); stroke-width: 1; }
@@ -323,8 +324,10 @@
     <p class="read">The shape is the argument. Weather is smooth in time, so a
     badly-forecast windy spell cannot produce a shortfall one hour wide — it would slope
     in and out across the neighbouring hours. A shutdown triggered by the hour's own
-    price can, and this one does: the deficit collapses by an order of magnitude the hour
-    either side, and the control hours scatter around zero in both directions.
+    price can, and this one does: the deficit collapses by more than an order of magnitude
+    in the very next fifteen-minute block, and every control block scatters around zero in
+    both directions. Fifteen minutes is the market's own settlement interval, not a window
+    chosen to flatter the result.
     <span id="windControl"></span></p>
     <p class="read">What this cannot tell you is <em>who</em> stopped. Below zero a
     plant selling into the market loses money on every megawatt-hour, so feathering the
@@ -375,6 +378,28 @@
       </div>
     </div>
     <div class="plot" id="plotBorder"></div>
+  </section>
+
+  <section class="card" id="cardSeasons" hidden>
+    <div class="card-head">
+      <div class="grow">
+        <h2>January and July are different systems</h2>
+        <p class="hint" id="seasonsHint"></p>
+      </div>
+      <div class="key">
+        <span><i style="background:var(--out)"></i>net importer</span>
+        <span><i style="background:var(--in)"></i>net exporter</span>
+      </div>
+    </div>
+    <div class="plot" id="plotSeasons"></div>
+    <p class="read">This is the caveat for everything above it. Every other panel reports
+    a window, and the default window is thirty days — so the same page read in February and
+    in June makes materially different claims, all of them true of their month. The gap
+    the headline leads with is largely a summer phenomenon; Germany changes from net
+    exporter to net importer partway through the spring; and solar's discount to the market
+    average, the thing that makes cheap afternoons cheap, essentially does not exist in
+    January, when there is little solar to depress its own price.</p>
+    <p class="read" id="seasonsRead"></p>
   </section>
 
   <section class="card" id="cardCosts" hidden>
@@ -608,6 +633,15 @@ function showTip(evt, html) {
   tip.style.top = Math.max(tip.offsetHeight + 4, evt.clientY - pad) + "px";
 }
 const hideTip = () => { tip.style.opacity = 0; };
+// The tooltip is position: fixed and was only ever dismissed by pointerleave on a hit
+// rect. Scroll away mid-hover and it rode along at full opacity over whatever panel came
+// next; on touch, a tap fires pointerenter and pointerleave never comes, so it stuck
+// permanently. Scroll and any press outside a hit rect now dismiss it too.
+addEventListener("scroll", () => { if (tip.style.opacity !== "0") hideTip(); },
+                 { passive: true });
+addEventListener("pointerdown", e => {
+  if (!e.target.closest?.(".hit")) hideTip();
+}, { capture: true });
 /** The day tooltip, shared by the balance, price, volume and residual charts.
  *
  *  Leads with the transit-free basis because that is what the price chart plots --
@@ -963,13 +997,15 @@ function drawResidualDaily(host, days) {
 function drawWind(host, adj) {
   const prof = adj?.profile;
   if (!prof) { host.replaceChildren(); return false; }
-  const lags = ["-3", "-2", "-1", "0", "1", "2", "3"].filter(k => prof[k]);
+  // Keys are step offsets whose size depends on the run's resolution, so order by the
+  // minutes each one carries rather than assuming a fixed set.
+  const lags = Object.keys(prof).sort((a, b) => prof[a].minutes - prof[b].minutes);
   if (lags.length < 3) { host.replaceChildren(); return false; }
 
   const PH = 150, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b + 14;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
     "aria-label": "Wind deficit against day-ahead forecast, per cent of forecast, by "
-      + "distance in hours from an hour priced below zero" });
+      + "distance in minutes from a market interval priced below zero" });
   const x0 = PAD.l, x1 = W - PAD.r, y0 = PAD.t, y1 = PAD.t + PH;
 
   const vals = lags.map(k => prof[k].share_of_forecast_pct);
@@ -997,24 +1033,31 @@ function drawWind(host, adj) {
       fill: zero ? "var(--out)" : "var(--thru)",
       opacity: zero ? 1 : .55,
     }));
-    svg.append(el("text", { class: "val", x: cx, y: v >= 0 ? y(v) - 6 : y(v) + 14,
-                            "text-anchor": "middle" }, num(v, 1) + "%"));
-    svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" },
-                  zero ? "the hour" : (k > 0 ? "+" : "") + k + " h"));
+    // Label every bar when there is room; when there is not, label the finding and let
+    // the controls speak as a flat row -- which is the whole message anyway.
+    if (zero || band >= 44)
+      svg.append(el("text", { class: "val", x: cx, y: v >= 0 ? y(v) - 6 : y(v) + 14,
+                              "text-anchor": "middle" }, num(v, band >= 44 ? 1 : 2) + "%"));
+    const mins = prof[k].minutes;
+    const edge = Math.abs(mins) === Math.max(...lags.map(q => Math.abs(prof[q].minutes)));
+    if (band >= 40 || zero || edge)
+      svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" },
+                    zero ? (band >= 40 ? "the block" : "0")
+                         : (mins > 0 ? "+" : "−") + Math.abs(mins)));
     const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PH });
-    const html = `<div class="t-date">${zero ? "Hours priced below €0"
-                    : Math.abs(+k) + " hour" + (Math.abs(+k) === 1 ? "" : "s")
-                      + (+k > 0 ? " after" : " before") + ", price at or above €0"}</div>`
+    const html = `<div class="t-date">${zero ? "Intervals priced below €0"
+                    : Math.abs(mins) + " min " + (mins > 0 ? "after" : "before")
+                      + ", price at or above €0"}</div>`
       + `<div class="t-row"><span>Deficit vs forecast</span><span>${num(v, 2)}%</span></div>`
       + `<div class="t-row"><span>Volume</span><span>${num(prof[k].deficit_gwh, 1)} GWh</span></div>`
-      + `<div class="t-row"><span>Hours counted</span><span>${num(prof[k].hours, 0)}</span></div>`;
+      + `<div class="t-row"><span>Intervals counted</span><span>${num(prof[k].intervals, 0)}</span></div>`;
     hit.addEventListener("pointerenter", e => showTip(e, html));
     hit.addEventListener("pointermove", e => showTip(e, html));
     hit.addEventListener("pointerleave", hideTip);
     svg.append(hit);
   });
   svg.append(el("text", { class: "tick", x: (x0 + x1) / 2, y: H - 2, "text-anchor": "middle" },
-                "distance from an hour priced below €0"));
+                "minutes from a market interval priced below €0"));
   host.replaceChildren(svg);
   return true;
 }
@@ -1060,7 +1103,10 @@ function drawDay(host, day) {
   for (const t of ticks(pLo, pHi, 4)) {
     svg.append(el("line", { class: Math.abs(t) < 1e-9 ? "axisline" : "gridline",
                             x1: x0, x2: x1, y1: yP(t), y2: yP(t) }));
-    svg.append(el("text", { class: "tick", x: x0 - 8, y: yP(t) + 4, "text-anchor": "end" }, num(t)));
+    // the unit sits just above pTop, so a tick landing there would print through it
+    if (yP(t) - pTop > 11)
+      svg.append(el("text", { class: "tick", x: x0 - 8, y: yP(t) + 4, "text-anchor": "end" },
+                    num(t)));
   }
   svg.append(el("text", { x: x0 - 8, y: pTop - 2, "text-anchor": "end" }, "€/MWh"));
 
@@ -1173,6 +1219,90 @@ function drawCosts(host, costs) {
     hit.addEventListener("pointermove", e => showTip(e, html));
     hit.addEventListener("pointerleave", hideTip);
     svg.append(hit);
+  });
+  host.replaceChildren(svg);
+  return true;
+}
+
+/** Three monthly series on a shared month axis: the seasons disagree.
+ *
+ *  Full record and range-independent, like the wind and congestion panels, because that
+ *  is the whole point -- every other number on this page is drawn from a window, and a
+ *  30-day window in January and one in June describe different systems. Small multiples
+ *  rather than one axis: the three series share nothing but their months (EUR/MWh, GWh,
+ *  EUR/MWh against a different baseline), so stacking them on one scale would be
+ *  arithmetic nonsense.
+ */
+function drawSeasons(host, seasons) {
+  const ms = seasons?.months?.filter(m => m.price_gap != null);
+  if (!ms || ms.length < 3) { host.replaceChildren(); return false; }
+
+  const ROW = 74, GAPY = 26, LBL = 20;
+  const W = host.clientWidth || 720;
+  const H = ROW * 3 + GAPY * 2 + PAD.t + LBL + 10;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
+    "aria-label": "Price gap, net position and solar capture price by month, showing the "
+      + "summer and winter systems differ" });
+  const x0 = PAD.l, x1 = W - PAD.r;
+  const band = (x1 - x0) / ms.length;
+  const bw = Math.min(34, barW(band));
+
+  const rows = [
+    { key: "price_gap", title: "Price gap, importing minus exporting hours (€/MWh)",
+      diverging: false },
+    { key: "net_import_gwh", title: "Net position (GWh)", diverging: true },
+    { key: "solar_vs_market", title: "Solar's capture price vs the month's average (€/MWh)",
+      diverging: true },
+  ];
+
+  rows.forEach((row, r) => {
+    const top = PAD.t + r * (ROW + GAPY), bot = top + ROW;
+    const vals = ms.map(m => m[row.key] ?? 0);
+    const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
+    const pad = (hi - lo) * .14 || 1;
+    const y = scale(lo - pad, hi + pad, bot, top);
+
+    svg.append(el("text", { class: "rowtitle", x: x0, y: top - 7 }, row.title));
+    for (const t of ticks(lo - pad, hi + pad, 2)) {
+      svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
+                              x1: x0, x2: x1, y1: y(t), y2: y(t) }));
+      svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" },
+                    num(t, 0)));
+    }
+
+    ms.forEach((m, i) => {
+      const v = m[row.key] ?? 0, cx = x0 + band * (i + .5);
+      // Row 2 keeps the page's meaning for red and blue -- red is importing everywhere
+      // else, so it is importing here. Row 3 is not a trade quantity, so it stays neutral
+      // rather than borrowing colours that already mean something.
+      const fill = !row.diverging ? "var(--thru)"
+        : row.key === "net_import_gwh" ? (v >= 0 ? "var(--out)" : "var(--in)")
+        : "var(--thru)";
+      const h = Math.abs(y(v) - y(0));
+      svg.append(el("path", { d: barPath(cx - bw / 2, Math.min(y(v), y(0)), bw, h, RAD, v >= 0),
+                              fill, opacity: row.diverging && row.key !== "net_import_gwh"
+                                ? .62 : 1 }));
+      if (r === rows.length - 1)
+        // month only: "Jan '26" at 7 months in a 238px plot overlaps its neighbour
+        svg.append(el("text", { x: cx, y: H - 6, "text-anchor": "middle" },
+                      MONTHS[+m.month.slice(5, 7) - 1]));
+      const hit = el("rect", { class: "hit", x: cx - band / 2, y: top, width: band, height: ROW });
+      const html = `<div class="t-date">${dMonth(m.month + "-01")}</div>`
+        + `<div class="t-row"><span>Price gap</span><span>€${num(m.price_gap, 1)}</span></div>`
+        + `<div class="t-row"><span>&nbsp;&nbsp;importing / exporting</span>`
+        + `<span>${num(m.px_importing, 0)} / ${num(m.px_exporting, 0)}</span></div>`
+        + `<div class="t-row"><span>Net position</span><span>${num(m.net_import_gwh, 0)} GWh `
+        + `${(m.net_import_gwh ?? 0) >= 0 ? "in" : "out"}</span></div>`
+        + `<div class="t-sep"></div>`
+        + `<div class="t-row"><span>Day-ahead average</span><span>€${num(m.day_ahead_mean, 1)}</span></div>`
+        + `<div class="t-row"><span>Solar captured</span><span>€${num(m.solar_mv, 1)} `
+        + `(${num(m.solar_vs_market, 1)})</span></div>`
+        + `<div class="t-row"><span>Congestion rent</span><span>€${num(m.rent_meur, 1)}M</span></div>`;
+      hit.addEventListener("pointerenter", e => showTip(e, html));
+      hit.addEventListener("pointermove", e => showTip(e, html));
+      hit.addEventListener("pointerleave", hideTip);
+      svg.append(hit);
+    });
   });
   host.replaceChildren(svg);
   return true;
@@ -1485,26 +1615,29 @@ function render() {
   windCard.hidden = false;                     // unhide before measuring
   windCard.hidden = !drawWind(document.getElementById("plotWind"), state.wind);
   if (!windCard.hidden) {
-    const a = state.wind, p0 = a.profile["0"];
-    const near = ["-1", "1"].map(k => a.profile[k]).filter(Boolean);
+    const a = state.wind, p0 = a.profile["0"], step = a.step_minutes || 60;
+    // the immediate neighbours, whatever the resolution calls them
+    const near = Object.values(a.profile)
+      .filter(v => Math.abs(v.minutes) > 0 && Math.abs(v.minutes) <= step);
     const worst = near.length
       ? Math.max(...near.map(v => Math.abs(v.share_of_forecast_pct))) : null;
     document.getElementById("windHint").textContent =
-      `In the ${num(a.negative_price_hours, 0)} hours priced below zero, wind ran `
+      `Across the ${num(a.negative_hours_equiv, 0)} hours' worth of `
+      + `${step}-minute blocks priced below zero, wind ran `
       + `${num(p0.share_of_forecast_pct, 1)}% under its own day-ahead forecast — `
-      + `${num(p0.deficit_gwh, 0)} GWh. In the hour either side, with the price back at `
-      + `or above zero, the same forecast is off by ${worst == null ? "almost nothing"
-          : "at most " + num(worst, 1) + "%"}. Measured over the whole record, `
+      + `${num(p0.deficit_gwh, 0)} GWh. One block later, with the price back at or above `
+      + `zero, the same forecast is off by ${worst == null ? "almost nothing"
+          : "at most " + num(worst, 2) + "%"}. Measured over the whole record, `
       + `${a.covers[0]} to ${a.covers[1]}, and not affected by the range above.`;
   }
 
-  if (!windCard.hidden && state.wind.control_other_hours?.share_of_forecast_pct != null) {
+  if (!windCard.hidden && state.wind.control_other_intervals?.share_of_forecast_pct != null) {
     // Answers the other obvious objection -- that the forecast is simply biased low.
     // It runs the other way, which is a stronger statement than "near nothing".
-    const c = state.wind.control_other_hours;
+    const c = state.wind.control_other_intervals;
     document.getElementById("windControl").textContent =
       `Nor is the forecast simply pitched low: across the other `
-      + `${num(c.hours, 0)} hours of the record wind ran `
+      + `${num(c.hours_equiv, 0)} hours of the record wind ran `
       + `${num(Math.abs(c.share_of_forecast_pct), 1)}% `
       + `${c.share_of_forecast_pct < 0 ? "above" : "below"} it.`;
   }
@@ -1552,6 +1685,35 @@ function render() {
 
   drawBorders(document.getElementById("plotBorder"), days);
 
+  const seasonsCard = document.getElementById("cardSeasons");
+  seasonsCard.hidden = false;                  // unhide before measuring
+  seasonsCard.hidden = !drawSeasons(document.getElementById("plotSeasons"), state.seasons);
+  if (!seasonsCard.hidden) {
+    const ms = state.seasons.months;
+    const gap = ms.map(m => m.price_gap), net = ms.map(m => m.net_import_gwh);
+    const lo = ms[gap.indexOf(Math.min(...gap))], hi = ms[gap.indexOf(Math.max(...gap))];
+    const cann = ms.filter(m => m.solar_vs_market != null);
+    const mildest = cann.reduce((a, b) => b.solar_vs_market > a.solar_vs_market ? b : a);
+    const deepest = cann.reduce((a, b) => b.solar_vs_market < a.solar_vs_market ? b : a);
+    const exporters = net.filter(v => v < 0).length;
+    document.getElementById("seasonsHint").textContent =
+      `${ms.length} complete months on the same three measures, whole record, independent `
+      + `of the range above. The price gap runs from €${num(lo.price_gap, 0)} in `
+      + `${dMonth(lo.month + "-01")} to €${num(hi.price_gap, 0)} in `
+      + `${dMonth(hi.month + "-01")}, and Germany was a net exporter in ${exporters} of `
+      + `them and a net importer in the rest.`;
+    // Describe the sign in words and keep the number unsigned, or "EUR-60 below" happens.
+    // And a month within a euro of the average is "level with it", not "EUR0 above it".
+    const side = v => Math.abs(v) < 1 ? "level with it"
+      : `€${num(Math.abs(v), 0)} ${v > 0 ? "above" : "below"} it`;
+    document.getElementById("seasonsRead").textContent =
+      `The sharpest of the three is solar: against the average price of its own month it `
+      + `came in ${side(deepest.solar_vs_market)} in ${dMonth(deepest.month + "-01")}, and `
+      + `${side(mildest.solar_vs_market)} in ${dMonth(mildest.month + "-01")} — the same `
+      + `technology in the same market, cannibalising its own price in one season and `
+      + `not the other.`;
+  }
+
   const costsCard = document.getElementById("cardCosts");
   costsCard.hidden = false;                    // unhide before measuring
   // whole months on file, not the sliced window: this panel is monthly, and a
@@ -1575,7 +1737,6 @@ function render() {
     : "Volume-weighted German price in the hours Germany imported, against the hours it "
       + "exported. Both are the same price curve — the gap is timing.";
 
-  const ownPx = days.some(d => d.imp_px_own != null);
   document.getElementById("keyImp").textContent = "when importing";
   document.getElementById("keyExp").textContent = "when exporting";
 
@@ -1595,9 +1756,6 @@ function render() {
       + `nothing marks an arriving megawatt-hour as bound for an export rather than for `
       + `German demand.`
     : legacyVolHint(days, netted);
-  if (!hasT) document.getElementById("volHint").textContent = legacyVolHint(days, netted);
-  const _unused = netted
-    ;
   function legacyVolHint(days, netted) { return netted
     ? (srcs.length > 1
         ? "Energy crossing the border each day. Part of this window comes from a source "
@@ -1684,6 +1842,12 @@ async function boot() {
     state.wind = r.ok ? await r.json() : null;
   } catch (e) {
     state.wind = null;
+  }
+  try {
+    const r = await fetch("data/seasons.json", { cache: "no-cache" });
+    state.seasons = r.ok ? await r.json() : null;
+  } catch (e) {
+    state.seasons = null;
   }
   try {
     const r = await fetch("data/index.json", { cache: "no-cache" });
