@@ -1,0 +1,358 @@
+ok, can you kick of an adversarial review on the whole page and it's useful ness and if data is meaningful
+
+---
+
+<task-notification>
+<task-id>a34d88f4886a1cf0e</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-soph-Work-own-energy-import-export/e31e5543-7a34-499c-9074-5fefc0bbe0fc/tasks/a34d88f4886a1cf0e.output</output-file>
+<status>completed</status>
+<summary>Agent "Review usefulness cold" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I read `index.html` in full (1,565 lines), `data/index.json`, `data/2026-07.json`, `data/example_day.json`, `data/reference_prices.json`, `data/system_costs.json`, and computed what the default 30-day view actually renders so I could judge the panels as a reader sees them, not as the code intends them.
+
+Default view (30 days, 2026-07-18 → 2026-08-16): hero reads **€127/MWh apart** (€166.9 importing vs €40.3 exporting, 4.1×); balance **−€265M**; net import **18 GWh**; transit **60%**; wind cut **32 GWh**; r = 0.79.
+
+---
+
+## 1. Thesis
+
+**As written:** *A megawatt-hour in Germany is worth several times more in some hours than others, cross-border flows track that gap — in when it is dear, out when it is cheap — and the cheap hours are cheap because wind and solar are running.*
+
+The page states this well, twice: the header sub (lines 222–226) and the last sentence of `cardRead` (250–252): *"What is left is a real fact with real consequences: the value of a megawatt-hour in Germany varies several-fold within the day."* That is the thesis, and it is a good one.
+
+**Does every panel serve it? No.** Six do (hero, cardRead, cardPrice, cardCut, cardVolume, cardDay). Five are a second and third article stapled on.
+
+**Panels that would improve the page BY BEING DELETED:**
+
+- **cardCosts** (360–417). Delete. On the current data it draws **10 bars — five month-pairs, Jan–May 2026** (I checked `system_costs.json`: only 5 months have both series). Attached to those 10 bars is a 68-word hint plus a ~450-word `&lt;details&gt;` on Article 19 of Regulation (EU) 2019/943 and § 19 StromNEV. It is the panel with the least data and the most words on the page, it is a different subject (who pays for internal grid congestion), and it ignores the range control. *Lost:* the legitimate "congestion rent is revenue, not a loss" point — which the footer already makes at 447–449. Nothing else.
+- **cardLevels** (418–430). Delete or cut to one sentence. It is a genuinely interesting chart about German retail and industrial tariffs, and it has nothing to do with cross-border flows. Its two coloured bars are the hero number redrawn (lines 1132–1141). *Lost:* one excellent fact — "only €140 of a €365 household bill moves with wholesale" (`household_components_latest`). Promote that clause into `cardRead` and delete the other eight bars.
+- **cardResidualDaily** (290–305). Delete. `cardDay` proves the same claim — renewables set the price — hour by hour, visibly, in one panel. This one asserts it and asks you to scan up (295: *"The same days as the chart above"*) plus trust an r. *Lost:* the r value; keep it as one sentence in cardDay's hint.
+- **cardBorder** (350–359). Delete unless rebuilt (see §6.1). It ranks eleven borders by the one number the page tells you three times not to read as money.
+
+Eleven panels → six, and the page gets stronger.
+
+## 2. Who is the reader?
+
+The prose assumes someone who already knows what a day-ahead auction, a bidding zone, redispatch, congestion rent and merit order are — **and who arrives believing Germany loses money on power trade**, since panel 1 is a rebuttal. That is an energy-policy insider. But the h1, the volume chart and the tiles are written for a newspaper reader. The page has not picked.
+
+Knowledge assumed but never given:
+
+- **244–245:** *"nothing here was sold below cost and nothing was bought unwillingly — a uniform-price auction cannot do either."* This is the single load-bearing claim of the entire rebuttal and it rests on an undefined term of art in a subordinate clause. Should read: *"...cannot do either: in this auction every seller is paid the same clearing price, and nobody is obliged to bid."*
+- **319–320:** *"it sits in the redispatch spending under both sides of the ledger."* "Redispatch" is used here and defined 78 lines later at 397–401. Jargon used before defined, literally.
+- **315:** *"When the price is below zero the support premium is withdrawn."* Which premium, withdrawn by whom? EEG feed-in support is never named anywhere on the page.
+- **354:** *"Balance per neighbouring bidding zone, summed over the window."* Bidding zone undefined — and the chart's row labels then read `DK1 DK2 NO2 SE4` with not one word about why Denmark appears twice, Norway once, and Sweden once. That is the first question every reader will have about that chart.
+- **366:** *"the eleven DE-LU borders."* Luxembourg appears from nowhere and is not among the eleven borders in `data/index.json`.
+- **1373:** *"Across this window the two move together at r = 0.79."* Pearson's r, unexplained, on a public dashboard. Worse: click "7 days" and it drops to **r = 0.52** with no comment — the reader watches the page's central mechanism weaken to a coin flip.
+- **dayNote** (from `example_day.json`): *"The ordering is the conventional merit order, not observed bids."* Merit order undefined; the ordinal blue ramp encodes exactly that concept and the legend (1013–1015) never says "cheapest at the bottom".
+- **Table headers** (1288–1301): `Px, import hours`, `Px importing (gross)`, `Balance kEUR`, **`Zonal kEUR`**. "Px" is trading-desk shorthand. "kEUR" is never defined on the page. And `Zonal kEUR` is the **only** place `bal_zonal_keur` appears anywhere — a whole column of numbers whose meaning exists nowhere on the page.
+- **Units:** cardResidualDaily's axis is `GW` for a daily figure (852) and the tooltip says *"Not covered by wind/solar 38.1 GW"* — mean? peak? Never said. And cardCosts labels its axis `M€` (1061) while every other money value on the page is `€1.2M` via the `money()` helper. Two money notations.
+
+## 3. The "so what" test
+
+| Panel | Takeaway sentence a reader can write |
+|---|---|
+| hero | "Germany bought at €167 and sold at €40 in the same month — 4× apart, hours apart." ✅ strongest thing on the page |
+| cardRead | "None of that means anyone was fleeced." ✅ (but answers a question the reader may not have asked) |
+| **cardBalance** | ❌ **Cannot write it.** |
+| cardPrice | "The gap never closes — it's the whole window, not one bad week." ✅ best chart |
+| **cardResidualDaily** | ❌ Half-writable; the chart contains no price, so the claim is asserted, not shown |
+| cardCut | "Below €0, wind is switched off on purpose." ✅ real, non-obvious finding |
+| cardVolume | "60% of what arrives leaves again the same hour — Germany is a corridor." ✅ second-best fact on the page |
+| cardDay | "Same power stations, same day, €8 at 13:00 and €256 of spread — because solar ran." ✅ best panel |
+| **cardBorder** | ❌ **Cannot write it.** "Switzerland is the biggest"? So what? |
+| **cardCosts** | ❌ **Cannot write it.** |
+| cardLevels | "Almost none of a household bill moves with wholesale; almost all of a relieved industrial one does." ✅ — but it's a different article's sentence |
+| cardTable | ✅ as a data dump, fine |
+
+**cardBalance is the important failure.** Its own hint says *"A valuation, not a cash flow"* (264); its tile note says *"a value gap, not a loss"* (1262); its legend has been rewritten into the coinages *"arrivals worth more"/"departures worth more"* (256–258) to dodge the words cost and revenue; and the footer disowns it again (447–449). **A chart whose caption is four disclaimers is a chart the author does not believe in.** It survives because it was the original project — README line 3: *"Did Germany pay more for imported electricity than it earned from exports?"* The page has since found a better question and kept the old chart.
+
+Also: cardCosts's hint forbids netting the two series, and its own tooltip nets them anyway — `&lt;span&gt;Net&lt;/span&gt;&lt;span&gt;€${num((r.rent - r.spend)/1e6,1)}M&lt;/span&gt;` (1078).
+
+## 4. Framing honesty
+
+**Verdict: it succeeds at not implying Germany is losing money, and there is a real, defensible point. But it over-corrected in exactly one place** — it kept cardBalance and hedged the caption four separate times instead of deciding. Count the negations: *"A valuation, not a cash flow"* (264), *"a value gap, not a loss"* (1262), *"price levels... not sums anyone was billed"* (426), *"not a payment anyone makes"* (448), *"not a loss"* (449), *"Germany as a corridor, not a buyer"* (1453), *"Related economics, but not one ledger"* (365). Seven "not X" constructions. Negation is the page's rhetorical tic, and four denials of one number is not caution — it is an unresolved editorial decision shipped as prose.
+
+**Strongest sentences (1253–1257):**
+&gt; *"€166.9 when importing, €40.3 when exporting — 4.1× apart, hours apart, in one market. These are clearing prices, not payments: everyone buying in the German zone pays that hour's German price, whatever its power came from."*
+
+Fact, magnitude, and the misreading pre-empted in one clause instead of a paragraph. This is the model the rest of the page should follow. Runner-up: *"Germany as a corridor, not a buyer"* (1453).
+
+**Weakest sentences:**
+
+**(a) 242–243:** *"Three facts that stop the numbers above being read as a verdict."* The first sentence of the first prose panel is a defensive crouch that presumes the reader already reached a wrong conclusion. It also mislabels its own paragraph: three corrections follow, but the payload is the *fourth* sentence. Should be: *"Germany buys in its dear hours and sells in its cheap ones. Three things that does not mean:"* — claim first, corrections after.
+
+**(b) 1387–1391, the cut hint** — the most self-undermining sentence on the page:
+&gt; *"The same forecast is off by −142 GWh across all hours together — near nothing on 8,065 GWh forecast — so this is not forecast error piling up, it is turbines being switched off."*
+
+The number that is supposed to establish "the residual is small" prints as **−142**, which is *four times larger in absolute terms* than the 32 GWh it is meant to make credible, and it is negative (the forecast under-predicted). The reader is asked to accept 142 as "near nothing" while treating 32 as significant. Compare like with like instead: *"In negative-price hours wind ran 32 GWh below forecast. In every other hour it ran 174 GWh above it. The shortfall is not spread across the day — it sits where the price is below zero."*
+
+**(c) 365–368:** a 68-word hint whose entire content is apologies — *"Related economics, but not one ledger... This one ignores the range above... the spending series lags roughly three months behind, so the most recent months on the page have no partner yet."* A panel that must explain that it ignores the page's own control, that its two series are not comparable, and that its data is three months stale, is not ready to publish.
+
+## 5. Redundancy
+
+- **The import/export price pair appears four times:** hero (1253), cardPrice, cardLevels (two of ten bars, 1132–1141), cardTable (four columns). cardLevels' two coloured bars *are* the hero number redrawn as bars.
+- **The balance appears four times:** hero tile (1261), cardBalance, cardBorder (identical sum, cut by geography), cardTable.
+- **cardResidualDaily and cardDay** argue the same claim. cardDay wins outright.
+- **Colour collision between adjacent panels.** In cardBalance red = balance below zero (257). In cardResidualDaily red = *net importer* (297–300). Same two colours, different variables, in panels the reader is explicitly told to read against each other (295: *"The same days as the chart above"*). On **8 of the last 30 days those two encodings disagree** — a red bar above a blue bar for the same day. That is worse than redundancy; it is a trap.
+
+## 6. Missing — all supported by fields already in the month files
+
+1. **`mean_spread` per border is computed, shipped in every day's `borders` object, and appears nowhere on the page.** It is the number that explains both the direction of trade and the congestion rent — "the German price sits €18/MWh above Switzerland's, €3 below Austria's". This is the panel cardBorder should have been.
+2. **The sentence that would make the thesis undeniable, and it isn't there:** on **8 of the last 30 days** (41 of 228) Germany **exported more energy than it imported and the arrivals were still worth more**. `net_import_gwh` and `bal_de_keur`, already loaded. One line of code, and it beats every sentence currently on the page.
+3. **A normalizer for the €265M.** `load_gw` is in every day: −€265M over 35,448 GWh consumed = **−€7.48 per MWh of German consumption**, ≈0.75 ct/kWh, ≈2% of the €384/MWh household bill cardLevels already displays. That one figure retires all four balance disclaimers. (Do *not* normalize by net import — net import is 18 GWh over the window, so €/MWh-traded is meaningless. That instability is itself the finding.)
+4. **`bal_zonal_keur`** — the same flows valued at the *neighbours'* prices — is computed and shown only as the unexplained `Zonal kEUR` table column. It is the actual counterfactual the framing argument needs: what was this worth to the other side?
+5. **`solar_gwh`, `wind_onshore_gwh`, `wind_offshore_gwh`** are shipped and used only as hidden weights inside cardLevels. The page's core mechanism is "the cheap hours are cheap because wind and solar are running" and it never shows wind and solar output.
+6. **`negative_price_hours`** exists per day and lives only in a tooltip. A 228-day strip of hours-below-zero is the cheapest chart on this list and supports both cardCut and the thesis.
+7. **A second example day.** The best panel on the page has n=1. A contrasting low-renewable or windy-winter day would turn an anecdote into a mechanism. `example_day.json` is already a separate file, so a second costs nothing structurally.
+
+## 7. The h1
+
+**No.** `&lt;h1&gt;Germany's cross-border power balance&lt;/h1&gt;` (221) names the balance — the exact quantity the code comment at 1242–1245 calls *"the most misread number on the page, since it looks like a loss and is not one"*, and which the prose disowns four times. The h1 promises a trade-balance story; the hero delivers a price-timing story. The subtitle (222–226) is the real headline. The `&lt;title&gt;` (6) and meta description (7) carry the same stale framing.
+
+Replace with something the hero can cash: **"Germany buys power dear and sells it cheap — hours apart"**, or **"Four times the price, the same afternoon"**. And move `cardRead` *after* cardPrice: right now the rebuttal precedes the claim it defends.
+
+---
+
+## Ranked recommendations (improvement per unit of work)
+
+1. **~10 min** — Rewrite h1, `&lt;title&gt;`, meta description to the price-gap framing. Free, and it fixes the reader's first impression.
+2. **~10 min** — Add "on 8 of the last 30 days Germany exported more than it imported and the arrivals were still worth more" to the hero note. Best sentence-per-keystroke on the whole list.
+3. **~10 min** — Put −€7.48/MWh-consumed in the balance tile note; delete two of the four balance disclaimers.
+4. **~15 min** — Delete cardCosts and cardLevels. Salvage one clause each (Article 19 is already in the footer; keep the €140-of-€365 household fact). Removes ~500 words and two panels.
+5. **~20 min** — Promote the 60%-transit fact out of cardVolume's hint (1452–1453) into the header sub or a hero tile. The second-best fact on the page is currently body text on panel 6.
+6. **~20 min** — Fix the cut hint (§4b). It currently argues against itself.
+7. **~20 min** — Delete cardResidualDaily; move its r into cardDay's hint with a plain-language gloss. Also removes the red/blue collision.
+8. **~30 min** — Rebuild cardBorder on `mean_spread`, or delete it.
+9. **~30 min** — Define, once and inline: day-ahead auction, bidding zone, uniform clearing price. Move "redispatch" after its definition. Explain why DK appears twice.
+10. **~60 min+** — Second example day.
+
+**Bottom line:** worth publishing — but the version worth publishing is six panels long and is currently hiding inside eleven. cardDay and the hero are genuinely good; the transit fact and cardCut are real findings. Everything after cardDay is the author showing you what else the script can compute. Two credits where due, which are not problems: the per-source attribution handling (471–496) is more careful than most published dashboards, and the `#notice` synthetic-data banner (187–191, 1478–1486) is exactly right.</result>
+<usage><subagent_tokens>98722</subagent_tokens><tool_uses>20</tool_uses><duration_ms>399236</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>adf8384f5fd407221</task-id>
+<tool-use-id>toolu_015JG3EH6CJKiUPBWnJuXVu3</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-soph-Work-own-energy-import-export/e31e5543-7a34-499c-9074-5fefc0bbe0fc/tasks/adf8384f5fd407221.output</output-file>
+<status>completed</status>
+<summary>Agent "Attack the domain claims" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>## Review: `index.html` explanatory text — prioritised, worst first
+
+---
+
+### 1. The EEG negative-price claim — **FACTUALLY WRONG**
+
+&gt; L314–316: *"Only the market-driven half is visible here. When the price is below zero the support premium is withdrawn, so generating costs the operator money and the blades are feathered"*
+&gt; (repeated verbatim in `build_data.py:280` and again at `:327`)
+
+Stated as a general rule for German wind, this is wrong for the majority of the fleet in 2026. § 51 EEG is vintage- and size-graded:
+
+| Commissioned | Trigger | Exempt below |
+|---|---|---|
+| before 1 Jan 2016 | **never** — no reduction at all | — |
+| 2016–2020 | 6 *consecutive* hours | wind &lt; 3 MW |
+| 2021–2022 | 4 consecutive hours | 500 kW |
+| 2023 – 24 Feb 2025 | 4→3→2→1 h step-down | 400 kW |
+| from 25 Feb 2025 | first negative **quarter-hour** | 2 kW / 100 kW (PV, smart meter) |
+
+Correct version: *"For wind farms commissioned from 2016 the support premium is withdrawn during negative prices — after six, four or one consecutive hour depending on vintage, and from the first quarter-hour for plants commissioned since 25 February 2025. Plants older than 2016 keep their premium and have no price-based reason to stop."*
+
+Two knock-on points: (a) the mechanism the sentence describes is right — the *anzulegender Wert* drops to zero, so the sliding market premium goes to zero and a direct-marketed plant selling into a negative price does lose money; (b) but a plant whose premium is **not** withdrawn still receives `hourly price + (AW − monthly Marktwert)`, which is exactly why it keeps running through negative hours. That is the interesting half of the story and the page has removed it. Also: plants past their 20-year term have no premium to withdraw, and fixed-tariff plants simply get nothing rather than paying.
+
+Confidence: **high**. Sources: [§ 51 EEG](https://www.gesetze-im-internet.de/eeg_2014/__51.html), [Clearingstelle EEG|KWKG FAQ 264](https://www.clearingstelle-eeg-kwkg.de/haeufige-rechtsfrage/264), [next-kraftwerke on the hour rules](https://www.next-kraftwerke.de/wissen/6-stunden-regel-4-stunden-regel), [Grant Thornton on the Solarspitzengesetz](https://www.grantthornton.de/themen/2025/wirtschaftliche-auswirkungen-des-solarspitzengesetzes-auf-photovoltaik-windenergieanlagen-an-land/).
+
+---
+
+### 2. "Grid-ordered curtailment leaves no trace in this comparison" — **FACTUALLY WRONG**, and it invalidates the chart's headline
+
+&gt; L317–319: *"Curtailment ordered by the grid operator, because northern wind cannot reach southern demand, happens at any price and leaves no trace in this comparison"*
+
+It leaves exactly the same trace, in exactly the same hours. TSO-instructed wind curtailment also shows up as actual-below-forecast, and it is *concentrated* in high-wind hours — which are the negative-price hours. Conditioning on `price &lt; 0` does not separate the two causes; if anything it selects for their overlap. So the chart title *"Wind that chose not to run"* (L309) and the caption's *"it is turbines being switched off"* (L1390) are supportable, but *by whom* is not identified, and the paragraph asserts the opposite.
+
+Correct version: *"This cannot separate the two: TSO-ordered curtailment also lands in high-wind, negative-price hours, so some of the shortfall below zero is instructed, not chosen."*
+
+Confidence: **high** on the logic. Same error in `build_data.py:284` ("It does not capture grid-ordered curtailment, which happens at any price and is invisible to a price-conditioned test") — "happens at any price" is true; "invisible to a price-conditioned test" does not follow.
+
+---
+
+### 3. The congestion ledger chart compares a both-sides number with a Germany-only number — **MISLEADING**, and the chart invites the exact inference the caption disclaims
+
+&gt; L364–370: *"What the borders earned in congestion rent, against what the transmission operators spent keeping the grid within limits. Related economics, but not one ledger: the rent is day-ahead income on the eleven DE-LU borders, the spending is Germany-wide and includes the internal grid."*
+
+The caveat names the right axis of asymmetry (Germany-wide spending vs border rent) and misses the bigger one: the rent plotted is the **whole** border rent, and the page itself says at L387–388 it is *"paid to the two transmission operators on that border, normally split evenly"*. So the German TSOs' share is roughly half of the blue bar. On your own data the five paired months come out at €760M rent vs €689M spend — ratio **1.10**, "the borders more than pay for the grid". Halve the rent and it's **~0.55**. A reader takes the visual claim, not the disclaimer.
+
+Worse, `drawCosts` docstring (L1032–1034) says *"they are not components of one total… stacking them would invent a sum nobody should read"* — and then the tooltip at L1079 prints `Net: €X M` (rent − spend). That is the invented sum, spelled out.
+
+Two further gaps: the rent is day-ahead only, while German TSOs' actual congestion income also includes JAO long-term and intraday auction revenue; and Article 19(2)(b) means part of the countertrading/remedial-action spending in the red bar is *financed out of* the blue bar — so the two are more entangled than "not one ledger" admits, in a way that further muddles the visual.
+
+Fix: plot the German half (or say plainly "both TSOs' share; Germany receives about half"), and drop the Net row.
+
+---
+
+### 4. § 19 StromNEV as the cost-recovery mechanism — **FACTUALLY WRONG**
+
+&gt; L405–408: *"The operators recover it through network charges, passed to the distribution operators and on to consumers, spread across all German users by a mechanism descended from the § 19 StromNEV levy. Domestic and industrial alike, in proportion to network use."*
+
+The § 19(2) StromNEV levy (now *Aufschlag für besondere Netznutzung*) does the opposite job: it refinances the **discounts** granted to atypical and energy-intensive consumers, who can be cut to as little as 20% of standard network charges. It has nothing to do with redispatch recovery.
+
+Correct version: *"Redispatch sits in the TSOs' cost base and is recovered through transmission network charges — since 2023 a single nationwide uniform transmission tariff under NEMoG, equalised between the four TSOs — rolled into distribution tariffs and on to consumers."*
+
+The second sentence is also wrong on incidence: *"Domestic and industrial alike, in proportion to network use"* is contradicted by the page's own chart three cards down, where *"Industry pays, with reliefs"* is a fraction of the household bar — and those reliefs are § 19(2) StromNEV individual network fees. Confidence: **high**. Sources: [Amprion on the § 19 surcharge](https://www.amprion.net/Strommarkt/Abgaben-und-Umlagen/Aufschlag-f%C3%BCr-besondere-Netznutzung/), [§ 19 StromNEV](https://www.gesetze-im-internet.de/stromnev/__19.html), [BNetzA on redispatch costs](https://www.bundesnetzagentur.de/DE/Beschlusskammern/BK08/BK8_07a_Redispatchkosten/BK8_Redispatchkosten.html).
+
+---
+
+### 5. "Nothing about the stack changed except which unit had to run last" — **FACTUALLY WRONG**, refuted by the chart directly above it
+
+&gt; L1407 (`dayHint`): *"Nothing about the stack changed except which unit had to run last."*
+
+On the auto-selected day (2026-08-14) the stack changes completely: solar 0.0 → 57.5 GW, wind 23.3 → 2.5 GW, coal 11.9 → 5.2 GW, total generation 37.4 → 74.3 GW. Everything about the stack changed. You mean *"no new technology appeared — only the marginal unit changed"*, and even that is untrue here (coal is marginal at 03:00, gas at 20:00, near-zero-cost solar at 13:00).
+
+Correct version: *"The mix turns over completely across the day; what sets the price is only ever the last unit that had to run."*
+
+Related robustness bug in the same string (L1404): *"At {cheap.hour} solar alone ran to {X} GW"* is generated for the cheapest hour whatever it is. On a windy winter night the cheapest hour has solar = 0 and the sentence reads "solar alone ran to 0 GW".
+
+---
+
+### 6. "Every trade cleared at a price its seller had bid… a uniform-price auction cannot do either" — **FACTUALLY WRONG**
+
+&gt; L243–245: *"**Every trade cleared at a price its seller had bid**, so nothing here was sold below cost and nothing was bought unwillingly — a uniform-price auction cannot do either."*
+
+Three problems. (a) The defining property of uniform pricing is that sellers clear at the *market* price, not at their own bid — infra-marginal sellers receive more than they bid. As written it describes pay-as-bid. (b) EUPHEMIA does accept out-of-the-money block orders (*paradoxically accepted blocks*) precisely so that block and complex orders can clear at a loss against their limit price, and can curtail orders at the clearing price. So the auction *can* do the thing you say it cannot. (c) "nothing was sold below cost" conflates bids with costs — negative bids are exactly the case where a plant offers below its short-run cost, which is the phenomenon the page's own curtailment card is about.
+
+Correct version: *"Every seller received at least its own bid and every buyer paid at most its own bid — that is what uniform pricing guarantees for simple orders; block and complex orders are the small exception."*
+
+---
+
+### 7. "Where the stack rises above the demand line, the surplus left the country" — **MISLEADING BUT DEFENSIBLE** at best; contradicted by your own numbers
+
+&gt; L1409–1410 (`dayNote`)
+
+SMARD's *Netzlast* is defined as net generation − exports + imports **− pumped-storage pumping**, and excludes power-plant self-consumption and industrial private networks. So `generation − Netzlast` = net exports **+ pumping/battery charging** ± definitional differences, not net exports. On 2026-08-14 the sum of `generation − load` over the 24 hours is **+36.2 GWh**, while the page's own scheduled net export for the day is **62.9 GWh** — a 43% mismatch — and in 10 of the 24 hours the stack sits *below* the load line on a day Germany was a net exporter throughout. The instruction the reader is given does not reproduce the page's own export figure.
+
+This is also the page's clearest **physical/commercial conflation**: the stack and load line are metered actuals, the volumes and balance are *scheduled commercial exchanges*, and `de_trade_balance.py:88–91` correctly says these are different objects. Best fix is to stop asserting the identity: *"When the stack rises above the demand line, the surplus is being exported or stored."*
+
+Confidence: **high** on the Netzlast definition, **high** on the arithmetic mismatch.
+
+---
+
+### 8. "In transit" — an upper bound presented as a measurement, and it doubles the page's headline number — **MISLEADING**
+
+&gt; L1451–1454: *"{X}% of what came in left again by another border in the same hour — Germany as a corridor, not a buyer. Only the coloured ends are power this country actually used or generated."*
+&gt; L1264–1265 tile: *"{X}% of arrivals passed straight through"*
+
+`transit = min(total imports, total exports)` per hour (`build_data.py:380–382`) is the **maximum possible** commercial offset, not transit. Electricity is fungible; nothing in scheduled commercial exchanges attributes an imported MWh to an export rather than to German load. "In transit" is also a term of art for physical transit and loop flows, which are a *physical-flow* quantity — and your own docstring (`de_trade_balance.py:88–91`) knows the distinction. The code comment calling `min()` "the tight bound" is wrong: it is the loose bound.
+
+This matters because it drives the hero figure. Over the default 30-day window:
+
+- transit-stripped ("own") basis: **€166.9 importing vs €40.3 exporting — 4.1× apart**
+- gross basis: **€136.6 vs €86.8 — 1.6× apart**
+
+The headline "4.1× apart" is more than double the gross-basis number, and the entire difference is the min() attribution. L1433–1434 asserts that including transit *"only drags the two lines together"* — that presupposes the attribution is correct. Say instead: *"at most 60% of arrivals were offset by exports in the same hour"*, and state the gross-basis gap alongside the stripped one.
+
+---
+
+### 9. Switzerland is not in the coupled day-ahead market — **FACTUALLY WRONG** for one of the eleven borders
+
+&gt; L383–388: *"when a border is full, the two sides clear at different prices… the gap on each megawatt-hour that crossed is collected by the coupling mechanism and paid to the two transmission operators on that border"*
+
+DE-CH day-ahead capacity is allocated **explicitly** via JAO auctions; Switzerland is outside SDAC. There is no implicit allocation, no coupling-collected spread, and DE-CH prices diverge persistently whether or not the border is constrained. Whatever `rent_keur` the code computes for CH (€184k on 14 Aug alone) is `net flow × spread`, not congestion income — the real income is the JAO capacity-auction revenue, which is generally much smaller, and physical flows can even run adversely (dear → cheap) because capacity holders nominate on their own expectations. The by-border chart and the rent totals both carry this.
+
+Confidence: **high**. Sources: [Swissgrid congestion management](https://www.swissgrid.ch/en/home/customers/topics/congestion-mgmt.html), [TransnetBW DE-CH](https://www.transnetbw.de/en/energy-market/congestion-management/de-ch), [JAO](https://www.jao.eu/resource-center/auction-rules).
+
+---
+
+### 10. "When a border is full, the two sides clear at different prices" — **MISLEADING BUT DEFENSIBLE**
+
+True under NTC/ATC coupling. Under **flow-based** market coupling, which governs most DE borders (Core CCR: AT, BE, CZ, FR, NL, PL), price separation corresponds to a binding *critical network element*, which can be an internal line in a third country, with no DE border at its physical limit. Relatedly, the actual congestion income in Core is pooled at CCR level and then *distributed* to bidding-zone borders using |commercial flow × market spread| as the key, before the 50/50 split between the two TSOs. So your per-border `net flow × spread` is a good approximation *of the distribution key*, not of income collected on that border — and it uses net rather than absolute flow. The **50/50 split claim is FINE**. Sources: [ACER CID methodology](https://eepublicdownloads.entsoe.eu/clean-documents/nc-tasks/ACER_Decision_06-2023_on_CID_Annex_I.pdf), [CID explanatory note](https://www.acer.europa.eu/sites/default/files/documents/en/Electricity/MARKET-CODES/CAPACITY-ALLOCATION-AND-CONGESTION-MANAGEMENT/12%20CIDM/Action%203b%20-%20CIDM%20explanatory%20document.PDF).
+
+---
+
+### 11. "It is already inside the price the dearer zone paid" — **MISLEADING BUT DEFENSIBLE**
+
+&gt; L387–388
+
+As a settlement identity, fine: nobody is invoiced separately. As an incidence claim, wrong. Relative to the uncongested counterfactual, prices would converge to some P* between the two; dear-zone buyers pay *above* P* and cheap-zone sellers receive *below* P*. Both sides fund the rent. Suggest: *"Nobody is billed for it separately — it is the wedge between what the dear zone paid and what the cheap zone received, and both sides bear part of it."*
+
+---
+
+### 12. Article 19 — **FINE**, one word off
+
+&gt; L389–395: *"Article 19 of Regulation (EU) 2019/943 puts it to two priority uses first — guaranteeing that the capacity they sold stays firm, including compensation when it does not, and maintaining or increasing cross-zonal capacity, whether by remedial actions or by building interconnection. Only once those are satisfied may it be counted as income when network tariffs are set, and anything left has to sit in a separate account until it can be spent on those purposes."*
+
+Substantively accurate and unusually well done. Art. 19(2): *"(a) guaranteeing the actual availability of the allocated capacity including firmness compensation; **or** (b) maintaining or increasing cross-zonal capacities through optimisation of the usage of existing interconnectors by means of coordinated remedial actions… or covering costs resulting from network investments that are relevant to reduce interconnector congestion."* Art. 19(3): tariff use only where the objectives *"have been adequately fulfilled"*, residual on *"a separate internal account line"*. The only nitpick: (a) and (b) are joined by **or**, not "and" — though 19(3)'s plural "objectives… have been adequately fulfilled" makes your reading defensible. One omission: Art. 19 covers *all* cross-zonal allocation revenue, including long-term and explicit auctions, not just the day-ahead rent you plot. Verified against [legislation.gov.uk Art. 19](https://www.legislation.gov.uk/eur/2019/943/article/19).
+
+---
+
+### 13. Footer contradicts the balance chart — **FACTUALLY WRONG (internal)**
+
+&gt; L445–447: *"the balance is what the volume was worth at each side's zonal price"*
+&gt; vs L263–264: *"both priced at the German hourly price"*
+
+The plotted series is `bal_de_keur` — everything at the German price. "Each side's zonal price" describes `bal_zonal_keur`, which appears only in the table. Fix the footer to match the chart.
+
+---
+
+### 14. "Hourly price" is now stale — **MISLEADING**
+
+The page says "German hourly price" throughout (L263, L278, L1256, L422). Since delivery day **1 October 2025** the SDAC day-ahead clearing price is a **15-minute** MTU price — 96 prices per day, Germany included. Aggregating to hours is a defensible data choice, but describing the market's price as hourly is out of date, it understates the "several-fold within a day" claim in the header, and it means the curtailment analysis cannot see the quarter-hour trigger that now governs post-Feb-2025 plants. (Note for §51: the older vintages' rules do reference the hourly mean of the four quarter-hours, so hourly averaging is the right basis for *those* plants.) Source: [EPEX SPOT go-live](https://www.epexspot.com/en/news/successful-implementation-15-minute-market-time-unit-mtu-sdac).
+
+---
+
+### 15. "The fixed two-thirds of a household bill… the part that does not move when the wholesale price does" — **MISLEADING**
+
+&gt; L413–414
+
+Your own data: levies+grid+taxes €225.3 vs procurement+margin €139.9 → **61.7%**, which is three-fifths, not two-thirds. More substantively, that block includes 19% VAT, which is charged on the whole bill and therefore *does* move with the wholesale price. Say "about three-fifths" and "mostly fixed".
+
+---
+
+### 16. "Loads paid to be interruptible" — **likely stale**
+
+&gt; L402–404: *"The same budget covers stations held in reserve outside the market for exactly this, loads paid to be interruptible, and countertrading"*
+
+The AbLaV interruptible-load scheme lapsed on **1 July 2022**; the chart's window starts 2024-01. Reserve plants (Netzreserve, Kapazitätsreserve, bnBm) and countertrading are right; interruptible loads should not be in a description of 2024–2026 spending. Confidence: **moderate-high** — SMARD's own category description still lists AbLaV historically, and § 13(1) EnWG contracted load reduction still exists, so hedge rather than delete. Sources: [SMARD Kosten der Systemdienstleistungen](https://www.smard.de/page/home/topic-article/211816/218854/kosten-der-systemdienstleistungen).
+
+Separately: `system_costs.json`'s note correctly says *"measures instructed by distribution operators are not included"*, but the page never says this. Since Redispatch 2.0 (Oct 2021) DSO-connected plants including RES are redispatched at scale, so the red bar understates German congestion-management cost — worth one clause in the visible text.
+
+---
+
+### 17. "Subsidised industry price €50 / policy cap from 2026" — **MISLEADING**
+
+&gt; L1133
+
+Verified as policy: 50 €/MWh, ≤50% of annual consumption, €3.8bn, 2026–2028, Commission state-aid approval 16 April 2026 — your JSON is accurate. But the bar reads as *the price industry pays*, when it is a cap on the subsidised half only, for eligible energy-intensive firms. Basis text should say "capped price on half of eligible consumption". Sources: [EC approval](https://germany.representation.ec.europa.eu/news/industriestrompreis-kommission-genehmigt-deutsche-beihilferegelung-zur-vorubergehenden-entlastung-2026-04-16_de).
+
+---
+
+### 18. "Near nothing" — **MISLEADING BUT DEFENSIBLE**
+
+&gt; L1388–1389: *"The same forecast is off by {gap} GWh across all hours together — near nothing on {fc} GWh forecast"*
+
+On the current window this renders as **−142 GWh** off, against a claimed curtailment signal of **32 GWh**. As a percentage of 8,065 GWh forecast it is indeed 1.8%; as a control for a 32 GWh effect it is 4× the size of the thing being measured, and signed the other way. The argument survives (a negative all-hours bias makes a positive negative-hour shortfall *more* notable) but "near nothing" is the wrong word. Say: *"across all hours the forecast is 1.8% low, so the shortfall below zero is not the aggregate error showing through."*
+
+---
+
+### 19. Smaller items
+
+- **`de_trade_balance.py:143`** — *"SE_4 is Hansa PowerBridge/Baltic Cable"*: **FACTUALLY WRONG**. Hansa PowerBridge was **cancelled** — the Swedish government refused the concession in June 2024 and Svenska kraftnät ended the project. Baltic Cable is the only DE-SE4 link. ([SvK](https://www.svk.se/en/about-us/news/news/svenska-kraftnat-ends-the-hansa-powerbridge-project-after-the-governments-rejection/))
+- **L314** *"the market-driven half"*: loose. German TSO-ordered RES curtailment runs to tens of TWh a year; "half" reads as a magnitude claim it cannot support. Say "one of the two kinds".
+- **L1131–1132** market-value bars: the official *Marktwert* is a **calendar-month** generation-weighted average and the EEG top-up reference; computing it over a rolling 30/90-day window is a different number. Label it "this window", as you do elsewhere.
+- **L222–224 header** *"cross-border flows follow it"*: **MISLEADING BUT DEFENSIBLE**. Flows respond to price *differentials*, and flows and prices are determined **simultaneously** by one auction — nothing follows anything. Acceptable in a header; the page never lapses into the worse version ("Germany buys from France"), which is to its credit.
+- **L245–247** *"without them those hours would price like the expensive ones"*: overstated. Removing wind and solar changes residual demand and the whole price shape, not just the marginal unit in those hours. Direction is right.
+- **README L108–115** licensing chain: the argument that BNetzA licenses under § 111d EnWG as its own licensor is coherent, and § 111d does establish the platform mandate — but note § 111d(1) sentence 2 describes publishing *the data TSOs transmit to ENTSO-E under Reg. 543/2013*. If the day-ahead price series really belong to the power exchanges (your own reasoning at README L103–106), that reasoning cuts against BNetzA's ability to sub-license too. Flagging as **unverified legal risk**, low confidence — outside my competence, worth a lawyer's eye before relying on it.
+
+---
+
+### What is right and worth keeping
+
+The implicit-trade explanation (L383–388, README L138–142, docstring L32–43) is correct and better than most published treatments. *"A valuation, not a cash flow"* (L264), *"These are clearing prices, not payments: everyone buying in the German zone pays that hour's German price, whatever its power came from"* (L1256–1257), *"a value gap, not a loss"* (L1262), *"congestion rent is revenue to the transmission operators on both sides of a border, not a loss"* (L447–448), the day-ahead-only caveat, the 50/50 split, Article 19's substance, *"the ordering is the conventional merit order, not observed bids"*, and *"importing in the dear hours lowers the German price"* (L247–249) are all **FINE**. The three-metric framing in the docstring, and the explicit note that `balance_at_de_price` collapses to `sum(net_MWh × price_de)` and therefore says nothing about trade volume, is genuinely good economics.</result>
+<usage><subagent_tokens>166572</subagent_tokens><tool_uses>50</tool_uses><duration_ms>939369</duration_ms></usage>
+</task-notification>
+
+---
+
+do the flat bugs first, then continue with the wind panel
