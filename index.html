@@ -64,8 +64,13 @@ day-ahead market data — including the choices that decide how strong the claim
      held in a string table: a translation is content, it stays legible and editable in
      place, and the page still reads correctly before any script runs. Only the sentences
      that interpolate numbers live in JS, where they must be bilingual anyway. */
-  [data-lang="en"] [lang="de"] { display: none; }
-  [data-lang="de"] [lang="en"] { display: none; }
+  [data-lang="en"] [lang="de"]:not(.langs *) { display: none; }
+  [data-lang="de"] [lang="en"]:not(.langs *) { display: none; }
+  /* The switcher is exempt. Its buttons carry lang="en"/lang="de" so a screen reader
+     pronounces "EN" and "DE" in the right voice -- which also made them match the rules
+     above, so each button hid itself in the other language and the only one left visible
+     was the one already active. The toggle looked dead because the half you needed to
+     press was never on screen. */
 
   * { box-sizing: border-box; }
   body {
