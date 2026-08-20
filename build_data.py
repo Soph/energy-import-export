@@ -211,10 +211,16 @@ STACK = {
 def example_day(backend, outdir: str, start, end) -> None:
     """Write one real day, hour by hour, as a worked example of how a price happens.
 
-    Picks the day in the range with the widest intraday price spread, because that is
-    the one where the mechanism is visible: the stack fills bottom-up with whatever is
-    cheapest, and the price follows whatever had to run last. Records which day and
-    why, so the choice is not mistaken for a hand-picked illustration.
+    Picks the day with the widest intraday price spread, because that is the one where
+    the mechanism is visible: the stack fills bottom-up with whatever is cheapest, and
+    the price follows whatever had to run last. Records which day and why, so the choice
+    is not mistaken for a hand-picked illustration.
+
+    Only replaces the day on file if this range beats it. The candidate is the widest day
+    in the *refreshed* range, and the daily job refreshes three days -- so without this
+    the cron would overwrite a 672 EUR/MWh day with the best of last Tuesday to Thursday
+    while the page went on saying the choice was automatic. The claim is "the widest day
+    we have seen", so the file has to be allowed to keep it.
     """
     if not hasattr(backend, "generation"):
         return
@@ -238,6 +244,16 @@ def example_day(backend, outdir: str, start, end) -> None:
         return
     spread = j.groupby(dtb.period_of(j.index, "day"))["price"].agg(lambda s: s.max() - s.min())
     pick = spread.idxmax()
+    path = os.path.join(outdir, "example_day.json")
+    try:
+        with open(path) as fh:
+            held = json.load(fh)
+    except (OSError, ValueError):
+        held = None
+    if held and held.get("spread_eur_mwh", 0) > spread[pick] and held.get("date") != pick:
+        print(f"  example_day: kept {held['date']} "
+              f"({held['spread_eur_mwh']:.0f} EUR/MWh beats this range's {spread[pick]:.0f})")
+        return
     day = j[dtb.period_of(j.index, "day") == pick]
 
     LABEL = {1004068: "Photovoltaik", 1004067: "Wind Onshore", 1001225: "Wind Offshore",
@@ -252,9 +268,10 @@ def example_day(backend, outdir: str, start, end) -> None:
             row[bucket] = _n(sum(r[c] for c in cols) / 1000)
         hours.append(row)
 
-    _write(os.path.join(outdir, "example_day.json"), {
+    _write(path, {
         "date": pick,
-        "chosen_because": (f"widest intraday price spread in the refreshed range: "
+        "spread_eur_mwh": _n(spread[pick]),
+        "chosen_because": (f"widest intraday price spread on record: "
                            f"{spread[pick]:.0f} EUR/MWh"),
         "note": ("Generation is what actually ran, grouped cheap-to-dear. The ordering is "
                  "the conventional merit order, not observed bids -- what each unit offered "
