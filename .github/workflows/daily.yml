@@ -16,6 +16,18 @@ name: Daily balance
 #     re-fetching corrects a day in place instead of duplicating it.
 
 on:
+  # A push that touches the page or its data publishes it. Without this, editing
+  # index.html and pushing changed nothing until the next cron or a hand-run dispatch --
+  # which also meant the cron's data commit kept landing mid-edit and forcing a rebase.
+  # The fetch step is skipped on push (see the `if:` guards), so a push only republishes
+  # what is already committed. GitHub does not re-trigger workflows for pushes made with
+  # GITHUB_TOKEN, so the step that commits data cannot set this off in a loop.
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "data/**"
+      - ".github/workflows/daily.yml"
   schedule:
     - cron: "0 6 * * *"        # 06:00 UTC, comfortably after D-1 is settled
   workflow_dispatch:
@@ -55,6 +67,7 @@ jobs:
       # ours to redistribute; energy-charts is licensed but nets the flows away.
       # See the note at the top of build_data.py before changing this.
       - name: Fetch and merge
+        if: github.event_name != 'push'      # a push publishes; it does not re-fetch
         # Inputs arrive as env vars, never interpolated into the script body --
         # `${{ inputs.date }}` inline would be a shell-injection hole.
         env:
@@ -75,6 +88,7 @@ jobs:
           fi
 
       - name: Commit if the data moved
+        if: github.event_name != 'push'
         run: |
           set -euo pipefail
           git config user.name  "github-actions[bot]"

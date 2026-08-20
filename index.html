@@ -225,6 +225,9 @@
   .read a, .flows a { color: inherit; text-decoration-color: var(--hairline);
                       text-underline-offset: 2px; }
   .read a:hover, .flows a:hover { text-decoration-color: currentColor; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden;
+        clip: rect(0 0 0 0); white-space: nowrap; }
+  .plot:focus-visible { outline: 2px solid var(--accent-ring, currentColor); outline-offset: 3px; }
   #err { display: none; padding: 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hairline); }
 </style>
 </head>
@@ -363,9 +366,9 @@
         <p class="hint" id="volHint">Energy crossing the border each day.</p>
       </div>
       <div class="key">
-        <span><i style="background:var(--out)"></i>imported and used here</span>
-        <span><i style="background:var(--thru)"></i>in transit</span>
-        <span><i style="background:var(--in)"></i>exported from German plants</span>
+        <span><i style="background:var(--out)"></i>at least this much stayed</span>
+        <span><i style="background:var(--thru)"></i>could have passed through</span>
+        <span><i style="background:var(--in)"></i>at least this much was German</span>
       </div>
     </div>
     <div class="plot" id="plotVolume"></div>
@@ -502,7 +505,7 @@
 
   <section class="card" id="cardTable" hidden>
     <details>
-      <summary>Table view — every value on this page</summary>
+      <summary>Table view — the daily series, one row per day</summary>
       <div class="scroll" id="tableWrap"></div>
     </details>
   </section>
@@ -520,7 +523,10 @@
   </footer>
 </div>
 
-<div id="tip" role="status" aria-live="polite"></div>
+<div id="tip" aria-hidden="true"></div>
+<!-- One announcement per keypress, not per mouse pixel. #tip used to be the live region
+     and was rewritten on every pointermove. -->
+<div id="ann" role="status" aria-live="polite" class="sr"></div>
 
 <script>
 "use strict";
@@ -646,12 +652,53 @@ function showTip(evt, html) {
   tip.style.top = Math.max(tip.offsetHeight + 4, evt.clientY - pad) + "px";
 }
 const hideTip = () => { tip.style.opacity = 0; };
+
+/** Make a plot reachable and readable without a mouse.
+ *
+ *  One tab stop per chart, then left/right to step through it -- not tabindex on every hit
+ *  rect, which would put 232 tab stops in a single card. Stepping dispatches the same
+ *  pointerenter the mouse would, so there is one code path for the tooltip contents, and
+ *  copies the result into the live region so it is announced once per keypress.
+ *
+ *  Called after every render, because replaceChildren() throws the old rects away.
+ */
+function makeNavigable(host, label) {
+  const hits = [...host.querySelectorAll(".hit")];
+  if (!hits.length) return;
+  host.tabIndex = 0;
+  host.setAttribute("role", "group");
+  host.setAttribute("aria-label", `${label}. Use left and right arrow keys to read values.`);
+  let at = -1;
+  const go = i => {
+    at = Math.max(0, Math.min(hits.length - 1, i));
+    const r = hits[at].getBoundingClientRect();
+    hits[at].dispatchEvent(new PointerEvent("pointerenter", { bubbles: true,
+      clientX: (r.left + r.right) / 2, clientY: r.top + 8 }));
+    // collapse the markup's indentation, or the announcement reads as ragged fragments
+    document.getElementById("ann").textContent =
+      tip.textContent.replace(/\s+/g, " ").trim();
+  };
+  host.onkeydown = e => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      go(at < 0 ? (e.key === "ArrowRight" ? 0 : hits.length - 1)
+                : at + (e.key === "ArrowRight" ? 1 : -1));
+    } else if (e.key === "Home") { e.preventDefault(); go(0); }
+    else if (e.key === "End") { e.preventDefault(); go(hits.length - 1); }
+    else if (e.key === "Escape") { hideTip(); document.getElementById("ann").textContent = ""; }
+  };
+  host.onblur = () => { hideTip(); at = -1; };
+}
 // The tooltip is position: fixed and was only ever dismissed by pointerleave on a hit
 // rect. Scroll away mid-hover and it rode along at full opacity over whatever panel came
 // next; on touch, a tap fires pointerenter and pointerleave never comes, so it stuck
 // permanently. Scroll and any press outside a hit rect now dismiss it too.
-addEventListener("scroll", () => { if (tip.style.opacity !== "0") hideTip(); },
-                 { passive: true });
+addEventListener("scroll", () => {
+  // ...but not while the keyboard is driving: focusing a plot scrolls it into view, and
+  // that scroll would dismiss the tooltip the arrow key had just opened.
+  if (document.activeElement?.classList?.contains("plot")) return;
+  if (tip.style.opacity !== "0") hideTip();
+}, { passive: true });
 addEventListener("pointerdown", e => {
   if (!e.target.closest?.(".hit")) hideTip();
 }, { capture: true });
@@ -696,6 +743,11 @@ function tipRows(d) {
  * ========================================================================== */
 
 const PLOT_H = 210, PAD = { t: 12, r: 16, b: 26, l: 52 };
+// Every per-day chart uses this right inset, whether or not it needs the gutter for an
+// end label. Two of the four reserved it and two did not, so the same date sat 33px apart
+// between vertically stacked panels -- about 4.2 days at 390px, worst at the right edge,
+// while the residual card's own hint invites reading it against the chart above.
+const DAY_R = PAD.r + 34;
 const BAR_MAX = 24, GAP = 2, RAD = 4;
 
 /** Bar width for a band, for `per` bars sharing it.
@@ -709,7 +761,7 @@ function drawBalance(host, days) {
   const W = host.clientWidth || 720, H = PLOT_H + PAD.t + PAD.b;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
                           role: "img", "aria-label": "Daily balance, million euro" });
-  const x0 = PAD.l, x1 = W - PAD.r, y0 = PAD.t, y1 = PAD.t + PLOT_H;
+  const x0 = PAD.l, x1 = W - DAY_R, y0 = PAD.t, y1 = PAD.t + PLOT_H;
 
   const vals = days.map(d => d.bal_de_keur ?? 0);
   const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
@@ -762,7 +814,7 @@ function drawPrice(host, days) {
   // is exactly what a source with different price levels will do to you.
   const TOP = PAD.t + 14;
   const W = host.clientWidth || 720, H = PLOT_H + TOP + PAD.b;
-  const R = PAD.r + 34;                                  // room for end labels
+  const R = DAY_R;                                       // room for end labels
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
                           role: "img", "aria-label": "Volume-weighted price when importing and when exporting, euro per megawatt hour" });
   const x0 = PAD.l, x1 = W - R, y0 = TOP, y1 = TOP + PLOT_H;
@@ -866,7 +918,7 @@ function drawVolume(host, days) {
   const H2 = 96, W = host.clientWidth || 720, H = H2 * 2 + PAD.t + PAD.b;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
                           role: "img", "aria-label": "Imported and exported energy per day, gigawatt hours" });
-  const x0 = PAD.l, x1 = W - PAD.r, mid = PAD.t + H2;
+  const x0 = PAD.l, x1 = W - DAY_R, mid = PAD.t + H2;
 
   const top = Math.max(...days.map(d => Math.max(d.import_gwh ?? 0, d.export_gwh ?? 0)), 1);
   const h = v => (v ?? 0) / top * (H2 - 6);
@@ -948,7 +1000,7 @@ function drawResidualDaily(host, days) {
   const PH = 126, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
     "aria-label": "Demand not covered by wind and solar, per day, gigawatts" });
-  const x0 = PAD.l, x1 = W - (PAD.r + 34), y0 = PAD.t, y1 = PAD.t + PH;
+  const x0 = PAD.l, x1 = W - DAY_R, y0 = PAD.t, y1 = PAD.t + PH;
 
   const vals = days.map(d => d.residual_gw ?? 0);
   const hi = Math.max(...vals, 1), lo = Math.min(0, ...vals);
@@ -1521,9 +1573,13 @@ function drawSummary(days) {
   document.getElementById("heroValue").innerHTML =
     `<i style="background:var(--out)"></i><span>€${num(gap, 0)}</span>`
     + `<small>/MWh apart</small>`;
+  // A ratio needs both legs positive to mean anything. Exporting hours can average at or
+  // below zero in a week of deeply negative prices, and `earned || 1` quietly turned that
+  // into a divisor of 1 -- a EUR178 gap printing as "178x apart".
+  const ratio = earned > 1 && paid > 0 ? `${(paid / earned).toFixed(1)}× apart, ` : "";
   document.getElementById("heroNote").textContent =
     `€${num(paid, 1)} when importing, €${num(earned, 1)} when exporting — `
-    + `${(paid / (earned || 1)).toFixed(1)}× apart, hours apart, in one market. These are `
+    + `${ratio}hours apart, in one market. These are `
     + `clearing prices, not payments: everyone buying in the German zone pays that hour's `
     + `German price, whatever its power came from.`;
 
@@ -1641,7 +1697,12 @@ function render() {
         sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
       }
       const r = sxy / (Math.sqrt(sxx * syy) || 1);
-      hint += ` Across this window the two move together at r = ${r.toFixed(2)}.`;
+      // Say how many days it rests on, and stop asserting it below the point where it
+      // means anything: at the 7-day range this printed 0.52 from seven points as flatly
+      // as it prints 0.84 from ninety.
+      hint += xs.length >= 14
+        ? ` Across these ${xs.length} days the two move together at r = ${r.toFixed(2)}.`
+        : ` Too few days here to quote a correlation; widen the range.`;
     }
     document.getElementById("resDailyHint").textContent = hint;
   }
@@ -1763,6 +1824,13 @@ function render() {
   levels.hidden = false;                       // unhide before measuring
   levels.hidden = !drawLevels(document.getElementById("plotLevels"), days, state.ref);
   drawTable(days);
+
+  // after every render: the rects these attach to are replaced on each draw
+  for (const plot of document.querySelectorAll(".plot")) {
+    const card = plot.closest("section.card");
+    if (card && !card.hidden)
+      makeNavigable(plot, card.querySelector("h2")?.textContent?.trim() || "Chart");
+  }
   document.getElementById("rangeNote").textContent =
     `${dLong(days[0].date)} — ${dLong(days.at(-1).date)}`;
 
@@ -1825,6 +1893,16 @@ function render() {
   }
 }
 
+/** Show a recoverable failure. boot() has its own fatal path for a missing index; this is
+ *  for a range switch that could not load, which previously failed completely silently. */
+function showError(msg) {
+  const box = document.getElementById("err");
+  box.style.display = "block";
+  box.innerHTML = `<b>Could not load that range.</b><br>`
+    + `<span style="color:var(--ink-2)"></span>`;
+  box.querySelector("span").textContent = msg;
+}
+
 function buildRanges() {
   const host = document.getElementById("ranges");
   const total = state.index.total_days;
@@ -1835,9 +1913,22 @@ function buildRanges() {
     b.disabled = r.key > total;
     if (b.disabled) b.style.opacity = .4;
     b.onclick = async () => {
+      const prev = state.range;
       [...host.children].forEach(c => c.setAttribute("aria-pressed", String(c === b)));
       host.style.opacity = .6;              // hold the old render, no skeleton flash
-      try { await setRange(r.key); } finally { host.style.opacity = 1; }
+      try {
+        await setRange(r.key);
+      } catch (err) {
+        // Without this the rejection was unhandled: the button claimed the new range,
+        // render() never ran, and the previous chart stayed on screen looking current.
+        console.error(err);
+        state.range = prev;
+        [...host.children].forEach((c, i) => c.setAttribute("aria-pressed",
+          String(RANGES.filter(q => !q.key || total > 7)[i]?.key === prev)));
+        showError(`${r.label}: ${err.message || err}. Showing the previous range.`);
+      } finally {
+        host.style.opacity = 1;
+      }
     };
     return b;
   }));
