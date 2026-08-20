@@ -1,17 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Germany's cross-border power balance</title>
-<meta name="description" content="Daily value of German electricity imports and exports, from day-ahead prices and cross-border exchange.">
+<title>Germany sells low and buys high</title>
+<meta name="description" content="A common claim about German electricity trade, checked against the
+day-ahead market data — including the choices that decide how strong the claim looks.">
 <style>
-  /* ---- palette: one language across the page --------------------------------
-     red  = money out (imports, deficit)
-     blue = money in  (exports, surplus)
-     Both poles of the diverging pair, validated for CVD separation and contrast
-     against each surface (worst pair CVD dE 21.6 light / 19.2 dark).
-     Dark steps are chosen for the dark surface, not flipped from light.        */
+  /* Palette lifted from the dashboard so the two pages speak one language:
+     red = money out (imports), blue = money in (exports), neutral = neither. */
   :root {
     color-scheme: light;
     --plane:      #f9f9f7;
@@ -22,23 +19,10 @@
     --grid:       #e1e0d9;
     --axis:       #94928a;
     --hairline:   rgba(11, 11, 11, .10);
-    --out:        #e34948;   /* imports / deficit */
-    --in:         #2a78d6;   /* exports / surplus */
-    --zero:       #f0efec;   /* diverging midpoint: neutral, never a hue */
-    /* Transit is neither money out nor money in, so it takes the neutral pole of
-       the same diverging scale rather than a third hue. A categorical hue would
-       fail worse: aqua reads as "renewable" on a page about wind and solar, and
-       violet is 1.9 dE from our blue under protanopia in dark mode. Validated
-       for band, separation and >=3:1 contrast against both surfaces; the chroma
-       floor is a categorical gate and does not govern a diverging neutral. */
+    --out:        #e34948;
+    --in:         #2a78d6;
     --thru:       #8a887f;
-    /* Merit order is an ordered category, so an ordinal ramp rather than eight
-       arbitrary hues: light is cheap, dark is dear, and the encoding is the lesson.
-       A categorical set would also have fought the red/blue money language above.
-       Validated --ordinal in both modes: monotone lightness, adjacent dL >= 0.06,
-       light end clear of the surface. */
-    --m1: #47a3a6; --m2: #3c8a8e; --m3: #327175; --m4: #26585d; --m5: #193f45;
-    --st: #b9c0c6; --f1: #b07d28; --f2: #7d4f1f;   /* storage, then what burns */
+    --m1: #47a3a6; --m3: #327175; --f1: #b07d28;
     --shadow:     0 1px 2px rgba(11,11,11,.04), 0 8px 24px -12px rgba(11,11,11,.10);
   }
   @media (prefers-color-scheme: dark) {
@@ -54,10 +38,8 @@
       --hairline: rgba(255,255,255,.10);
       --out:      #e66767;
       --in:       #3987e5;
-      --zero:     #383835;
       --thru:     #6e6c66;
-      --m1: #7ed4d8; --m2: #5ab5ba; --m3: #44989c; --m4: #357b7f; --m5: #2a5e62;
-      --st: #5a6570; --f1: #e0ac5c; --f2: #a86c33;
+      --m1: #7ed4d8; --m3: #44989c; --f1: #e0ac5c;
       --shadow:   none;
     }
   }
@@ -73,1934 +55,841 @@
     --hairline: rgba(255,255,255,.10);
     --out:      #e66767;
     --in:       #3987e5;
-    --zero:     #383835;
     --thru:     #6e6c66;
-    --m1: #7ed4d8; --m2: #5ab5ba; --m3: #44989c; --m4: #357b7f; --m5: #2a5e62;
-    --st: #5a6570; --f1: #e0ac5c; --f2: #a86c33;
+    --m1: #7ed4d8; --m3: #44989c; --f1: #e0ac5c;
     --shadow:   none;
   }
 
+  /* One language visible at a time. Static prose is duplicated in the markup rather than
+     held in a string table: a translation is content, it stays legible and editable in
+     place, and the page still reads correctly before any script runs. Only the sentences
+     that interpolate numbers live in JS, where they must be bilingual anyway. */
+  [data-lang="en"] [lang="de"] { display: none; }
+  [data-lang="de"] [lang="en"] { display: none; }
+
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--plane);
-    color: var(--ink);
-    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
-    -webkit-font-smoothing: antialiased;
+    margin: 0; background: var(--plane); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 64px; }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 22px 20px 90px; }
 
-  /* ---- header ---- */
-  header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
-  header .grow { flex: 1; min-width: 0; }
-  h1 { font-size: 21px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 4px; }
-  .sub { color: var(--ink-2); font-size: 14px; margin: 0; }
-  .ghost {
-    background: var(--surface); color: var(--ink-2); cursor: pointer;
-    border: 1px solid var(--hairline); border-radius: 8px;
-    padding: 7px 11px; font: inherit; font-size: 13px; line-height: 1;
+  nav { display: flex; justify-content: space-between; align-items: center;
+        font-size: 13px; color: var(--muted); margin-bottom: 44px; }
+  nav a { color: var(--ink-2); text-decoration-color: var(--hairline);
+          text-underline-offset: 2px; }
+  nav a:hover { text-decoration-color: currentColor; }
+  .tools { display: flex; align-items: center; gap: 8px; }
+  .langs { display: inline-flex; border: 1px solid var(--hairline); border-radius: 7px;
+           overflow: hidden; }
+  .langs button { background: none; border: 0; font: inherit; font-size: 12.5px;
+                  padding: 4px 9px; color: var(--muted); cursor: pointer; }
+  .langs button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+  .langs button:focus-visible { outline: 2px solid var(--in); outline-offset: 2px; }
+  button.ghost { background: none; border: 1px solid var(--hairline); color: var(--muted);
+                 border-radius: 7px; padding: 4px 9px; font: inherit; font-size: 12.5px;
+                 cursor: pointer; }
+
+  /* the claim, quoted as it is actually said */
+  .claim {
+    font-size: clamp(27px, 5.2vw, 41px); line-height: 1.18; letter-spacing: -.02em;
+    font-weight: 600; margin: 0 0 18px; text-wrap: balance;
   }
-  .ghost:hover { color: var(--ink); }
+  .claim q { quotes: none; }
+  .claim .said { color: var(--muted); font-weight: 400; display: block;
+                 font-size: 14px; letter-spacing: .06em; text-transform: uppercase;
+                 margin-bottom: 14px; }
+  .lede { font-size: 19px; color: var(--ink-2); margin: 0 0 12px; }
+  .lede b { color: var(--ink); font-weight: 600; }
 
-  /* ---- hero + tiles ---- */
-  .hero {
-    background: var(--surface); border: 1px solid var(--hairline);
-    border-radius: 14px; box-shadow: var(--shadow);
-    padding: 22px 24px; margin-bottom: 14px;
-    display: grid; grid-template-columns: minmax(240px, 1.1fr) 2fr; gap: 28px;
-  }
-  @media (max-width: 720px) { .hero { grid-template-columns: 1fr; gap: 20px; } }
-  .lede-label { color: var(--ink-2); font-size: 13px; margin-bottom: 2px; }
-  /* hero figure: same sans as everything, proportional figures (no tabular-nums),
-     and in primary ink -- the sign carries the direction, the swatch carries the
-     colour. Numbers never wear the data colour. */
-  .lede-value { font-size: 52px; font-weight: 600; letter-spacing: -.025em; line-height: 1.05;
-                display: flex; align-items: center; gap: 12px; }
-  .lede-value i { width: 12px; height: 34px; border-radius: 4px; flex: none; }
-  .lede-value small { font-size: 22px; font-weight: 500; color: var(--ink-2);
-                      letter-spacing: 0; align-self: flex-end; padding-bottom: 6px; }
-  .lede-note { color: var(--muted); font-size: 13px; margin-top: 6px; }
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 20px 24px; }
-  .tile-label { color: var(--ink-2); font-size: 13px; }
-  .tile-value { font-size: 24px; font-weight: 600; letter-spacing: -.015em; margin-top: 1px; }
-  .tile-note { color: var(--muted); font-size: 12px; }
+  h2 { font-size: clamp(21px, 3.4vw, 27px); line-height: 1.22; letter-spacing: -.012em;
+       margin: 0 0 12px; text-wrap: balance; }
+  .act { margin: 64px 0 0; }
+  .act > .no { font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase;
+               color: var(--muted); margin-bottom: 8px; }
+  p { margin: 0 0 15px; }
+  p.tight { margin-bottom: 8px; }
+  .note { font-size: 14.5px; color: var(--muted); }
+  .note code { font-size: .92em; }
+  b, strong { font-weight: 600; }
 
-  /* ---- filter row: one row, above everything it scopes ---- */
-  .filters { display: flex; align-items: center; gap: 8px; margin: 22px 0 14px; flex-wrap: wrap; }
-  .filters .spacer { flex: 1; }
-  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--hairline); border-radius: 9px; padding: 2px; }
+  /* the machine */
+  .machine { background: var(--surface); border: 1px solid var(--hairline);
+             border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+  .dials { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
+  .dial { display: flex; flex-direction: column; gap: 7px; }
+  .dial > span { font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+                 color: var(--muted); }
+  .seg { display: flex; flex-wrap: wrap; gap: 4px; }
   .seg button {
-    background: none; border: 0; border-radius: 7px; cursor: pointer;
-    color: var(--ink-2); font: inherit; font-size: 13px; padding: 6px 12px;
+    font: inherit; font-size: 13.5px; padding: 5px 11px; cursor: pointer;
+    background: var(--plane); color: var(--ink-2);
+    border: 1px solid var(--hairline); border-radius: 8px;
   }
-  .seg button[aria-pressed="true"] { background: var(--plane); color: var(--ink); font-weight: 600; }
-  .range-note { color: var(--muted); font-size: 13px; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface);
+                                     border-color: var(--ink); }
+  .seg button:focus-visible { outline: 2px solid var(--in); outline-offset: 2px; }
 
-  /* ---- cards ---- */
-  .card {
-    background: var(--surface); border: 1px solid var(--hairline);
-    border-radius: 14px; box-shadow: var(--shadow);
-    padding: 20px 22px 14px; margin-bottom: 14px;
-  }
-  .card > h2 { font-size: 15px; font-weight: 600; margin: 0; }
-  .card > p.hint { color: var(--ink-2); font-size: 13px; margin: 3px 0 0; }
-  .card-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-  /* Head stacks: title, paragraph, then the legend as its own full-width row directly
-     above the plot. Two reasons over sitting the legend beside the title. A legend belongs
-     next to what it explains, and beside the title it was several hundred pixels from its
-     own chart. And a wide legend used to compete with the text for the same row -- the day
-     panel's is seven items and 787px, which starved the hint to its 180px floor, wrapped
-     it into sixteen lines and left a 350px dead zone. Stacking removes the competition,
-     so the measure below is a reading decision rather than a consequence of the legend. */
-  .card-head { flex-direction: column; align-items: stretch; }
-  .card-head .grow { min-width: 0; }
-  /* Full width would be ~130 characters. Cap the measure for reading, not for layout. */
-  .card-head .hint { max-width: 74ch; }
-  .plot { margin-top: 14px; }
-  .plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .verdict { font-size: 17.5px; line-height: 1.5; margin: 0; }
+  .verdict .big { font-weight: 600; }
+  .swing { font-size: 14.5px; color: var(--muted); margin: 14px 0 0; }
 
-  /* legend: always present for two or more series */
-  .key { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-  .key span { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 13px; white-space: nowrap; }
-  .key i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-  .key i.line { width: 14px; height: 2px; border-radius: 2px; }
-
-  /* chart text wears text tokens, never the series color */
-  text { fill: var(--muted); font-size: 11px; }
-  text.val { fill: var(--ink-2); font-size: 11px; font-weight: 600; }
-  text.rowtitle { fill: var(--ink-2); font-size: 11.5px; font-weight: 600; }
-  text.val.idle { fill: var(--muted); font-weight: 400; font-style: italic; }
-  text.tick { font-variant-numeric: tabular-nums; }
+  figure { margin: 20px 0 0; }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 10px; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  text { font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         fill: var(--muted); }
+  text.val { fill: var(--ink); font-weight: 600; }
+  text.big { font-size: 21px; font-weight: 600; fill: var(--ink); }
   .gridline { stroke: var(--grid); stroke-width: 1; }
   .axisline { stroke: var(--axis); stroke-width: 1; }
-  .hit { fill: transparent; cursor: crosshair; }
-  .crosshair { stroke: var(--axis); stroke-width: 1; pointer-events: none; }
 
-  /* ---- tooltip: enhances, never the only way to a value ---- */
-  #tip {
-    position: fixed; z-index: 10; pointer-events: none; opacity: 0;
-    transition: opacity .1s; transform: translate(-50%, -100%);
-    background: var(--surface); color: var(--ink);
-    border: 1px solid var(--hairline); border-radius: 9px;
-    box-shadow: 0 4px 16px rgba(0,0,0,.16);
-    padding: 9px 11px; font-size: 12.5px; min-width: 150px;
-  }
-  #tip .t-date { font-weight: 600; margin-bottom: 5px; }
-  #tip .t-row { display: flex; justify-content: space-between; gap: 14px; }
-  #tip .t-row span:last-child { font-variant-numeric: tabular-nums; }
-  #tip .t-sep { border-top: 1px solid var(--hairline); margin: 5px 0; }
+  .pull { border-left: 3px solid var(--out); padding: 2px 0 2px 16px; margin: 22px 0;
+          font-size: 18px; color: var(--ink-2); }
+  .pull b { color: var(--ink); }
 
-  /* ---- table view ---- */
-  details { margin-top: 6px; }
-  summary { cursor: pointer; color: var(--ink-2); font-size: 14px; padding: 6px 0; }
-  summary:hover { color: var(--ink); }
-  .scroll { overflow-x: auto; margin-top: 10px; }
-  table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
-  th, td { text-align: right; padding: 6px 10px; white-space: nowrap; }
-  th:first-child, td:first-child { text-align: left; }
-  thead th { color: var(--ink-2); font-weight: 600; border-bottom: 1px solid var(--axis); }
-  tbody td { font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--grid); color: var(--ink-2); }
-  tbody td:first-child { color: var(--ink); }
-  .neg { color: var(--out); }
+  .ledger { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1px; background: var(--hairline); border: 1px solid var(--hairline);
+            border-radius: 10px; overflow: hidden; margin: 20px 0 0; }
+  .ledger div { background: var(--surface); padding: 13px 15px; }
+  .ledger .n { font-size: 22px; font-weight: 600; display: block; line-height: 1.15;
+               font-variant-numeric: tabular-nums; }
+  .ledger .k { font-size: 12.5px; color: var(--muted); display: block; margin-top: 4px; }
 
-  /* loud, because synthetic numbers that look real are the worst failure here */
-  #notice {
-    background: var(--surface); border: 1px solid var(--out); border-left-width: 4px;
-    border-radius: 10px; padding: 12px 15px; margin-bottom: 14px; font-size: 13.5px;
-  }
-  .read { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); }
-  .read b { color: var(--ink); font-weight: 600; }
-  .flows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 30px; margin: 4px 0 10px; }
-  @media (max-width: 720px) { .flows { grid-template-columns: 1fr; gap: 0 0; } }
-  .flows h3 { font-size: 13.5px; font-weight: 600; margin: 12px 0 4px;
-              display: flex; align-items: center; gap: 7px; }
-  .flows h3 i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
-  .flows p { font-size: 13px; line-height: 1.55; color: var(--ink-2); margin: 0 0 8px; }
-  .flows b { color: var(--ink); font-weight: 600; }
-  footer { color: var(--muted); font-size: 12.5px; margin-top: 30px; }
-  footer p { margin: 0 0 7px; }
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--hairline);
+           font-size: 13px; color: var(--muted); }
   footer a { color: var(--ink-2); }
-  /* body links inherit the text colour: the palette is already carrying meaning
-     in these panels, and a browser-default blue would read as a fourth series. */
-  .read a, .flows a { color: inherit; text-decoration-color: var(--hairline);
-                      text-underline-offset: 2px; }
-  .read a:hover, .flows a:hover { text-decoration-color: currentColor; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden;
-        clip: rect(0 0 0 0); white-space: nowrap; }
-  .plot:focus-visible { outline: 2px solid var(--accent-ring, currentColor); outline-offset: 3px; }
-  #err { display: none; padding: 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hairline); }
+  #err { display: none; background: var(--surface); border: 1px solid var(--out);
+         border-left-width: 4px; border-radius: 10px; padding: 16px; }
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .wrap { padding: 18px 16px 64px; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header>
-    <div class="grow">
-      <h1>Germany's cross-border power balance</h1>
-      <p class="sub">The price of German power swings several-fold within a day, and
-      cross-border flows follow it: in when it is dear, out when it is cheap. The cheap
-      hours are cheap <em>because</em> wind and solar are running.</p>
+<nav>
+  <span><span lang="en">German power, checked</span><span lang="de">Deutscher Strom, nachgerechnet</span></span>
+  <span class="tools">
+    <a href="dashboard.html"><span lang="en">the full data &rarr;</span><span lang="de">alle Daten &rarr;</span></a>
+    <span class="langs" id="langs" role="group" aria-label="Language / Sprache"></span>
+    <button class="ghost" id="theme"><span lang="en">theme</span><span lang="de">Ansicht</span></button>
+  </span>
+</nav>
+
+<div id="err"></div>
+
+<h1 class="claim">
+  <span class="said"><span lang="en">the claim</span><span lang="de">die Behauptung</span></span>
+  <q lang="en">Germany is stupid — it sells its power cheap and buys it back expensive.</q>
+  <q lang="de">Deutschland ist blöd – es verkauft seinen Strom billig und kauft ihn teuer zurück.</q>
+</h1>
+
+<p class="lede" lang="en">You hear it about every country with a lot of wind and solar. On the
+German day-ahead market data, <b>the price pattern it describes is real</b> — and larger than
+most people saying it realise. What follows is that number, the two choices that decide how
+big it looks, and then the four things the word <i>stupid</i> gets wrong.</p>
+<p class="lede" lang="de">Man hört es über jedes Land mit viel Wind und Sonne. In den Daten des
+deutschen Day-Ahead-Markts <b>gibt es dieses Preismuster wirklich</b> – und es ist größer, als
+die meisten vermuten, die den Satz sagen. Es folgen: diese Zahl, die zwei Entscheidungen, die
+über ihre Größe bestimmen, und dann die vier Dinge, die am Wort <i>blöd</i> falsch sind.</p>
+
+<section class="act" id="act1">
+  <p class="no"><span lang="en">Act one · is it true?</span><span lang="de">Erster Teil · stimmt es?</span></p>
+  <h2 lang="en">Yes. Power arriving in Germany is worth several times what power leaving it is worth.</h2>
+<h2 lang="de">Ja. Strom, der nach Deutschland kommt, ist ein Mehrfaches davon wert, was Strom wert ist, der Deutschland verlässt.</h2>
+  <p lang="en">But <em>how many</em> times depends on two choices, and they are not small. Make them
+  yourself:</p>
+<p lang="de">Aber <em>wie viel</em> Mehrfaches – das hängt an zwei Entscheidungen, und die sind nicht klein. Treffen Sie sie selbst:</p>
+
+  <div class="machine">
+    <div class="dials">
+      <div class="dial">
+        <span id="lblBasis">which power counts</span>
+        <div class="seg" id="dialBasis" role="group" aria-labelledby="lblBasis"></div>
+      </div>
+      <div class="dial">
+        <span id="lblPeriod">which period</span>
+        <div class="seg" id="dialPeriod" role="group" aria-labelledby="lblPeriod"></div>
+      </div>
     </div>
-    <button class="ghost" id="theme" title="Switch theme">Theme</button>
-  </header>
-
-  <div id="err"></div>
-  <div id="notice" hidden></div>
-
-  <section class="hero" id="hero" hidden>
-    <div>
-      <div class="lede-label" id="heroLabel">The gap between buying and selling</div>
-      <div class="lede-value" id="heroValue">—</div>
-      <div class="lede-note" id="heroNote"></div>
-    </div>
-    <div class="tiles" id="tiles"></div>
-  </section>
-
-  <section class="card" id="cardRead" hidden>
-    <p class="read">Three facts that stop the numbers above being read as a verdict.
-    <b>Every seller received at least what it asked and every buyer paid at most what it
-    offered</b>, so nothing here was bought or sold unwillingly — that is what a uniform
-    clearing price guarantees: everyone who clears is paid the same market price, not
-    their own bid, so most sellers receive more than they asked for. (Block orders are
-    the small exception; they can be accepted against their own limit.) <b>The cheap hours are cheap because wind and solar are running</b>; without
-    them those hours would price like the expensive ones, and German consumers would pay
-    more, not less. <b>And importing in the dear hours lowers the German price</b> rather
-    than raising it, because the imported megawatt-hour displaces a more expensive German
-    plant. What is left is a real fact with real consequences: the value of a megawatt-hour
-    in Germany varies several-fold within the day.</p>
-  </section>
-
-  <div class="filters" id="filters" hidden>
-    <div class="seg" id="ranges" role="group" aria-label="Time range"></div>
-    <div class="spacer"></div>
-    <div class="range-note" id="rangeNote"></div>
+    <figure style="margin-top:0">
+      <div id="plotBars"></div>
+    </figure>
+    <p class="verdict" id="verdict"></p>
+    <p class="swing" id="swing"></p>
   </div>
 
-  <section class="card" id="cardBalance" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2>Daily balance</h2>
-        <p class="hint">The value of what left minus the value of what arrived, both priced
-        at the German day-ahead price. A valuation, not a cash flow. (Since October 2025
-        that price is set in quarter-hour blocks; everything here is averaged to the hour,
-        so the swings shown are gentler than the ones the market actually cleared.)</p>
-      </div>
-      <div class="key">
-        <span><i style="background:var(--out)"></i>arrivals worth more</span>
-        <span><i style="background:var(--in)"></i>departures worth more</span>
-      </div>
-    </div>
-    <div class="plot" id="plotBalance"></div>
-  </section>
+  <p class="note" id="basisNote" style="margin-top:16px"></p>
+</section>
 
-  <section class="card" id="cardPrice" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2>When power arrives, and when it leaves</h2>
-        <p class="hint" id="priceHint">Volume-weighted German price in the hours Germany
-        imported, against the hours it exported. Both are the same price curve — the gap
-        is timing.</p>
-      </div>
-      <div class="key">
-        <span><i class="line" style="background:var(--out)"></i><span id="keyImp">paid for power kept</span></span>
-        <span><i class="line" style="background:var(--in)"></i><span id="keyExp">earned on own output</span></span>
-      </div>
-    </div>
-    <div class="plot" id="plotPrice"></div>
-  </section>
+<section class="act">
+  <p class="no"><span lang="en">Act two · but there is no "it"</span><span lang="de">Zweiter Teil · aber es gibt kein „es“</span></p>
+  <h2 lang="en">Nobody in Germany sold anything, and nobody bought anything back.</h2>
+<h2 lang="de">Niemand in Deutschland hat etwas verkauft, und niemand hat etwas zurückgekauft.</h2>
+  <p lang="en">This is the claim's real mistake, and it is not about the numbers. In the coupled
+  European day-ahead market, cross-border trade is <b>implicit</b>. There is no German
+  agency with a trading desk, no decision to export at breakfast and re-import at dinner.</p>
+<p lang="de">Das ist der eigentliche Fehler der Behauptung, und er liegt nicht in den Zahlen. Im gekoppelten europäischen Day-Ahead-Markt ist der Handel über die Grenzen <b>implizit</b>. Es gibt keine deutsche Stelle mit einem Handelstisch und keine Entscheidung, morgens zu exportieren und abends zurückzukaufen.</p>
+  <p lang="en">One auction clears the whole coupled area at once. Buyers in Germany pay the German
+  price for that interval, whoever generated the power. Sellers abroad receive their own
+  zone's price. Where the two differ, the gap is collected by the transmission operators on
+  both sides of the border as congestion rent. Every seller that cleared received
+  <em>at least</em> what it asked for, because the price is uniform — that is what a
+  clearing price means.</p>
+<p lang="de">Eine einzige Auktion räumt das gesamte gekoppelte Gebiet gleichzeitig. Käufer in Deutschland zahlen den deutschen Preis dieses Intervalls, ganz gleich, wer den Strom erzeugt hat. Verkäufer im Ausland erhalten den Preis ihrer eigenen Zone. Wo beide auseinanderfallen, fließt die Differenz als Engpasserlös an die Übertragungsnetzbetreiber auf beiden Seiten der Grenze. Jeder Verkäufer, der zum Zuge kam, hat <em>mindestens</em> seinen Gebotspreis erhalten – denn der Preis ist einheitlich, genau das bedeutet Markträumung.</p>
+  <p class="pull" lang="en">So <b>“sells low, buys high”</b> describes a pattern in prices. It does not
+  describe a transaction, and there is nobody in it to be stupid.</p>
+<p class="pull" lang="de">„<b>Billig verkauft, teuer gekauft</b>“ beschreibt also ein Muster in Preisen. Es beschreibt kein Geschäft – und es ist niemand darin, der blöd sein könnte.</p>
+</section>
 
-  <section class="card" id="cardResidualDaily" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2>What wind and solar left to cover</h2>
-        <p class="hint" id="resDailyHint">The same days as the chart above: how much
-        demand wind and solar left for everything else to cover. Tall bars line up with
-        the expensive days.</p>
-      </div>
-      <div class="key">
-        <span><i style="background:var(--out)"></i>net importer</span>
-        <span><i style="background:var(--in)"></i>net exporter</span>
-      </div>
-    </div>
-    <div class="plot" id="plotResidualDaily"></div>
-  </section>
+<section class="act">
+  <p class="no"><span lang="en">Act three · the direction is the point</span><span lang="de">Dritter Teil · die Richtung ist der Sinn</span></p>
+  <h2 lang="en">Importing when your own power is expensive is the correct move, not the mistake.</h2>
+<h2 lang="de">Zu importieren, wenn der eigene Strom teuer ist, ist der richtige Zug – nicht der Fehler.</h2>
+  <p lang="en">Germany imports in its dear hours precisely <em>because</em> imported power undercuts
+  the German alternative. Every imported megawatt-hour displaces a more expensive German
+  plant, which pulls the German price <em>down</em>. It exports in cheap hours because in
+  those hours there is more power than the country can use.</p>
+<p lang="de">Deutschland importiert in seinen teuren Stunden gerade <em>deshalb</em>, weil importierter Strom die deutsche Alternative unterbietet. Jede importierte Megawattstunde verdrängt ein teureres deutsches Kraftwerk und drückt damit den deutschen Preis <em>nach unten</em>. Exportiert wird in billigen Stunden, weil dann mehr Strom da ist, als das Land verbrauchen kann.</p>
+  <p lang="en">A system that did the reverse — exporting when power was scarce and importing when it
+  was abundant — is the one that would deserve the word. Here is a real day, at the
+  fifteen-minute resolution the market actually settles in:</p>
+<p lang="de">Ein System, das es umgekehrt machte – exportieren bei Knappheit, importieren bei Überschuss –, hätte das Wort verdient. Hier ein echter Tag, in der Viertelstunden-Auflösung, in der der Markt tatsächlich abgerechnet wird:</p>
+  <figure>
+    <div id="plotDay"></div>
+    <figcaption id="dayCap"></figcaption>
+  </figure>
+</section>
 
-  <section class="card" id="cardWind" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2>Wind goes missing below zero</h2>
-        <p class="hint" id="windHint"></p>
-      </div>
-      <div class="key">
-        <span><i style="background:var(--out)"></i>the negative hour</span>
-        <span><i style="background:var(--thru);opacity:.55"></i>control hours</span>
-      </div>
-    </div>
-    <div class="plot" id="plotWind"></div>
-    <p class="read">The shape is the argument. Weather is smooth in time, so a
-    badly-forecast windy spell cannot produce a shortfall one hour wide — it would slope
-    in and out across the neighbouring hours. A shutdown triggered by the hour's own
-    price can, and this one does: the deficit collapses by more than an order of magnitude
-    in the very next fifteen-minute block, and every control block scatters around zero in
-    both directions. Fifteen minutes is the market's own settlement interval, not a window
-    chosen to flatter the result.
-    <span id="windControl"></span></p>
-    <p class="read">What this cannot tell you is <em>who</em> stopped. Below zero a
-    plant selling into the market loses money on every megawatt-hour, so feathering the
-    blades is the owner's own call — but only for plants whose support premium is
-    actually withdrawn, which under § 51 EEG depends on commissioning date: never for
-    plants older than 2016, after six, four or one consecutive negative hours for later
-    vintages, and from the first negative quarter-hour only for plants commissioned since
-    February 2025. Curtailment <em>ordered</em> by the grid operator, because northern
-    wind cannot reach southern demand, lands in the same high-wind hours and looks
-    identical here. Price-conditioning cannot separate the two; the ordered part is
-    counted in the redispatch spending under
-    <a href="#cardCosts">both sides of the ledger</a>.</p>
-    <p class="read" id="windSeason"></p>
-  </section>
+<section class="act">
+  <p class="no"><span lang="en">Act four · the size of it</span><span lang="de">Vierter Teil · die Größenordnung</span></p>
+  <h2 lang="en">Set against what Germany consumes, the gap is under one per cent of a bill.</h2>
+<h2 lang="de">Gemessen am deutschen Verbrauch liegt die Differenz unter einem Prozent der Stromrechnung.</h2>
+  <p lang="en">The balance is a real number and it is negative. It is also the kind of number that
+  sounds enormous until you divide it by the electricity a country actually uses:</p>
+<p lang="de">Der Saldo ist eine echte Zahl, und er ist negativ. Er ist auch die Art von Zahl, die gewaltig klingt – bis man sie durch den Strom teilt, den ein Land wirklich verbraucht:</p>
+  <div class="ledger" id="ledger"></div>
+  <p class="note" style="margin-top:16px" id="ledgerNote"></p>
+</section>
 
-  <section class="card" id="cardVolume" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2>Volumes</h2>
-        <p class="hint" id="volHint">Energy crossing the border each day.</p>
-      </div>
-      <div class="key">
-        <span><i style="background:var(--out)"></i>at least this much stayed</span>
-        <span><i style="background:var(--thru)"></i>could have passed through</span>
-        <span><i style="background:var(--in)"></i>at least this much was German</span>
-      </div>
-    </div>
-    <div class="plot" id="plotVolume"></div>
-  </section>
+<section class="act">
+  <p class="no"><span lang="en">Act five · and it does not hold still</span><span lang="de">Fünfter Teil · und es bleibt nicht stehen</span></p>
+  <h2 lang="en">In winter the claim inverts: Germany was a net exporter, and the gap roughly halved.</h2>
+<h2 lang="de">Im Winter kippt die Behauptung: Deutschland war Nettoexporteur, und die Differenz halbierte sich etwa.</h2>
+  <p lang="en">A claim stated as a permanent property of a country ought to survive the calendar.
+  This one does not — it is largely a summer observation:</p>
+<p lang="de">Eine Behauptung, die als dauerhafte Eigenschaft eines Landes auftritt, sollte den Kalender überstehen. Diese tut es nicht – sie ist im Wesentlichen eine Sommerbeobachtung:</p>
+  <figure>
+    <div id="plotSeasons"></div>
+    <figcaption id="seasonsCap"></figcaption>
+  </figure>
+</section>
 
-  <section class="card" id="cardDay" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2 id="dayTitle">How one day's price happens</h2>
-        <p class="hint" id="dayHint"></p>
-      </div>
-      <div class="key" id="dayKey"></div>
-    </div>
-    <div class="plot" id="plotDay"></div>
-    <p class="read" id="dayNote"></p>
-  </section>
+<section class="act">
+  <p class="no"><span lang="en">Act six · what is actually happening</span><span lang="de">Sechster Teil · was wirklich passiert</span></p>
+  <h2 lang="en">The interesting thing is not the trade. It is that an hour of power has stopped having
+  one price.</h2>
+<h2 lang="de">Das Interessante ist nicht der Handel. Es ist, dass eine Stunde Strom aufgehört hat, <em>einen</em> Preis zu haben.</h2>
+  <p lang="en">Behind the pattern the claim noticed is something genuinely new: with enough wind and
+  solar, the value of electricity swings several-fold within a single day, and sometimes goes
+  below zero. When it does, generators stop — not because anyone ordered it, but because
+  running costs them money. The shortfall is fifteen minutes wide, which weather cannot do:</p>
+<p lang="de">Hinter dem Muster, das die Behauptung bemerkt hat, steckt etwas wirklich Neues: Mit genügend Wind und Sonne schwankt der Wert von Strom innerhalb eines Tages um ein Mehrfaches und fällt manchmal unter null. Dann schalten Erzeuger ab – nicht auf Anweisung, sondern weil Weiterlaufen Geld kostet. Der Ausfall ist genau eine Viertelstunde breit, und das kann Wetter nicht:</p>
+  <figure>
+    <div id="plotWind"></div>
+    <figcaption id="windCap"></figcaption>
+  </figure>
+</section>
 
-  <section class="card" id="cardBorder" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2>By border</h2>
-        <p class="hint">Balance per neighbouring bidding zone, summed over the window.</p>
-      </div>
-    </div>
-    <div class="plot" id="plotBorder"></div>
-  </section>
+<section class="act">
+  <p class="no"><span lang="en">The verdict</span><span lang="de">Das Fazit</span></p>
+  <h2 id="finalHead"></h2>
+  <p id="finalBody"></p>
+  <p class="note" lang="en">Every figure here is recomputed from the same published series the
+  <a href="dashboard.html">data view</a> draws, so you can check any of it against the
+  daily table there.</p>
+<p class="note" lang="de">Jede Zahl hier wird aus denselben veröffentlichten Reihen berechnet, aus denen auch die <a href="dashboard.html">Datenansicht</a> zeichnet – Sie können alles gegen die Tagestabelle dort prüfen.</p>
+</section>
 
-  <section class="card" id="cardSeasons" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2>January and July are different systems</h2>
-        <p class="hint" id="seasonsHint"></p>
-      </div>
-      <div class="key">
-        <span><i style="background:var(--out)"></i>net importer</span>
-        <span><i style="background:var(--in)"></i>net exporter</span>
-      </div>
-    </div>
-    <div class="plot" id="plotSeasons"></div>
-    <p class="read">This is the caveat for everything above it. Every other panel reports
-    a window, and the default window is thirty days — so the same page read in February and
-    in June makes materially different claims, all of them true of their month. The gap
-    the headline leads with is largely a summer phenomenon; Germany changes from net
-    exporter to net importer partway through the spring; and solar's discount to the market
-    average, the thing that makes cheap afternoons cheap, essentially does not exist in
-    January, when there is little solar to depress its own price.</p>
-    <p class="read" id="seasonsRead"></p>
-  </section>
-
-  <section class="card" id="cardCosts" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2>Congestion, both sides of the ledger</h2>
-        <p class="hint">What the borders earned in congestion rent, against what the
-        transmission operators spent keeping the grid within limits. Related economics,
-        but not one ledger: the rent is day-ahead income on the eleven DE-LU borders,
-        the spending is Germany-wide and includes the internal grid. This one ignores the
-        range above and shows every month where both sides exist: the spending series
-        lags roughly three months behind, so the most recent months on the page have no
-        partner yet.</p>
-      </div>
-      <div class="key">
-        <span><i style="background:var(--in)"></i>rent earned on borders</span>
-        <span><i style="background:var(--out)"></i>spent on grid security</span>
-      </div>
-    </div>
-    <div class="plot" id="plotCosts"></div>
-    <details>
-      <summary>Where does this money come from, and where does it go?</summary>
-      <div class="flows">
-        <div>
-          <h3><i style="background:var(--in)"></i>The rent, in and out</h3>
-          <p><b>In:</b> when a border is full, the two sides clear at different prices.
-          Buyers in the dearer zone pay their own zonal price and sellers in the cheaper
-          zone receive theirs; the gap on each megawatt-hour that crossed is collected by
-          the coupling mechanism and paid to the two transmission operators on that
-          border, normally split evenly. Nobody is billed for it separately — it is the
-          wedge between what the dearer zone paid and what the cheaper zone received, and
-          both sides bear part of it.</p>
-          <p>One border here is not like the others. Switzerland sits outside the coupled
-          day-ahead market, so its capacity is auctioned explicitly instead and no
-          coupling mechanism collects the spread. The Swiss figure in the chart above is
-          still price difference times flow, but what the operators actually earn there is
-          auction revenue, generally a good deal less. It is about an eighth of the rent
-          shown, so read the total as the coupled borders plus a Swiss approximation.</p>
-          <p><b>Out:</b> the operators cannot keep it. Article 19 of Regulation (EU)
-          2019/943 puts it to two priority uses first — guaranteeing that the capacity
-          they sold stays firm, including compensation when it does not, and maintaining
-          or increasing cross-zonal capacity, whether by remedial actions or by building
-          interconnection. Only once those are satisfied may it be counted as income when
-          network tariffs are set, and anything left has to sit in a separate account
-          until it can be spent on those purposes.</p>
-        </div>
-        <div>
-          <h3><i style="background:var(--out)"></i>The spending, in and out</h3>
-          <p><b>Out:</b> the grid inside Germany constrains flows the market ignored, so
-          the operator intervenes. In redispatch it orders one power station down and
-          another up on the far side of the bottleneck, and compensates both for the
-          change. The same budget covers stations held in reserve outside the market for
-          exactly this, contracted load reductions, and countertrading — buying and
-          selling across a border to relieve a constraint.</p>
-          <p><b>In:</b> from every electricity customer. It sits in the transmission
-          operators' cost base and is recovered through their network charges — since 2023
-          a single nationwide transmission tariff, equalised between the four operators
-          rather than charged by region — then rolled into distribution tariffs and on to
-          bills. Not evenly, though: energy-intensive and atypical consumers can have
-          their network fees cut sharply under § 19(2) StromNEV, and the shortfall that
-          creates is refinanced by a separate surcharge on everyone else. Those same
-          reliefs are why the industrial bar in the panel below sits so far under the
-          household one.</p>
-        </div>
-      </div>
-      <p class="read">So both ends of this chart reach the same place: the grid fee on a
-      bill. Rent can only lower it after the capacity obligations are met; redispatch
-      raises it. And that fee sits in the roughly three-fifths of a household bill in the
-      panel below that is levies, network charges and tax — mostly fixed, though the VAT
-      inside it rides on the whole bill and so does move with the wholesale price.</p>
-    </details>
-  </section>
-
-  <section class="card" id="cardLevels" hidden>
-    <div class="card-head">
-      <div class="grow">
-        <h2>Who actually pays what</h2>
-        <p class="hint" id="levelsHint">Every bar is euros per megawatt-hour. The two
-        coloured ones are from this page's own data; the grey ones are reference levels.
-        Note how little of a household bill moves with the wholesale price, and how
-        nearly all of a relieved industrial one does. The two wholesale bars are price
-        levels reached in different hours, not sums anyone was billed.</p>
-      </div>
-    </div>
-    <div class="plot" id="plotLevels"></div>
-  </section>
-
-  <section class="card" id="cardTable" hidden>
-    <details>
-      <summary>Table view — the daily series, one row per day</summary>
-      <div class="scroll" id="tableWrap"></div>
-    </details>
-  </section>
-
-  <footer>
-    <p id="prov"></p>
-    <!-- attribution follows the data, not the page: each day records the source
-         it came from, and the licence and required credit differ per source -->
-    <p id="attrib"></p>
-    <p>Three caveats worth carrying: this is day-ahead only, so intraday and balancing
-    trades are missing; the balance is what the crossing volume was worth at the German
-    price in both directions, not a payment anyone makes, since cross-border trade in the
-    coupled market is implicit; and congestion rent is revenue to the transmission operators on both sides
-    of a border, not a loss.</p>
-  </footer>
+<footer>
+  <p lang="en">Day-ahead prices and cross-border flows from
+  <a href="https://www.smard.de">Bundesnetzagentur | SMARD.de</a>, used under
+  <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Day-ahead only:
+  intraday and balancing trades settle at other prices and are not included. Since October
+  2025 the market clears in quarter-hour blocks, and that is the resolution used here.</p>
+<p lang="de">Day-Ahead-Preise und Grenzkuppelflüsse von <a href="https://www.smard.de">Bundesnetzagentur | SMARD.de</a>, genutzt unter <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Nur Day-Ahead: Intraday- und Regelenergiegeschäfte werden zu anderen Preisen abgerechnet und sind nicht enthalten. Seit Oktober 2025 räumt der Markt in Viertelstunden, und in dieser Auflösung wird hier gerechnet.</p>
+  <p id="footRange"></p>
+</footer>
 </div>
 
-<div id="tip" aria-hidden="true"></div>
-<!-- One announcement per keypress, not per mouse pixel. #tip used to be the live region
-     and was rewritten on every pointermove. -->
-<div id="ann" role="status" aria-live="polite" class="sr"></div>
-
 <script>
-"use strict";
-
 /* ========================================================================== *
- * data
+ * helpers
  * ========================================================================== */
-
-const RANGES = [
-  { key: 7,   label: "7 days" },
-  { key: 30,  label: "30 days" },
-  { key: 90,  label: "90 days" },
-  { key: 0,   label: "All" },
-];
-
-const state = { index: null, months: new Map(), days: [], range: 30, ref: null, costs: null, day: null };
-
-/* Credit required per source. energy-charts asks for attribution to itself and
-   passes SMARD's CC BY 4.0 through; ENTSO-E's platform is a different licence
-   chain entirely, so showing the SMARD credit for ENTSO-E data would be wrong in
-   both directions -- crediting a party that supplied nothing, and omitting the
-   one whose terms require it. */
-const ATTRIB = {
-  "smard": `Cross-border exchange, day-ahead prices and load are
-    <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> from
-    <a href="https://www.smard.de">Bundesnetzagentur | SMARD.de</a>, licensed by it
-    under § 111d EnWG. Flows are gross in each direction, per bidding zone.`,
-  "energy-charts": `Day-ahead prices for Germany and its neighbours are
-    <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> from
-    <a href="https://www.smard.de">Bundesnetzagentur | SMARD.de</a>, redistributed
-    unchanged by <a href="https://www.energy-charts.info">Energy-Charts.info</a>
-    (Fraunhofer ISE), which is also the source of the cross-border exchange series.`,
-  "entsoe": `Day-ahead prices and cross-border exchange come from the
-    <a href="https://transparency.entsoe.eu">ENTSO-E Transparency Platform</a>,
-    published under Regulation (EU) No 543/2013. Re-use requires attribution to
-    ENTSO-E as the source; much of the platform's data is listed for free re-use
-    under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>,
-    while an individual series can remain the copyright of the reporting TSO —
-    worth checking the platform's terms for whatever you republish.`,
-  "demo": `Synthetic data generated by the script's demo backend. It is
-    arbitrage-consistent but entirely made up, and carries no licence because it
-    is not anybody's measurement.`,
+/* Static prose lives in the markup, twice, hidden by CSS. Everything here is a sentence
+   with a number in it, so it is built in code -- and therefore has to exist in both
+   languages in code. Numbers are formatted per locale: German decimal commas are not
+   cosmetic, a page writing "2.07" to a German reader is writing a different number. */
+const LOCALE = { en: "en-GB", de: "de-DE" };
+const MONTHS = {
+  en: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+  de: ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"],
 };
-
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-// Format from the string parts. Parsing "2026-08-16" as a Date would drag the
-// value through UTC and can land the label on the previous day.
-const dLabel = s => `${+s.slice(8, 10)} ${MONTHS[+s.slice(5, 7) - 1]}`;
-const dLong  = s => `${dLabel(s)} ${s.slice(0, 4)}`;
-const dMonth = s => `${MONTHS[+s.slice(5, 7) - 1]} ${s.slice(0, 4)}`;
-
-const num = (v, dp = 0) => v == null ? "—"
-  // collapse -0 and float dust to a clean zero: an axis reading "-0" is noise
-  : (Math.abs(v) < 5e-10 ? 0 : v).toLocaleString("en-GB",
-      { minimumFractionDigits: dp, maximumFractionDigits: dp });
-/** kEUR -> a compact signed money string. */
-const money = (k, dp = 1) => {
-  if (k == null) return "—";
-  const s = k < 0 ? "−" : "+", a = Math.abs(k);
-  if (a >= 1000) return `${s}€${num(a / 1000, dp)}M`;
-  return `${s}€${num(a, 0)}k`;
+const TXT = {
+  en: {
+    title: "Germany sells low and buys high",
+    basisGross: "everything that crossed",
+    basisStripped: "only what stayed or was German",
+    lblBasis: "which power counts", lblPeriod: "which period", periodAll: "whole record",
+    barsImporting: "when importing", barsExporting: "when exporting",
+    barsAxis: "€ per megawatt-hour, volume-weighted",
+    wholeRecord: n => `over the whole record, ${n} days`,
+    inPeriod: m => `in ${m}`,
+    apart: r => `${r}× apart`,
+    noRatio: "the exporting side averages at or below zero here, so a ratio would be meaningless",
+    verdictTail: "The claim's price pattern is real.",
+    netExporter: g => `Note that in this period Germany was a net <b>exporter</b> (${g} GWh out `
+      + `on balance), so it cannot be a story about buying back more than was sold.`,
+    swing: (other, lo, hi) => `Switch the first dial and the same period reads ${other}× instead. `
+      + `Nothing about the power changed — only which megawatt-hours you agree to count. The `
+      + `claim is between ${lo}× and ${hi}× strong, and you chose which.`,
+    basisNote: pct => `<b>Why the first dial matters.</b> In any interval, some power arrives at `
+      + `one border and leaves by another. Nobody can say which arriving megawatt-hour did that, `
+      + `because electricity is fungible — so the most that <em>could</em> have passed straight `
+      + `through is the smaller of the two flows. Over this period that ceiling is <b>${pct}%</b> `
+      + `of everything arriving. Subtract it and you are left with power that plausibly stayed, `
+      + `the version most favourable to the claim. Keep it and you get the least favourable. Both `
+      + `are honest; neither is the only answer, and that is the point.`,
+    ledger: ["the balance, as usually quoted", "per MWh of German consumption",
+             "per kilowatt-hour", "of that is congestion rent to the grid operators"],
+    bn: "bn",
+    ledgerNote: twh => `The middle two are the same number as the first, divided by the ${twh} TWh `
+      + `Germany consumed in the period. The last is not a loss at all: when a border is full the `
+      + `two sides clear at different prices, and that wedge is paid to the transmission operators `
+      + `on both sides, who must put it back into keeping capacity firm and building more of it `
+      + `before it can count against network charges. Roughly half accrues on the German side.`,
+    finalHead: "The pattern is real. The word that is wrong is “stupid”.",
+    finalRatio: r => `on the reading most favourable to the claim, ${r}× so, `,
+    finalBody: r => `Germany's power does arrive dearer than it leaves — ${r}over this period. `
+      + `What the claim gets wrong is everything after the observation: there is no seller and no `
+      + `buyer, because the trade is implicit in one coupled auction; the direction is the `
+      + `efficient one, since importing cheap power lowers the German price rather than raising `
+      + `it; the amount comes to under a euro per megawatt-hour consumed once you divide it by `
+      + `what the country uses, and half of it is rent that funds the interconnectors; and it `
+      + `reverses in winter. What is left is not a country being fleeced. It is a system where the `
+      + `value of an hour has started to move by a factor of several, every day.`,
+    dayPriceAxis: "€/MWh cleared", dayShareAxis: "share of generation with no fuel cost",
+    dayCheapest: "cheapest", dayDearest: "dearest", dayFuelFree: "fuel-free",
+    dayCap: d => `${d}, chosen automatically as the widest intraday price spread on record. Red is `
+      + `a positive clearing price, blue is below zero. The line beneath is the share of `
+      + `generation from sources with no fuel bill.`,
+    seasonsRow1: "price gap, arriving minus leaving (€/MWh)",
+    seasonsRow2: "net position (GWh) — below the line is exporting",
+    seasonsCap: (lv, lm, hv, hm, out, n) => `Complete months only. The gap runs from €${lv} in `
+      + `${lm} to €${hv} in ${hm}, and in ${out} of ${n} months Germany was a net exporter.`,
+    windBlock: "the block", windAxis: "minutes from an interval priced below €0",
+    windCap: (h, pct, a, b) => `Across ${h} hours' worth of blocks priced below zero, wind ran `
+      + `${pct}% under its own day-ahead forecast. One block either side, with the price back `
+      + `above zero, it is within half a per cent. Whole record, ${a} to ${b}.`,
+    footRange: (a, b, n) => `Figures cover ${a} to ${b}, ${n} days.`,
+    errHead: "Could not load the data.",
+    errBody: "data/index.json is missing or empty. Run build_data.py, then serve with ./serve.py.",
+  },
+  de: {
+    title: "Deutschland verkauft billig und kauft teuer",
+    basisGross: "alles, was die Grenze querte",
+    basisStripped: "nur was blieb oder deutsch war",
+    lblBasis: "welcher Strom zählt", lblPeriod: "welcher Zeitraum", periodAll: "ganzer Zeitraum",
+    barsImporting: "beim Import", barsExporting: "beim Export",
+    barsAxis: "€ pro Megawattstunde, mengengewichtet",
+    wholeRecord: n => `über den ganzen Zeitraum, ${n} Tage`,
+    inPeriod: m => `im ${m}`,
+    apart: r => `das ${r}-Fache`,
+    noRatio: "die Exportseite liegt hier im Mittel bei oder unter null, ein Verhältnis wäre also "
+      + "sinnlos",
+    verdictTail: "Das Preismuster der Behauptung ist echt.",
+    netExporter: g => `Beachten Sie: In diesem Zeitraum war Deutschland Netto<b>exporteur</b> `
+      + `(${g} GWh mehr hinaus als herein) – es kann also nicht darum gehen, mehr zurückzukaufen `
+      + `als verkauft wurde.`,
+    swing: (other, lo, hi) => `Stellen Sie den ersten Regler um, und derselbe Zeitraum liest sich `
+      + `als das ${other}-Fache. Am Strom hat sich nichts geändert – nur daran, welche `
+      + `Megawattstunden Sie mitzählen. Die Behauptung ist zwischen dem ${lo}- und dem `
+      + `${hi}-Fachen stark, und Sie haben ausgewählt, welches.`,
+    basisNote: pct => `<b>Warum der erste Regler zählt.</b> In jedem Intervall kommt Strom an `
+      + `einer Grenze herein und verlässt das Land an einer anderen. Niemand kann sagen, welche `
+      + `ankommende Megawattstunde das war, denn Strom ist nicht unterscheidbar – das Höchste, `
+      + `was durchgelaufen sein <em>kann</em>, ist also der kleinere der beiden Flüsse. In diesem `
+      + `Zeitraum sind das <b>${pct} %</b> von allem, was ankam. Zieht man es ab, bleibt Strom, `
+      + `der plausibel geblieben ist: die für die Behauptung günstigste Lesart. Lässt man es `
+      + `drin, bekommt man die ungünstigste. Beides ist ehrlich, keines ist die einzige Antwort – `
+      + `und genau das ist der Punkt.`,
+    ledger: ["der Saldo, wie üblich zitiert", "pro MWh deutschen Verbrauchs",
+             "pro Kilowattstunde", "davon sind Engpasserlöse der Netzbetreiber"],
+    bn: " Mrd.",
+    ledgerNote: twh => `Die beiden mittleren Zahlen sind dieselbe wie die erste, geteilt durch `
+      + `die ${twh} TWh, die Deutschland im Zeitraum verbraucht hat. Die letzte ist überhaupt `
+      + `kein Verlust: Ist eine Grenze voll, räumen beide Seiten zu unterschiedlichen Preisen, `
+      + `und diese Differenz geht an die Übertragungsnetzbetreiber beider Seiten. Sie müssen sie `
+      + `zuerst dafür einsetzen, zugesagte Kapazität zu sichern und neue zu bauen, bevor sie `
+      + `gegen die Netzentgelte gerechnet werden darf. Etwa die Hälfte fällt in Deutschland an.`,
+    finalHead: "Das Muster ist echt. Falsch ist das Wort „blöd“.",
+    finalRatio: r => `in der für die Behauptung günstigsten Lesart um das ${r}-Fache, `,
+    finalBody: r => `Deutschlands Strom kommt tatsächlich teurer herein, als er hinausgeht – `
+      + `${r}in diesem Zeitraum. Falsch ist alles, was die Behauptung daraus macht: Es gibt `
+      + `keinen Verkäufer und keinen Käufer, denn der Handel ist implizit in einer gekoppelten `
+      + `Auktion; die Richtung ist die effiziente, denn billiger Import senkt den deutschen Preis, `
+      + `statt ihn zu heben; der Betrag liegt unter einem Euro pro verbrauchter Megawattstunde, `
+      + `wenn man ihn durch den Verbrauch des Landes teilt, und die Hälfte davon sind Erlöse, die `
+      + `die Kuppelleitungen finanzieren; und im Winter kehrt sich das Ganze um. Was bleibt, ist `
+      + `kein Land, das über den Tisch gezogen wird. Es ist ein System, in dem der Wert einer `
+      + `Stunde begonnen hat, sich täglich um ein Mehrfaches zu bewegen.`,
+    dayPriceAxis: "€/MWh geräumt", dayShareAxis: "Anteil der Erzeugung ohne Brennstoffkosten",
+    dayCheapest: "günstigste", dayDearest: "teuerste", dayFuelFree: "ohne Brennstoff",
+    dayCap: d => `${d}, automatisch gewählt als größte Preisspanne innerhalb eines Tages im `
+      + `ganzen Zeitraum. Rot ist ein positiver Räumungspreis, blau unter null. Die Linie darunter `
+      + `zeigt den Anteil der Erzeugung ohne Brennstoffkosten.`,
+    seasonsRow1: "Preisdifferenz, herein minus hinaus (€/MWh)",
+    seasonsRow2: "Nettoposition (GWh) — unter der Linie heißt Export",
+    seasonsCap: (lv, lm, hv, hm, out, n) => `Nur vollständige Monate. Die Differenz reicht von `
+      + `${lv} € im ${lm} bis ${hv} € im ${hm}, und in ${out} von ${n} Monaten war Deutschland `
+      + `Nettoexporteur.`,
+    windBlock: "die Viertelstunde", windAxis: "Minuten von einem Intervall unter 0 €",
+    windCap: (h, pct, a, b) => `In Viertelstunden mit Preisen unter null – zusammen ${h} Stunden `
+      + `– lief Wind ${pct} % unter seiner eigenen Day-Ahead-Prognose. Eine Viertelstunde davor `
+      + `oder danach, mit Preisen wieder über null, sind es weniger als ein halbes Prozent. `
+      + `Ganzer Zeitraum, ${a} bis ${b}.`,
+    footRange: (a, b, n) => `Die Zahlen umfassen ${a} bis ${b}, ${n} Tage.`,
+    errHead: "Daten konnten nicht geladen werden.",
+    errBody: "data/index.json fehlt oder ist leer. build_data.py ausführen und mit ./serve.py "
+      + "ausliefern.",
+  },
 };
+const T = () => TXT[state.lang];
 
-/* ========================================================================== *
- * tiny svg helpers
- * ========================================================================== */
-
-const SVGNS = "http://www.w3.org/2000/svg";
-function el(name, attrs = {}, text) {
-  const n = document.createElementNS(SVGNS, name);
-  for (const k in attrs) if (attrs[k] != null) n.setAttribute(k, attrs[k]);
+const SVG = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, text) => {
+  const n = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
   if (text != null) n.textContent = text;
   return n;
-}
+};
+const num = (v, dp = 0) => v == null ? "—"
+  : (Math.abs(v) < 5e-10 ? 0 : v).toLocaleString(LOCALE[state.lang],
+      { minimumFractionDigits: dp, maximumFractionDigits: dp });
+/** Money with the sign outside the symbol: "−€2.07bn", never "€-2.07bn". German puts the
+ *  symbol after the number, so this is a function rather than a template. */
+const eur = (v, dp = 0, suffix = "") => {
+  if (v == null) return "—";
+  const sign = v < 0 ? "−" : "", n = num(Math.abs(v), dp);
+  return state.lang === "de" ? `${sign}${n}${suffix} €` : `${sign}€${n}${suffix}`;
+};
 const scale = (d0, d1, r0, r1) => v => r0 + (v - d0) / ((d1 - d0) || 1) * (r1 - r0);
+const mShort = m => MONTHS[state.lang][+m.slice(5, 7) - 1];
+const mLabel = m => `${mShort(m)} ${m.slice(0, 4)}`;
 
-/** Bar path with the data-end rounded and the baseline end square. */
-function barPath(x, y, w, h, r, roundUp) {
-  r = Math.max(0, Math.min(r, w / 2, h));
-  if (h <= 0.6) return `M${x} ${y}h${w}`;               // hairline for ~zero
-  return roundUp
-    ? `M${x} ${y + h}V${y + r}q0 ${-r} ${r} ${-r}h${w - 2 * r}q${r} 0 ${r} ${r}V${y + h}Z`
-    : `M${x} ${y}V${y + h - r}q0 ${r} ${r} ${r}h${w - 2 * r}q${r} 0 ${r} ${-r}V${y}Z`;
-}
-
-/** Which x positions get a date label.
- *  Counted back from the last day, so the most recent date is always labelled
- *  and the spacing stays even -- labelling every nth from the left and then
- *  forcing the last one lands two labels on top of each other. How many fit is
- *  a function of the plot width, not a constant: eight labels that breathe on a
- *  desktop run into each other at 390px. */
-function labelIndices(n, plotW) {
-  const target = Math.max(3, Math.min(8, Math.floor(plotW / 72)));
-  const every = Math.max(1, Math.ceil(n / target));
-  const idx = new Set();
-  for (let i = n - 1; i >= 0; i -= every) idx.add(i);
-  return idx;
-}
-
-/** Nice round tick values covering [lo, hi], aiming for ~count steps. */
-function ticks(lo, hi, count = 5) {
-  const span = (hi - lo) || 1;
-  const raw = span / count;
+function ticks(lo, hi, want = 4) {
+  if (![lo, hi].every(Number.isFinite) || hi < lo) return [];
+  const raw = (hi - lo) / want || 1;
   const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || 10 * mag;
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || mag * 10;
   const out = [];
-  for (let t = Math.ceil(lo / step) * step; t <= hi + step * 1e-6; t += step) out.push(t);
+  for (let t = Math.ceil(lo / step) * step; t <= hi + step * .001; t += step)
+    out.push(Math.abs(t) < step * 1e-6 ? 0 : t);
   return out;
 }
 
 /* ========================================================================== *
- * tooltip
+ * state and the two dials
  * ========================================================================== */
+const BASES = {
+  // Which volume each price is weighted by. The two differ by min(imports, exports) per
+  // interval -- the most that could have been offset within the same hour. Stripping it
+  // makes the claim look strongest, which is exactly why the dial exists.
+  gross:    { key: "basisGross",
+              ip: "imp_px_de",  iv: "import_gwh",
+              ep: "exp_px_de",  ev: "export_gwh" },
+  stripped: { key: "basisStripped",
+              ip: "imp_px_own", iv: "stayed_gwh",
+              ep: "exp_px_own", ev: "from_de_plants_gwh" },
+};
+const state = { lang: "en", basis: "stripped", period: "all", days: [], months: [], extra: {} };
 
-const tip = document.getElementById("tip");
-function showTip(evt, html) {
-  tip.innerHTML = html;
-  tip.style.opacity = 1;
-  const pad = 12, w = tip.offsetWidth;
-  let x = evt.clientX;
-  x = Math.max(w / 2 + 4, Math.min(x, window.innerWidth - w / 2 - 4));
-  tip.style.left = x + "px";
-  tip.style.top = Math.max(tip.offsetHeight + 4, evt.clientY - pad) + "px";
-}
-const hideTip = () => { tip.style.opacity = 0; };
+const inPeriod = () => state.period === "all"
+  ? state.days : state.days.filter(d => d.date.startsWith(state.period));
 
-/** Make a plot reachable and readable without a mouse.
- *
- *  One tab stop per chart, then left/right to step through it -- not tabindex on every hit
- *  rect, which would put 232 tab stops in a single card. Stepping dispatches the same
- *  pointerenter the mouse would, so there is one code path for the tooltip contents, and
- *  copies the result into the live region so it is announced once per keypress.
- *
- *  Called after every render, because replaceChildren() throws the old rects away.
- */
-function makeNavigable(host, label) {
-  const hits = [...host.querySelectorAll(".hit")];
-  if (!hits.length) return;
-  host.tabIndex = 0;
-  host.setAttribute("role", "group");
-  host.setAttribute("aria-label", `${label}. Use left and right arrow keys to read values.`);
-  let at = -1;
-  const go = i => {
-    at = Math.max(0, Math.min(hits.length - 1, i));
-    const r = hits[at].getBoundingClientRect();
-    hits[at].dispatchEvent(new PointerEvent("pointerenter", { bubbles: true,
-      clientX: (r.left + r.right) / 2, clientY: r.top + 8 }));
-    // collapse the markup's indentation, or the announcement reads as ragged fragments
-    document.getElementById("ann").textContent =
-      tip.textContent.replace(/\s+/g, " ").trim();
-  };
-  host.onkeydown = e => {
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      e.preventDefault();
-      go(at < 0 ? (e.key === "ArrowRight" ? 0 : hits.length - 1)
-                : at + (e.key === "ArrowRight" ? 1 : -1));
-    } else if (e.key === "Home") { e.preventDefault(); go(0); }
-    else if (e.key === "End") { e.preventDefault(); go(hits.length - 1); }
-    else if (e.key === "Escape") { hideTip(); document.getElementById("ann").textContent = ""; }
-  };
-  host.onblur = () => { hideTip(); at = -1; };
-}
-// The tooltip is position: fixed and was only ever dismissed by pointerleave on a hit
-// rect. Scroll away mid-hover and it rode along at full opacity over whatever panel came
-// next; on touch, a tap fires pointerenter and pointerleave never comes, so it stuck
-// permanently. Scroll and any press outside a hit rect now dismiss it too.
-addEventListener("scroll", () => {
-  // ...but not while the keyboard is driving: focusing a plot scrolls it into view, and
-  // that scroll would dismiss the tooltip the arrow key had just opened.
-  if (document.activeElement?.classList?.contains("plot")) return;
-  if (tip.style.opacity !== "0") hideTip();
-}, { passive: true });
-addEventListener("pointerdown", e => {
-  if (!e.target.closest?.(".hit")) hideTip();
-}, { capture: true });
-/** The day tooltip, shared by the balance, price, volume and residual charts.
- *
- *  Leads with the transit-free basis because that is what the price chart plots --
- *  it used to print the gross basis instead, so the tooltip and the line under the
- *  cursor disagreed by up to 136 EUR/MWh. Both are shown: the gross pair is the
- *  honest denominator and the stripped pair is a bound, so neither stands alone.
- */
-/** The two price rows, on whichever basis the day actually has.
- *
- *  A day can carry the gross pair without the transit-free pair. Falling back with `??`
- *  would print the gross number under the stripped label -- so name the basis instead of
- *  substituting quietly, and only offer the second row when there are two to compare.
- */
-function pxRows(d) {
-  const own = d.imp_px_own != null || d.exp_px_own != null;
-  const row = (label, v) =>
-    `<div class="t-row"><span>${label}</span><span>${v == null ? "—" : num(v, 1)}</span></div>`;
-  if (!own)
-    return row("Price when importing", d.imp_px_de) + row("Price when exporting", d.exp_px_de);
-  return row("Price when importing", d.imp_px_own)
-       + row("Price when exporting", d.exp_px_own)
-       + `<div class="t-row"><span>&nbsp;&nbsp;same, counting transit</span>`
-       + `<span>${num(d.imp_px_de, 1)} / ${num(d.exp_px_de, 1)}</span></div>`;
-}
-
-function tipRows(d) {
-  return `<div class="t-date">${dLong(d.date)}</div>
-    <div class="t-row"><span>Balance</span><span>${money(d.bal_de_keur, 2)}</span></div>
-    <div class="t-sep"></div>
-    <div class="t-row"><span>Imported</span><span>${num(d.import_gwh, 1)} GWh</span></div>
-    <div class="t-row"><span>Exported</span><span>${num(d.export_gwh, 1)} GWh</span></div>
-    <div class="t-row"><span>of which in transit</span><span>${num(d.transit_gwh, 1)} GWh</span></div>
-    ${pxRows(d)}
-    <div class="t-row"><span>Congestion rent</span><span>${money(d.rent_keur, 2)}</span></div>`;
-}
-
-/* ========================================================================== *
- * charts
- * ========================================================================== */
-
-const PLOT_H = 210, PAD = { t: 12, r: 16, b: 26, l: 52 };
-// Every per-day chart uses this right inset, whether or not it needs the gutter for an
-// end label. Two of the four reserved it and two did not, so the same date sat 33px apart
-// between vertically stacked panels -- about 4.2 days at 390px, worst at the right edge,
-// while the residual card's own hint invites reading it against the chart above.
-const DAY_R = PAD.r + 34;
-const BAR_MAX = 24, GAP = 2, RAD = 4;
-
-/** Bar width for a band, for `per` bars sharing it.
- *  Clamped above zero: a year of days on a phone gives a band under 2px, and
- *  band - GAP then goes negative, which SVG rejects outright. */
-const barW = (band, per = 1) =>
-  Math.max(0.5, Math.min(BAR_MAX, (band - GAP * per) / per));
-
-/** Columns growing from a zero line, red below / blue above. */
-function drawBalance(host, days) {
-  const W = host.clientWidth || 720, H = PLOT_H + PAD.t + PAD.b;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
-                          role: "img", "aria-label": "Daily balance, million euro" });
-  const x0 = PAD.l, x1 = W - DAY_R, y0 = PAD.t, y1 = PAD.t + PLOT_H;
-
-  const vals = days.map(d => d.bal_de_keur ?? 0);
-  const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
-  // a lane past the extreme, so its label sits below the deepest bar instead of
-  // landing in the date row
-  const y = scale(lo - (hi - lo) * .10, hi, y1, y0);
-
-  for (const t of ticks(lo, hi)) {                          // hairline, solid
-    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
-                            x1: x0, x2: x1, y1: y(t), y2: y(t) }));
-    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" },
-                  (t < 0 ? "−" : "") + num(Math.abs(t) / 1000, 1) + "M"));
-  }
-
-  const band = (x1 - x0) / days.length;
-  const bw = barW(band);
-  const worst = days.reduce((a, b) => (b.bal_de_keur ?? 0) < (a.bal_de_keur ?? 0) ? b : a, days[0]);
-  const labels = labelIndices(days.length, x1 - x0);
-
-  days.forEach((d, i) => {
-    const v = d.bal_de_keur ?? 0, up = v >= 0;
-    const cx = x0 + band * (i + .5), top = Math.min(y(v), y(0));
-    svg.append(el("path", {
-      d: barPath(cx - bw / 2, top, bw, Math.abs(y(v) - y(0)), RAD, up),
-      fill: up ? "var(--in)" : "var(--out)",
-    }));
-    // hit target spans the whole band, so it clears the 24px minimum
-    const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PLOT_H });
-    hit.addEventListener("pointerenter", e => showTip(e, tipRows(d)));
-    hit.addEventListener("pointermove", e => showTip(e, tipRows(d)));
-    hit.addEventListener("pointerleave", hideTip);
-    svg.append(hit);
-
-    if (d === worst) {                     // label the extreme only, never every bar
-      svg.append(el("text", { class: "val", x: cx, y: y(v) + (v < 0 ? 14 : -7),
-                              "text-anchor": "middle" }, money(v)));
-    }
-    if (labels.has(i)) {
-      svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" }, dLabel(d.date)));
-    }
-  });
-
-  host.replaceChildren(svg);
-}
-
-/** Two price lines on one axis, with the gap between them washed in. */
-function drawPrice(host, days) {
-  // A band above the plot for the unit label. Without it the topmost tick and
-  // the unit share a line whenever the data reaches the top of the scale, which
-  // is exactly what a source with different price levels will do to you.
-  const TOP = PAD.t + 14;
-  const W = host.clientWidth || 720, H = PLOT_H + TOP + PAD.b;
-  const R = DAY_R;                                       // room for end labels
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
-                          role: "img", "aria-label": "Volume-weighted price when importing and when exporting, euro per megawatt hour" });
-  const x0 = PAD.l, x1 = W - R, y0 = TOP, y1 = TOP + PLOT_H;
-
-  // Prefer the transit-free basis: transit is bought and sold in the same hour at the
-  // same price, so including it pulls both curves together. But it is a bound, not a
-  // measurement -- see the hint under this chart.
-  const ownBasis = days.some(d => d.imp_px_own != null);
-  const fI = ownBasis ? "imp_px_own" : "imp_px_de", fE = ownBasis ? "exp_px_own" : "exp_px_de";
-  const all = days.flatMap(d => [d[fI], d[fE]]).filter(v => v != null);
-  const lo = Math.min(...all), hi = Math.max(...all);
-  const pad = (hi - lo) * .12 || 1;
-  const y = scale(lo - pad, hi + pad, y1, y0);
-  // Band centres, not edge-to-edge: each value is a daily *average*, so it belongs
-  // in the middle of its day rather than on a boundary -- and it puts these points
-  // exactly above the columns in the panel below, which is the whole point of
-  // pairing them.
-  const band = (x1 - x0) / days.length;
-  const x = i => x0 + band * (i + .5);
-
-  for (const t of ticks(lo - pad, hi + pad)) {
-    svg.append(el("line", { class: "gridline", x1: x0, x2: x1, y1: y(t), y2: y(t) }));
-    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" }, num(t)));
-  }
-
-  // The wash between the curves: the day's spread, ~10% opacity, never a block.
-  // One polygon per unbroken run of days where BOTH prices exist. Filtering the two
-  // edges independently -- which this did -- bridges each one's gaps separately, so
-  // the fill asserted a spread across the 34 days where one leg was never measured,
-  // and closed with a diagonal wedge wherever the two edges started on different days.
-  let run = [];
-  const flushBand = () => {
-    if (run.length > 1) {
-      const d = run.map(q => `${q[0]} ${y(q[1])}`).join("L") + "L"
-              + [...run].reverse().map(q => `${q[0]} ${y(q[2])}`).join("L");
-      svg.append(el("path", { d: `M${d}Z`, fill: "var(--out)", opacity: .10 }));
-    }
-    run = [];
-  };
-  days.forEach((d, i) => {
-    if (d[fI] == null || d[fE] == null) { flushBand(); return; }
-    run.push([x(i), d[fI], d[fE]]);
-  });
-  flushBand();
-
-  // segmented so a null day breaks the line rather than inventing a value
-  for (const [field, colour] of [[fI, "var(--out)"], [fE, "var(--in)"]]) {
-    let seg = [];
-    const flush = () => {
-      if (seg.length > 1) svg.append(el("path", {
-        d: "M" + seg.map(p => `${p[0]} ${p[1]}`).join("L"),
-        fill: "none", stroke: colour, "stroke-width": 2,
-        "stroke-linejoin": "round", "stroke-linecap": "round",
-      }));
-      else if (seg.length === 1) svg.append(el("circle", {
-        cx: seg[0][0], cy: seg[0][1], r: 2, fill: colour }));
-      seg = [];
-    };
-    days.forEach((d, i) => d[field] == null ? flush() : seg.push([x(i), y(d[field])]));
-    flush();
-
-    const last = days.filter(d => d[field] != null).pop();
-    if (last) {
-      const i = days.indexOf(last);
-      svg.append(el("circle", { cx: x(i), cy: y(last[field]), r: 4, fill: colour,
-                                stroke: "var(--surface)", "stroke-width": 2 }));
-      svg.append(el("text", { class: "val", x: x(i) + 9, y: y(last[field]) + 4 },
-                    num(last[field])));
-    }
-  }
-  svg.append(el("text", { x: x0 - 8, y: y0 - 9, "text-anchor": "end" }, "€/MWh"));
-
-  // crosshair + nearest-point tooltip across the whole plot
-  const cross = el("line", { class: "crosshair", y1: y0, y2: y1, x1: 0, x2: 0, opacity: 0 });
-  svg.append(cross);
-  const hit = el("rect", { class: "hit", x: x0, y: y0, width: x1 - x0, height: PLOT_H });
-  const at = evt => {
-    const box = svg.getBoundingClientRect();
-    const px = (evt.clientX - box.left) * (W / box.width);
-    const i = Math.max(0, Math.min(days.length - 1, Math.floor((px - x0) / band)));
-    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
-    cross.setAttribute("opacity", 1);
-    showTip(evt, tipRows(days[i]));
-  };
-  hit.addEventListener("pointerenter", at);
-  hit.addEventListener("pointermove", at);
-  hit.addEventListener("pointerleave", () => { cross.setAttribute("opacity", 0); hideTip(); });
-  svg.append(hit);
-
-  const labels = labelIndices(days.length, x1 - x0);
-  days.forEach((d, i) => {
-    if (labels.has(i))
-      svg.append(el("text", { x: x(i), y: y1 + 17, "text-anchor": "middle" }, dLabel(d.date)));
-  });
-
-  host.replaceChildren(svg);
-}
-
-/** Imports above the axis, exports below: direction encoded twice. */
-function drawVolume(host, days) {
-  const H2 = 96, W = host.clientWidth || 720, H = H2 * 2 + PAD.t + PAD.b;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
-                          role: "img", "aria-label": "Imported and exported energy per day, gigawatt hours" });
-  const x0 = PAD.l, x1 = W - DAY_R, mid = PAD.t + H2;
-
-  const top = Math.max(...days.map(d => Math.max(d.import_gwh ?? 0, d.export_gwh ?? 0)), 1);
-  const h = v => (v ?? 0) / top * (H2 - 6);
-
-  for (const t of ticks(0, top, 3)) {
-    if (t === 0) continue;
-    for (const s of [-1, 1]) {
-      svg.append(el("line", { class: "gridline", x1: x0, x2: x1,
-                              y1: mid - s * h(t), y2: mid - s * h(t) }));
-      svg.append(el("text", { class: "tick", x: x0 - 8, y: mid - s * h(t) + 4,
-                              "text-anchor": "end" }, num(t)));
-    }
-  }
-  svg.append(el("line", { class: "axisline", x1: x0, x2: x1, y1: mid, y2: mid }));
-  svg.append(el("text", { x: x0 - 8, y: PAD.t - 2, "text-anchor": "end" }, "GWh"));
-
-  const band = (x1 - x0) / days.length;
-  const bw = barW(band);
-  const labels = labelIndices(days.length, x1 - x0);
-  days.forEach((d, i) => {
-    const cx = x0 + band * (i + .5);
-    // Each side splits in two. Germany's own share -- power used here, or generated
-    // here -- sits against the axis so it can be compared across days on a common
-    // baseline; the transit overlap extends beyond it. The transit block is the
-    // same height above and below by construction, which is the point: one flow
-    // crossing the country, counted once in each direction.
-    const thru = Math.min(d.transit_gwh ?? 0, d.import_gwh ?? 0, d.export_gwh ?? 0);
-    const stack = (total, up, mine) => {
-      const own = Math.max(0, total - thru);
-      const dir = up ? -1 : 1;
-      // inner segment: square both ends, it meets the axis and the next segment
-      if (own > 0) {
-        const hp = h(own);
-        svg.append(el("rect", { x: cx - bw / 2, y: up ? mid - hp : mid,
-                                width: bw, height: hp, fill: mine }));
-      }
-      // outer segment: rounded on the data end only, held off by the surface gap
-      if (thru > 0) {
-        const base = mid + dir * (h(own) + GAP);
-        const hp = Math.max(0, h(thru) - GAP);
-        svg.append(el("path", { d: barPath(cx - bw / 2, up ? base - hp : base,
-                                           bw, hp, RAD, up), fill: "var(--thru)" }));
-      }
-    };
-    stack(d.import_gwh ?? 0, true, "var(--out)");
-    stack(d.export_gwh ?? 0, false, "var(--in)");
-    const hit = el("rect", { class: "hit", x: cx - band / 2, y: PAD.t, width: band, height: H2 * 2 });
-    hit.addEventListener("pointerenter", e => showTip(e, tipRows(d)));
-    hit.addEventListener("pointermove", e => showTip(e, tipRows(d)));
-    hit.addEventListener("pointerleave", hideTip);
-    svg.append(hit);
-    if (labels.has(i))
-      svg.append(el("text", { x: cx, y: mid + H2 + 17, "text-anchor": "middle" }, dLabel(d.date)));
-  });
-
-  host.replaceChildren(svg);
-}
-
-/** Tooltip body for the demand charts: the usual day, plus what it had to cover. */
-function tipDemand(d) {
-  return tipRows(d)
-    + `<div class="t-sep"></div>`
-    + `<div class="t-row"><span>Not covered by wind/solar</span><span>${num(d.residual_gw, 1)} GW</span></div>`
-    + `<div class="t-row"><span>Total demand</span><span>${num(d.load_gw, 1)} GW</span></div>`;
-}
-
-/** Residual load per day, as columns on the price chart's own x geometry.
- *
- *  Deliberately the same left and right insets as drawPrice, so the two plots
- *  share a date grid and the shapes can be compared by scanning down the page
- *  rather than by trusting a correlation coefficient. This is the small-multiples
- *  answer to "two measures, different units" -- the alternative, one plot with two
- *  y-scales, is the chart form that invents correlations.
- */
-function drawResidualDaily(host, days) {
-  const pts = days.filter(d => d.residual_gw != null);
-  if (!pts.length) { host.replaceChildren(); return false; }
-
-  const PH = 126, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": "Demand not covered by wind and solar, per day, gigawatts" });
-  const x0 = PAD.l, x1 = W - DAY_R, y0 = PAD.t, y1 = PAD.t + PH;
-
-  const vals = days.map(d => d.residual_gw ?? 0);
-  const hi = Math.max(...vals, 1), lo = Math.min(0, ...vals);
-  const y = scale(lo, hi * 1.06, y1, y0);
-
-  for (const t of ticks(lo, hi, 3)) {
-    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
-                            x1: x0, x2: x1, y1: y(t), y2: y(t) }));
-    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" },
-                  num(t)));
-  }
-  svg.append(el("text", { x: x0 - 8, y: y0 - 2, "text-anchor": "end" }, "GW"));
-
-  const band = (x1 - x0) / days.length;
-  const bw = barW(band);
-  const labels = labelIndices(days.length, x1 - x0);
-  days.forEach((d, i) => {
-    const cx = x0 + band * (i + .5);
-    if (d.residual_gw != null) {
-      const v = d.residual_gw, up = v >= 0;
-      const top = Math.min(y(v), y(0));
-      svg.append(el("path", {
-        d: barPath(cx - bw / 2, top, bw, Math.abs(y(v) - y(0)), RAD, up),
-        fill: (d.net_import_gwh ?? 0) >= 0 ? "var(--out)" : "var(--in)" }));
-    }
-    const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PH });
-    const html = tipDemand(d);
-    hit.addEventListener("pointerenter", e => showTip(e, html));
-    hit.addEventListener("pointermove", e => showTip(e, html));
-    hit.addEventListener("pointerleave", hideTip);
-    svg.append(hit);
-    if (labels.has(i))
-      svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" }, dLabel(d.date)));
-  });
-  host.replaceChildren(svg);
-  return true;
-}
-
-/** Wind that did not run while prices were negative, by day.
- *
- *  One series, so no legend: the title names it. Curtailment is a negative -- energy
- *  never made -- so it can only be drawn against an expectation, and the caption
- *  carries the control that makes it trustworthy: the same forecast is unbiased across
- *  all hours, so a shortfall concentrated below zero is a decision, not noise.
- */
-/** The wind deficit by distance in hours from a negative price.
- *
- *  This replaced a per-day bar chart, for two reasons. The daily series is dominated by
- *  forecast noise -- 30 of 228 days run the other way -- and, worse, the effect is
- *  episodic: it needs wind on the system to be visible, so it lands almost entirely in
- *  high-wind negative-price episodes. Any window shorter than the record flips sign with
- *  the range button (-4.07% over the default 30 days, +9.46% over the record), which is
- *  a property of the sample, not of the thing being measured.
- *
- *  So this is a full-record panel, deliberately ignoring the range control, and it plots
- *  the one test that identifies the effect rather than its volume. A shortfall exactly
- *  one hour wide cannot be forecast error -- weather is smooth in time.
- */
-function drawWind(host, adj) {
-  const prof = adj?.profile;
-  if (!prof) { host.replaceChildren(); return false; }
-  // Keys are step offsets whose size depends on the run's resolution, so order by the
-  // minutes each one carries rather than assuming a fixed set.
-  const lags = Object.keys(prof).sort((a, b) => prof[a].minutes - prof[b].minutes);
-  if (lags.length < 3) { host.replaceChildren(); return false; }
-
-  const PH = 150, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b + 14;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": "Wind deficit against day-ahead forecast, per cent of forecast, by "
-      + "distance in minutes from a market interval priced below zero" });
-  const x0 = PAD.l, x1 = W - PAD.r, y0 = PAD.t, y1 = PAD.t + PH;
-
-  const vals = lags.map(k => prof[k].share_of_forecast_pct);
-  const hi = Math.max(...vals, 1), lo = Math.min(...vals, 0);
-  const pad = (hi - lo) * .12;
-  const y = scale(lo - pad, hi + pad, y1, y0);
-
-  for (const t of ticks(lo - pad, hi + pad, 4)) {
-    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
-                            x1: x0, x2: x1, y1: y(t), y2: y(t) }));
-    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" },
-                  num(t, 0) + "%"));
-  }
-
-  const band = (x1 - x0) / lags.length;
-  const bw = Math.min(46, barW(band));
-  lags.forEach((k, i) => {
-    const v = prof[k].share_of_forecast_pct, cx = x0 + band * (i + .5);
-    const zero = k === "0";
-    const h = Math.abs(y(v) - y(0));
-    svg.append(el("path", {
-      d: barPath(cx - bw / 2, Math.min(y(v), y(0)), bw, h, RAD, v >= 0),
-      // the negative hour is the finding; its neighbours are the control, so they
-      // stay neutral rather than competing for attention
-      fill: zero ? "var(--out)" : "var(--thru)",
-      opacity: zero ? 1 : .55,
-    }));
-    // Label every bar when there is room; when there is not, label the finding and let
-    // the controls speak as a flat row -- which is the whole message anyway.
-    if (zero || band >= 44)
-      svg.append(el("text", { class: "val", x: cx, y: v >= 0 ? y(v) - 6 : y(v) + 14,
-                              "text-anchor": "middle" }, num(v, band >= 44 ? 1 : 2) + "%"));
-    const mins = prof[k].minutes;
-    const edge = Math.abs(mins) === Math.max(...lags.map(q => Math.abs(prof[q].minutes)));
-    if (band >= 40 || zero || edge)
-      svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" },
-                    zero ? (band >= 40 ? "the block" : "0")
-                         : (mins > 0 ? "+" : "−") + Math.abs(mins)));
-    const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PH });
-    const html = `<div class="t-date">${zero ? "Intervals priced below €0"
-                    : Math.abs(mins) + " min " + (mins > 0 ? "after" : "before")
-                      + ", price at or above €0"}</div>`
-      + `<div class="t-row"><span>Deficit vs forecast</span><span>${num(v, 2)}%</span></div>`
-      + `<div class="t-row"><span>Volume</span><span>${num(prof[k].deficit_gwh, 1)} GWh</span></div>`
-      + `<div class="t-row"><span>Intervals counted</span><span>${num(prof[k].intervals, 0)}</span></div>`;
-    hit.addEventListener("pointerenter", e => showTip(e, html));
-    hit.addEventListener("pointermove", e => showTip(e, html));
-    hit.addEventListener("pointerleave", hideTip);
-    svg.append(hit);
-  });
-  svg.append(el("text", { class: "tick", x: (x0 + x1) / 2, y: H - 2, "text-anchor": "middle" },
-                "minutes from a market interval priced below €0"));
-  host.replaceChildren(svg);
-  return true;
-}
-
-/** One real day: what generated each hour, and the price underneath it.
- *
- *  Two stacked panels on one hour axis rather than generation and price on two
- *  y-scales. The stack fills bottom-up from cheapest, load is drawn across it so the
- *  surplus that gets exported is visible, and the price strip below lets the reader
- *  see the collapse happen under the solar bulge without being told.
- */
-// Cheap-to-dear bottom-up, as before -- vertical position still carries the merit order.
-// What changed is the hue: the colour ramp used to encode merit-order position, which
-// vertical position already encodes, so the hue channel was spending itself on nothing.
-// It now carries the fuel boundary instead. Cool = nothing burns and the marginal cost is
-// about zero; warm = a fuel bill, which is what actually sets the price. Within each
-// family the steps still darken with cost, and the strongest contrast in the whole stack
-// is the boundary between the two families, because that is the line worth seeing.
-// Pumped storage sits between them in its own neutral: it burns nothing, but it is not
-// renewable generation either -- it re-emits energy something else made earlier.
-const STACK_ORDER = [
-  ["solar", "solar", "var(--m1)", true],
-  ["wind", "wind", "var(--m2)", true],
-  ["hydro_bio", "hydro & biomass", "var(--m3)", true],
-  ["storage", "pumped storage", "var(--st)", false],
-  ["coal", "lignite & hard coal", "var(--f1)", false],
-  ["gas_other", "gas & other thermal", "var(--f2)", false],
-];
-const RENEWABLE_KEYS = STACK_ORDER.filter(r => r[3]).map(r => r[0]);
-
-/** Share of generation from the zero-fuel-cost buckets, for one interval or a whole day.
- *  Reads the split off STACK_ORDER so the sentence cannot drift from the colours. */
-function renShare(h) {
-  const rows = Array.isArray(h) ? h : [h];
-  const pick = keys => rows.reduce((a, r) => a + keys.reduce((b, k) => b + (r[k] ?? 0), 0), 0);
-  const all = pick(STACK_ORDER.map(r => r[0]));
-  return all > 0 ? Math.round(pick(RENEWABLE_KEYS) / all * 100) : 0;
-}
-
-function drawDay(host, day) {
-  if (!day?.hours?.length) { host.replaceChildren(); return false; }
-  const hrs = day.hours;
-  const SH = 168, PH2 = 66, GAPY = 30;
-  const W = host.clientWidth || 720, H = SH + GAPY + PH2 + PAD.t + PAD.b;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": `Generation by technology and price, ${day.date}` });
-  const x0 = PAD.l, x1 = W - PAD.r, sTop = PAD.t, sBot = PAD.t + SH;
-  const pTop = sBot + GAPY, pBot = pTop + PH2;
-
-  const tot = h => STACK_ORDER.reduce((a, [k]) => a + (h[k] ?? 0), 0);
-  const gMax = Math.max(...hrs.map(h => Math.max(tot(h), h.load_gw ?? 0)));
-  const yG = scale(0, gMax * 1.05, sBot, sTop);
-  const px = hrs.map(h => h.price ?? 0);
-  const pLo = Math.min(0, ...px), pHi = Math.max(...px);
-  const yP = scale(pLo, pHi * 1.08, pBot, pTop);
-
-  for (const t of ticks(0, gMax, 4)) {
-    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
-                            x1: x0, x2: x1, y1: yG(t), y2: yG(t) }));
-    svg.append(el("text", { class: "tick", x: x0 - 8, y: yG(t) + 4, "text-anchor": "end" }, num(t)));
-  }
-  svg.append(el("text", { x: x0 - 8, y: sTop - 2, "text-anchor": "end" }, "GW"));
-  for (const t of ticks(pLo, pHi, 4)) {
-    svg.append(el("line", { class: Math.abs(t) < 1e-9 ? "axisline" : "gridline",
-                            x1: x0, x2: x1, y1: yP(t), y2: yP(t) }));
-    // the unit sits just above pTop, so a tick landing there would print through it
-    if (yP(t) - pTop > 11)
-      svg.append(el("text", { class: "tick", x: x0 - 8, y: yP(t) + 4, "text-anchor": "end" },
-                    num(t)));
-  }
-  svg.append(el("text", { x: x0 - 8, y: pTop - 2, "text-anchor": "end" }, "€/MWh"));
-
-  const band = (x1 - x0) / hrs.length;
-  const bw = barW(band);
-  const labels = labelIndices(hrs.length, x1 - x0);
-
-  hrs.forEach((h, i) => {
-    const cx = x0 + band * (i + .5);
-    let acc = 0;
-    STACK_ORDER.forEach(([k], si) => {
-      const v = h[k] ?? 0;
-      if (v <= 0) { acc += v; return; }
-      const top = yG(acc + v), hh = Math.max(0, yG(acc) - yG(acc + v) - (si ? GAP : 0));
-      const outer = si === STACK_ORDER.length - 1;
-      svg.append(outer
-        ? el("path", { d: barPath(cx - bw / 2, top, bw, hh, RAD, true), fill: STACK_ORDER[si][2] })
-        : el("rect", { x: cx - bw / 2, y: top, width: bw, height: hh, fill: STACK_ORDER[si][2] }));
-      acc += v;
-    });
-    // load across the stack: anything above the line left the country
-    if (h.load_gw != null)
-      svg.append(el("line", { x1: cx - band / 2, x2: cx + band / 2,
-                              y1: yG(h.load_gw), y2: yG(h.load_gw),
-                              stroke: "var(--ink-2)", "stroke-width": 2 }));
-    // the price, below
-    const pv = h.price ?? 0, up = pv >= 0;
-    svg.append(el("path", { d: barPath(cx - bw / 2, Math.min(yP(pv), yP(0)), bw,
-                                       Math.abs(yP(pv) - yP(0)), RAD, up),
-                            fill: "var(--thru)" }));
-    if (labels.has(i)) {
-      svg.append(el("text", { x: cx, y: sBot + 15, "text-anchor": "middle" }, h.hour));
-      svg.append(el("text", { x: cx, y: pBot + 15, "text-anchor": "middle" }, h.hour));
-    }
-    const hit = el("rect", { class: "hit", x: cx - band / 2, y: sTop, width: band, height: pBot - sTop });
-    const html = `<div class="t-date">${day.date} ${h.hour}</div>`
-      + `<div class="t-row"><span>Price</span><span>€${num(h.price, 1)}</span></div>`
-      + `<div class="t-sep"></div>`
-      + STACK_ORDER.map(([k, lab]) =>
-          `<div class="t-row"><span>${lab}</span><span>${num(h[k], 1)} GW</span></div>`).join("")
-      + `<div class="t-sep"></div>`
-      + `<div class="t-row"><span>generated</span><span>${num(tot(h), 1)} GW</span></div>`
-      + `<div class="t-row"><span>German demand</span><span>${num(h.load_gw, 1)} GW</span></div>`;
-    hit.addEventListener("pointerenter", e => showTip(e, html));
-    hit.addEventListener("pointermove", e => showTip(e, html));
-    hit.addEventListener("pointerleave", hideTip);
-    svg.append(hit);
-  });
-  host.replaceChildren(svg);
-
-  document.getElementById("dayKey").innerHTML =
-    STACK_ORDER.map(([, lab, c]) => `<span><i style="background:${c}"></i>${lab}</span>`).join("")
-    + `<span><i style="background:var(--ink-2);height:2px;width:14px;border-radius:2px"></i>German demand</span>`;
-  return true;
-}
-
-/** Congestion income against congestion spending, by month.
- *
- *  Paired columns rather than a stack: they are not components of one total, they are
- *  two different flows that happen to share a unit, so stacking them would invent a
- *  sum nobody should read.
- */
-function drawCosts(host, costs) {
-  // Both series come from the costs file, so this panel does not depend on which
-  // months the range happens to have loaded. It used to sum the rent from the daily
-  // files, which made it empty at the default range forever: the spending series
-  // lags about three months, so the newest months on the page never have a partner.
-  const rows = (costs?.months ?? [])
-    .map(c => ({ month: c.month, rent: c.congestion_rent,
-                 spend: (c.grid_security ?? 0) + (c.countertrading ?? 0) }))
-    .filter(r => r.spend > 0 && r.rent != null);
-  if (!rows.length) { host.replaceChildren(); return false; }
-  const shown = rows.slice(-14);          // keep the columns readable on a phone
-
-  const PH = 150, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": "Congestion rent earned and grid security spending, by month" });
-  const x0 = PAD.l, x1 = W - PAD.r, y0 = PAD.t, y1 = PAD.t + PH;
-  const hi = Math.max(...shown.flatMap(r => [r.rent, r.spend]));
-  const y = scale(0, hi * 1.08, y1, y0);
-
-  for (const t of ticks(0, hi, 4)) {
-    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
-                            x1: x0, x2: x1, y1: y(t), y2: y(t) }));
-    svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" },
-                  num(t / 1e6)));
-  }
-  svg.append(el("text", { x: x0 - 8, y: y0 - 2, "text-anchor": "end" }, "M€"));
-
-  const band = (x1 - x0) / shown.length;
-  const bw = barW(band, 2);
-  shown.forEach((r, i) => {
-    const cx = x0 + band * (i + .5);
-    [[r.rent, "var(--in)", -1], [r.spend, "var(--out)", 1]].forEach(([v, fill, side]) => {
-      const h = y(0) - y(v);
-      svg.append(el("path", { d: barPath(cx + side * (GAP / 2) - (side < 0 ? bw : 0),
-                                         y(v), bw, h, RAD, true), fill }));
-    });
-    svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" },
-                  r.month.slice(5) + "/" + r.month.slice(2, 4)));
-    const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PH });
-    const html = `<div class="t-date">${r.month}</div>`
-      + `<div class="t-row"><span>Rent earned on borders</span><span>€${num(r.rent / 1e6, 1)}M</span></div>`
-      + `<div class="t-row"><span>Spent on grid security</span><span>€${num(r.spend / 1e6, 1)}M</span></div>`
-;
-    // No net row. These are a border-level income and a Germany-wide cost, and the
-    // rent is both TSOs' share -- subtracting them is exactly the sum this chart's
-    // own docstring refuses to draw.
-    hit.addEventListener("pointerenter", e => showTip(e, html));
-    hit.addEventListener("pointermove", e => showTip(e, html));
-    hit.addEventListener("pointerleave", hideTip);
-    svg.append(hit);
-  });
-  host.replaceChildren(svg);
-  return true;
-}
-
-/** Three monthly series on a shared month axis: the seasons disagree.
- *
- *  Full record and range-independent, like the wind and congestion panels, because that
- *  is the whole point -- every other number on this page is drawn from a window, and a
- *  30-day window in January and one in June describe different systems. Small multiples
- *  rather than one axis: the three series share nothing but their months (EUR/MWh, GWh,
- *  EUR/MWh against a different baseline), so stacking them on one scale would be
- *  arithmetic nonsense.
- */
-function drawSeasons(host, seasons) {
-  const ms = seasons?.months?.filter(m => m.price_gap != null);
-  if (!ms || ms.length < 3) { host.replaceChildren(); return false; }
-
-  const ROW = 74, GAPY = 26, LBL = 20;
-  const W = host.clientWidth || 720;
-  const H = ROW * 3 + GAPY * 2 + PAD.t + LBL + 10;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": "Price gap, net position and solar capture price by month, showing the "
-      + "summer and winter systems differ" });
-  const x0 = PAD.l, x1 = W - PAD.r;
-  const band = (x1 - x0) / ms.length;
-  const bw = Math.min(34, barW(band));
-
-  // SVG text is not clipped to the viewBox, so an over-long row title paints past the
-  // card edge rather than wrapping. Carry a short form and pick by the width available.
-  const roomy = (x1 - x0) > 330;
-  const rows = [
-    { key: "price_gap", diverging: false,
-      title: roomy ? "Price gap, importing minus exporting hours (€/MWh)"
-                   : "Price gap (€/MWh)" },
-    { key: "net_import_gwh", diverging: true, title: "Net position (GWh)" },
-    { key: "solar_vs_market", diverging: true,
-      title: roomy ? "Solar's capture price vs the month's average (€/MWh)"
-                   : "Solar vs month average (€/MWh)" },
-  ];
-
-  rows.forEach((row, r) => {
-    const top = PAD.t + r * (ROW + GAPY), bot = top + ROW;
-    const vals = ms.map(m => m[row.key] ?? 0);
-    const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
-    const pad = (hi - lo) * .14 || 1;
-    const y = scale(lo - pad, hi + pad, bot, top);
-
-    svg.append(el("text", { class: "rowtitle", x: x0, y: top - 7 }, row.title));
-    for (const t of ticks(lo - pad, hi + pad, 2)) {
-      svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
-                              x1: x0, x2: x1, y1: y(t), y2: y(t) }));
-      svg.append(el("text", { class: "tick", x: x0 - 8, y: y(t) + 4, "text-anchor": "end" },
-                    num(t, 0)));
-    }
-
-    ms.forEach((m, i) => {
-      const v = m[row.key] ?? 0, cx = x0 + band * (i + .5);
-      // Row 2 keeps the page's meaning for red and blue -- red is importing everywhere
-      // else, so it is importing here. Row 3 is not a trade quantity, so it stays neutral
-      // rather than borrowing colours that already mean something.
-      const fill = !row.diverging ? "var(--thru)"
-        : row.key === "net_import_gwh" ? (v >= 0 ? "var(--out)" : "var(--in)")
-        : "var(--thru)";
-      const h = Math.abs(y(v) - y(0));
-      svg.append(el("path", { d: barPath(cx - bw / 2, Math.min(y(v), y(0)), bw, h, RAD, v >= 0),
-                              fill, opacity: row.diverging && row.key !== "net_import_gwh"
-                                ? .62 : 1 }));
-      if (r === rows.length - 1)
-        // month only: "Jan '26" at 7 months in a 238px plot overlaps its neighbour
-        svg.append(el("text", { x: cx, y: H - 6, "text-anchor": "middle" },
-                      MONTHS[+m.month.slice(5, 7) - 1]));
-      const hit = el("rect", { class: "hit", x: cx - band / 2, y: top, width: band, height: ROW });
-      const html = `<div class="t-date">${dMonth(m.month + "-01")}</div>`
-        + `<div class="t-row"><span>Price gap</span><span>€${num(m.price_gap, 1)}</span></div>`
-        + `<div class="t-row"><span>&nbsp;&nbsp;importing / exporting</span>`
-        + `<span>${num(m.px_importing, 0)} / ${num(m.px_exporting, 0)}</span></div>`
-        + `<div class="t-row"><span>Net position</span><span>${num(m.net_import_gwh, 0)} GWh `
-        + `${(m.net_import_gwh ?? 0) >= 0 ? "in" : "out"}</span></div>`
-        + `<div class="t-sep"></div>`
-        + `<div class="t-row"><span>Day-ahead average</span><span>€${num(m.day_ahead_mean, 1)}</span></div>`
-        + `<div class="t-row"><span>Solar captured</span><span>€${num(m.solar_mv, 1)} `
-        + `(${num(m.solar_vs_market, 1)})</span></div>`
-        + `<div class="t-row"><span>Congestion rent</span><span>€${num(m.rent_meur, 1)}M</span></div>`;
-      hit.addEventListener("pointerenter", e => showTip(e, html));
-      hit.addEventListener("pointermove", e => showTip(e, html));
-      hit.addEventListener("pointerleave", hideTip);
-      svg.append(hit);
-    });
-  });
-  host.replaceChildren(svg);
-  return true;
-}
-
-/** Price levels on one axis, because everything here is EUR/MWh.
- *
- *  Deliberately a plain levels comparison with emphasis rather than a categorical
- *  palette: the two bars from this page's data wear its colours, everything else is
- *  the neutral, so the eye goes to the comparison being made. Mixing an hourly
- *  subset with a monthly model in one chart is only honest if each bar says what it
- *  is, so each carries its basis in the label.
- */
-function drawLevels(host, days, ref) {
+function agg(days, basisKey) {
+  const B = BASES[basisKey];
   const sum = f => days.reduce((a, d) => a + (d[f] ?? 0), 0);
-  const wmv = t => {
-    const v = days.reduce((a, d) => a + (d[`${t}_gwh`] ?? 0), 0);
-    const n = days.reduce((a, d) => a + (d[`${t}_gwh`] ?? 0) * (d[`${t}_mv`] ?? 0), 0);
+  const vw = (pf, vf) => {
+    let n = 0, v = 0;
+    for (const d of days) { const q = d[vf] ?? 0; n += (d[pf] ?? 0) * q; v += q; }
     return v > 0 ? n / v : null;
   };
-  const paid = sum("stayed_gwh") ? days.reduce((a, d) =>
-        a + (d.stayed_gwh ?? 0) * (d.imp_px_own ?? 0), 0) / sum("stayed_gwh") : null;
-  const earned = sum("from_de_plants_gwh") ? days.reduce((a, d) =>
-        a + (d.from_de_plants_gwh ?? 0) * (d.exp_px_own ?? 0), 0) / sum("from_de_plants_gwh") : null;
-  const avg = days.reduce((a, d) => a + (d.price_de_mean ?? 0), 0) / (days.length || 1);
-
-  // the regulator's modelled industrial price for the latest month in the window
-  const month = (days.at(-1)?.date || "").slice(0, 7);
-  const ip = ref?.industrial_prices_eur_mwh?.slice().reverse()
-               .find(r => r.month <= month) || null;
-  const pol = ref?.industriestrompreis_policy || null;
-
-  const hh = ref?.household_prices_eur_mwh?.slice().reverse()
-               .find(r => r.month <= month) || null;
-  const hc = ref?.household_components_latest || null;
-
-  const rows = [
-    hh && ["Household, dynamic tariff", hh.dynamic_eur_mwh,
-           "modelled, " + hh.month + " — wholesale part only", "var(--thru)"],
-    hh && ["Household, new contract", hh.new_eur_mwh,
-           hc ? `modelled, ${hh.month} — only €${Math.round(hc.procurement_sales_margin_eur_mwh)} of it moves with wholesale`
-              : "modelled, " + hh.month, "var(--thru)"],
-    ip && ["Industry pays, no reliefs", ip.no_relief_eur_mwh, "modelled, " + ip.month, "var(--thru)"],
-    paid && ["German price, importing hours", paid,
-             "day-ahead, weighted by the imports that stayed", "var(--out)"],
-    ["Day-ahead average, all hours", avg, "this window", "var(--thru)"],
-    ip && ["Industry pays, with reliefs", ip.with_relief_eur_mwh, "modelled, " + ip.month, "var(--thru)"],
-    ["Solar's market value", wmv("solar"), "generation-weighted", "var(--thru)"],
-    ["Wind's market value", wmv("wind_onshore"), "onshore, generation-weighted", "var(--thru)"],
-    pol && ["Subsidised industry price", pol.capped_price_eur_mwh, "policy cap from 2026", "var(--thru)"],
-    earned && ["German price, exporting hours", earned,
-               "day-ahead, weighted by own-plant exports", "var(--in)"],
-  ].filter(r => r && r[1] != null).sort((a, b) => b[1] - a[1]);
-  if (rows.length < 3) { host.replaceChildren(); return false; }
-
-  // Side by side while there is room for a label column; stacked below that, since
-  // squeezing eight labels into 200px turns the bars into stubs and pushes the basis
-  // text out of the card.
-  const W = host.clientWidth || 720;
-  const narrow = W < 560;
-  const ROW = narrow ? 56 : 30, L = narrow ? 2 : 210;
-  const H = rows.length * ROW + (narrow ? 8 : 16);
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": "Electricity price levels in euro per megawatt hour" });
-  const x0 = L, x1 = W - (narrow ? 54 : 66);
-  const lim = Math.max(...rows.map(r => r[1]));
-  const bh = 15;
-
-  rows.forEach(([label, v, basis, fill], i) => {
-    const y = (narrow ? 4 : 8) + i * ROW;
-    const barY = narrow ? y + 15 : y;
-    const w = Math.max(1, v / lim * (x1 - x0));
-    svg.append(el("path", { d: barPath(0, 0, bh, w, RAD, false), fill,
-                            transform: `translate(${x0} ${barY + bh}) rotate(-90)` }));
-    svg.append(el("text", narrow ? { x: x0, y: y + 9 }
-                                 : { x: L - 10, y: y + bh - 3, "text-anchor": "end" }, label));
-    svg.append(el("text", { class: "val", x: x0 + w + 8, y: barY + bh - 3 }, "€" + num(v, 0)));
-    svg.append(el("text", { x: x0 + (narrow ? 0 : 6), y: barY + bh + 12 }, basis));
-  });
-  host.replaceChildren(svg);
-  return true;
+  const paid = vw(B.ip, B.iv), earned = vw(B.ep, B.ev);
+  const consumedGwh = sum("load_gw") * 24;      // load_gw is a daily mean
+  return {
+    days: days.length, paid, earned,
+    gap: paid != null && earned != null ? paid - earned : null,
+    ratio: paid != null && earned > 1 ? paid / earned : null,
+    balance: sum("bal_de_keur") * 1000,
+    net: sum("net_import_gwh"),
+    rent: sum("rent_keur") * 1000,
+    consumedGwh,
+    perMwh: consumedGwh > 0 ? sum("bal_de_keur") * 1000 / (consumedGwh * 1000) : null,
+    transitShare: sum("import_gwh") > 0 ? sum("transit_gwh") / sum("import_gwh") : null,
+  };
 }
 
-/** Horizontal diverging bars, one per border, value at the tip. */
-function drawBorders(host, days) {
-  const totals = {};
-  for (const d of days)
-    for (const [b, v] of Object.entries(d.borders || {})) {
-      const t = totals[b] || (totals[b] = { bal: 0, imp: 0, exp: 0, rent: 0 });
-      t.bal += v.bal_de_keur ?? 0; t.rent += v.rent_keur ?? 0;
-      t.imp += v.import_gwh ?? 0;  t.exp += v.export_gwh ?? 0;
-    }
-  const rows = Object.entries(totals).sort((a, b) => a[1].bal - b[1].bal);
-  if (!rows.length) { host.replaceChildren(); return; }
-
-  const ROW = 26, W = host.clientWidth || 720, H = rows.length * ROW + 34;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H,
-                          role: "img", "aria-label": "Balance per border over the window" });
-  const L = 62, LBL = 74;                 // row names, then room for a tip label
-  const x0 = L, x1 = W - 8;
-
-  // One scale for both arms, with LBL held back at each populated end so the
-  // longest bar's value label always fits outside the bar instead of landing on
-  // the row name.
-  const maxNeg = Math.max(0, ...rows.map(r => -Math.min(0, r[1].bal)));
-  const maxPos = Math.max(0, ...rows.map(r => Math.max(0, r[1].bal)));
-  const usable = (x1 - x0) - (maxNeg ? LBL : 0) - (maxPos ? LBL : 0);
-  const px = Math.max(0, usable) / ((maxNeg + maxPos) || 1);
-  const zero = x0 + (maxNeg ? LBL + maxNeg * px : 0);
-  const w = v => Math.abs(v) * px;
-
-  svg.append(el("line", { class: "axisline", x1: zero, x2: zero, y1: 6, y2: rows.length * ROW + 4 }));
-  const bh = 14;
-  rows.forEach(([name, t], i) => {
-    const yTop = 8 + i * ROW + (ROW - bh) / 2 - 2, up = t.bal >= 0;
-    // A border can carry no traffic at all in a window -- SE_4 does for every day of
-    // the default 30. Its bar has zero area, so it vanishes, and money(0) picks its
-    // sign from `k < 0` and prints "+EUR0k": a dormant border presented as a balanced
-    // one. Say idle, and skip the bar rather than drawing nothing and labelling it.
-    if (!t.imp && !t.exp) {
-      svg.append(el("text", { x: L - 10, y: yTop + bh - 2, "text-anchor": "end" },
-                    name.replace("_", "")));
-      svg.append(el("text", { class: "val idle", x: zero + 8, y: yTop + bh - 2,
-                              "text-anchor": "start" }, "no flow this window"));
-      return;
-    }
-    // horizontal bar: rotate the same path so the rounding lands on the data end
-    svg.append(el("path", {
-      d: barPath(0, 0, bh, w(t.bal), RAD, !up),
-      fill: up ? "var(--in)" : "var(--out)",
-      transform: `translate(${up ? zero : zero - w(t.bal)} ${yTop + bh}) rotate(-90)`,
-    }));
-    svg.append(el("text", { x: L - 10, y: yTop + bh - 2, "text-anchor": "end" },
-                  name.replace("_", "")));
-    const tipX = up ? zero + w(t.bal) + 8 : zero - w(t.bal) - 8;
-    svg.append(el("text", { class: "val", x: tipX, y: yTop + bh - 2,
-                            "text-anchor": up ? "start" : "end" }, money(t.bal)));
-    const hit = el("rect", { class: "hit", x: 0, y: 8 + i * ROW - 2, width: W, height: ROW });
-    const html = `<div class="t-date">${name.replace("_", "")}</div>
-      <div class="t-row"><span>Balance</span><span>${money(t.bal, 2)}</span></div>
-      <div class="t-sep"></div>
-      <div class="t-row"><span>Imported</span><span>${num(t.imp, 1)} GWh</span></div>
-      <div class="t-row"><span>Exported</span><span>${num(t.exp, 1)} GWh</span></div>
-      <div class="t-row"><span>Congestion rent</span><span>${money(t.rent, 2)}</span></div>`;
-    hit.addEventListener("pointerenter", e => showTip(e, html));
-    hit.addEventListener("pointermove", e => showTip(e, html));
-    hit.addEventListener("pointerleave", hideTip);
-    svg.append(hit);
-  });
-  host.replaceChildren(svg);
-}
-
-/* ========================================================================== *
- * summary + table
- * ========================================================================== */
-
-function drawSummary(days) {
-  const sum = f => days.reduce((a, d) => a + (d[f] ?? 0), 0);
-  const bal = sum("bal_de_keur"), imp = sum("import_gwh"), exp = sum("export_gwh");
-  // Germany's own share where the data has it, gross otherwise
-  const useOwn = days.some(d => d.imp_px_own != null);
-  const vI = useOwn ? "stayed_gwh" : "import_gwh", pI = useOwn ? "imp_px_own" : "imp_px_de";
-  const vE = useOwn ? "from_de_plants_gwh" : "export_gwh", pE = useOwn ? "exp_px_own" : "exp_px_de";
-  const impVol = days.reduce((a, d) => a + (d[vI] ?? 0), 0);
-  const expVol = days.reduce((a, d) => a + (d[vE] ?? 0), 0);
-  const impCost = days.reduce((a, d) => a + (d[vI] ?? 0) * (d[pI] ?? 0), 0);
-  const expRev  = days.reduce((a, d) => a + (d[vE] ?? 0) * (d[pE] ?? 0), 0);
-  const deficit = days.filter(d => (d.bal_de_keur ?? 0) < 0).length;
-
-  // Lead with the asymmetry, not the balance. The balance is an accounting
-  // consequence of it -- and the most misread number on the page, since it looks
-  // like a loss and is not one. The gap is the finding: it is what says German
-  // supply is short at the wrong hours, which is the thing worth knowing.
-  const paid = impCost / (impVol || 1), earned = expRev / (expVol || 1);
-  const gap = paid - earned;
-  document.getElementById("heroLabel").textContent =
-    "The German price in importing hours, against exporting hours";
-  document.getElementById("heroValue").innerHTML =
-    `<i style="background:var(--out)"></i><span>€${num(gap, 0)}</span>`
-    + `<small>/MWh apart</small>`;
-  // A ratio needs both legs positive to mean anything. Exporting hours can average at or
-  // below zero in a week of deeply negative prices, and `earned || 1` quietly turned that
-  // into a divisor of 1 -- a EUR178 gap printing as "178x apart".
-  const ratio = earned > 1 && paid > 0 ? `${(paid / earned).toFixed(1)}× apart, ` : "";
-  document.getElementById("heroNote").textContent =
-    `€${num(paid, 1)} when importing, €${num(earned, 1)} when exporting — `
-    + `${ratio}hours apart, in one market. These are `
-    + `clearing prices, not payments: everyone buying in the German zone pays that hour's `
-    + `German price, whatever its power came from.`;
-
-  const thru = sum("transit_gwh");
-  const tiles = [
-    ["Balance", money(bal, 1),
-     `${money(bal / days.length, 2)}/day — a value gap, not a loss`],
-    ["Net import", `${num(imp - exp, 0)} GWh`, `${num(imp, 0)} in, ${num(exp, 0)} out`],
-    ...(thru ? [["In transit", `${num(thru, 0)} GWh`,
-                `at most ${Math.round(thru / (imp || 1) * 100)}% of arrivals offset by exports`]] : []),
-    ["Days arrivals worth more", `${deficit} of ${days.length}`, "at the German price"],
-    ["Congestion rent", money(sum("rent_keur"), 1), "to the grid operators"],
-  ];
-  document.getElementById("tiles").innerHTML = tiles.map(([l, v, n]) =>
-    `<div><div class="tile-label">${l}</div><div class="tile-value">${v}</div>
-     <div class="tile-note">${n}</div></div>`).join("");
-}
-
-function drawTable(days) {
-  const cols = [
-    ["Date", d => dLong(d.date)],
-    ["Imported GWh", d => num(d.import_gwh, 1)],
-    ["Exported GWh", d => num(d.export_gwh, 1)],
-    ["Net GWh", d => num(d.net_import_gwh, 1)],
-    ["Transit GWh", d => num(d.transit_gwh, 1)],
-    ["Residual GW", d => num(d.residual_gw, 1)],
-    ["Load GW", d => num(d.load_gw, 1)],
-    ["Px, import hours", d => num(d.imp_px_own, 1)],
-    ["Px, export hours", d => num(d.exp_px_own, 1)],
-    ["Px importing (gross)", d => num(d.imp_px_de, 1)],
-    ["Px exporting (gross)", d => num(d.exp_px_de, 1)],
-    ["Balance kEUR", d => num(d.bal_de_keur, 1)],
-    ["Zonal kEUR", d => num(d.bal_zonal_keur, 1)],
-    ["Rent kEUR", d => num(d.rent_keur, 1)],
-  ];
-  document.getElementById("tableWrap").innerHTML =
-    `<table><thead><tr>${cols.map(c => `<th>${c[0]}</th>`).join("")}</tr></thead><tbody>`
-    + [...days].reverse().map(d => "<tr>" + cols.map(c =>
-        `<td>${c[1](d)}</td>`).join("") + "</tr>").join("")
-    + "</tbody></table>";
-}
-
-/* ========================================================================== *
- * wiring
- * ========================================================================== */
-
-/** Which month files a range of N days needs, newest first.
- *  Derived from the manifest, so no data has to be downloaded to work it out. */
-function monthsFor(n) {
-  const all = state.index.months.map(m => m.month);
-  if (!n) return all;
-  const last = new Date(state.index.last_date + "T12:00:00Z");
-  const from = new Date(last.getTime() - (n - 1) * 864e5);
-  const cut = from.toISOString().slice(0, 7);
-  const need = all.filter(m => m >= cut);
-  // a range can start mid-month, so keep the month before the cut as well when the
-  // window opens before that month's first day
-  const i = all.indexOf(need[0]);
-  if (i > 0 && from.toISOString().slice(0, 10) < state.index.months[i].first) need.unshift(all[i - 1]);
-  return need;
-}
-
-async function ensureMonths(months) {
-  const missing = months.filter(m => !state.months.has(m));
-  if (!missing.length) return;
-  await Promise.all(missing.map(async m => {
-    const r = await fetch(`data/${m}.json`, { cache: "no-cache" });
-    if (!r.ok) throw new Error(`${m}.json: HTTP ${r.status}`);
-    state.months.set(m, (await r.json()).days || []);
+function buildDials() {
+  const t = T();
+  document.getElementById("lblBasis").textContent = t.lblBasis;
+  document.getElementById("lblPeriod").textContent = t.lblPeriod;
+  const seg = (host, opts, active, set) => host.replaceChildren(...opts.map(([k, lab]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = lab;
+    b.setAttribute("aria-pressed", String(k === active));
+    b.onclick = () => { set(k); render(); };
+    return b;
   }));
+  seg(document.getElementById("dialBasis"),
+      Object.entries(BASES).map(([k, v]) => [k, t[v.key]]),
+      state.basis, k => { state.basis = k; });
+  seg(document.getElementById("dialPeriod"),
+      [["all", t.periodAll], ...state.months.map(m => [m, mShort(m)])],
+      state.period, k => { state.period = k; });
 }
 
-/** Every loaded day, in order. */
-function loadedDays() {
-  return [...state.months.keys()].sort()
-    .flatMap(m => state.months.get(m));
-}
-
-function slice() {
-  const all = loadedDays();
-  return state.range ? all.slice(-state.range) : all;
-}
-
-async function setRange(n) {
-  state.range = n;
-  await ensureMonths(monthsFor(n));
-  render();
+/* ========================================================================== *
+ * act one: the two bars, and a verdict that moves with the dials
+ * ========================================================================== */
+function drawBars(host, a) {
+  const t = T(), W = host.clientWidth || 700, H = 172;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+    "aria-label": `${t.barsImporting} ${eur(a.paid, 0)}, ${t.barsExporting} ${eur(a.earned, 0)}` });
+  if (a.paid == null || a.earned == null) { host.replaceChildren(svg); return; }
+  // the German labels are longer, so the gutter is measured rather than assumed
+  const L = state.lang === "de" ? 112 : 128, R = 92, x0 = L, x1 = W - R;
+  const hi = Math.max(a.paid, a.earned, 1) * 1.02;
+  const x = scale(0, hi, x0, x1);
+  [[t.barsImporting, a.paid, "var(--out)"], [t.barsExporting, a.earned, "var(--in)"]]
+    .forEach(([lab, v, fill], i) => {
+      const y = 28 + i * 62, h = 40, w = Math.max(2, x(Math.max(0, v)) - x0);
+      svg.append(el("rect", { x: x0, y, width: w, height: h, rx: 6, fill }));
+      svg.append(el("text", { x: x0 - 12, y: y + h / 2 + 5, "text-anchor": "end" }, lab));
+      svg.append(el("text", { class: "big", x: x0 + w + 12, y: y + h / 2 + 8 }, eur(v, 0)));
+    });
+  svg.append(el("line", { class: "axisline", x1: x0, x2: x0, y1: 18, y2: H - 22 }));
+  svg.append(el("text", { x: x0, y: H - 6 }, t.barsAxis));
+  host.replaceChildren(svg);
 }
 
 function render() {
-  const days = state.days = slice();
+  const t = T(), days = inPeriod();
   if (!days.length) return;
-  // the marks it was anchored to are about to be replaced, and after a range
-  // change it would be describing a day no longer on screen
-  hideTip();
-  drawSummary(days);
-  drawBalance(document.getElementById("plotBalance"), days);
-  drawPrice(document.getElementById("plotPrice"), days);
-  // unhide first, or a 0-wide container distorts the render
-  const resDaily = document.getElementById("cardResidualDaily");
-  const resPts = days.filter(d => d.residual_gw != null && d.price_de_mean != null);
-  resDaily.hidden = !days.some(d => d.residual_gw != null);
-  if (!resDaily.hidden) {
-    drawResidualDaily(document.getElementById("plotResidualDaily"), days);
-    // the one number worth keeping from the scatter this replaced
-    let hint = "The same days as the chart above: how much demand wind and solar left "
-             + "for everything else to cover. Tall bars line up with the expensive days.";
-    if (resPts.length > 2) {
-      const xs = resPts.map(d => d.residual_gw), ys = resPts.map(d => d.price_de_mean);
-      const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
-      const my = ys.reduce((a, b) => a + b, 0) / ys.length;
-      let sxy = 0, sxx = 0, syy = 0;
-      for (let i = 0; i < xs.length; i++) {
-        const dx = xs[i] - mx, dy = ys[i] - my;
-        sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
-      }
-      const r = sxy / (Math.sqrt(sxx * syy) || 1);
-      // Say how many days it rests on, and stop asserting it below the point where it
-      // means anything: at the 7-day range this printed 0.52 from seven points as flatly
-      // as it prints 0.84 from ninety.
-      hint += xs.length >= 14
-        ? ` Across these ${xs.length} days the two move together at r = ${r.toFixed(2)}.`
-        : ` Too few days here to quote a correlation; widen the range.`;
+  const a = agg(days, state.basis);
+  const other = agg(days, state.basis === "gross" ? "stripped" : "gross");
+
+  buildDials();
+  drawBars(document.getElementById("plotBars"), a);
+
+  const period = state.period === "all"
+    ? t.wholeRecord(num(a.days)) : t.inPeriod(mLabel(state.period));
+  let v = `<span class="big">${eur(a.paid, 0)} → ${eur(a.earned, 0)}</span>`;
+  v += a.ratio ? ` — <span class="big">${t.apart(num(a.ratio, 1))}</span>` : ` — ${t.noRatio}`;
+  v += `, ${period}. ${t.verdictTail}`;
+  if (a.net < 0) v += ` ${t.netExporter(num(Math.abs(a.net)))}`;
+  document.getElementById("verdict").innerHTML = v;
+
+  const swing = document.getElementById("swing");
+  if (other.ratio && a.ratio) {
+    const hi = Math.max(a.ratio, other.ratio), lo = Math.min(a.ratio, other.ratio);
+    swing.textContent = t.swing(num(other.ratio, 1), num(lo, 1), num(hi, 1));
+  } else swing.textContent = "";
+
+  document.getElementById("basisNote").innerHTML =
+    t.basisNote(num((a.transitShare ?? 0) * 100));
+
+  renderLedger(a);
+  document.getElementById("finalHead").textContent = t.finalHead;
+  document.getElementById("finalBody").innerHTML =
+    t.finalBody(a.ratio ? t.finalRatio(num(a.ratio, 1)) : "");
+}
+
+/* ========================================================================== *
+ * act four: the size, in units a person holds
+ * ========================================================================== */
+function renderLedger(a) {
+  const t = T(), bn = t.bn;
+  const cells = [
+    [eur(a.balance / 1e9, 2, bn), t.ledger[0]],
+    [eur(a.perMwh, 2), t.ledger[1]],
+    [`${num(Math.abs(a.perMwh) / 10, 2)} ct`, t.ledger[2]],
+    [eur(a.rent / 1e9, 2, bn), t.ledger[3]],
+  ];
+  document.getElementById("ledger").innerHTML = cells
+    .map(([n, k]) => `<div><span class="n">${n}</span><span class="k">${k}</span></div>`)
+    .join("");
+  document.getElementById("ledgerNote").innerHTML = t.ledgerNote(num(a.consumedGwh / 1000));
+}
+
+/* ========================================================================== *
+ * act three: one real day
+ * ========================================================================== */
+function drawDay(host, day) {
+  if (!day?.hours?.length) return false;
+  const t = T(), hrs = day.hours, ren = day.renewable_buckets || [];
+  const all = day.buckets || [];
+  const share = h => {
+    const tot = all.reduce((s, k) => s + (h[k] ?? 0), 0);
+    return tot > 0 ? ren.reduce((s, k) => s + (h[k] ?? 0), 0) / tot * 100 : 0;
+  };
+  const W = host.clientWidth || 700, PH = 96, SH = 74, GAPY = 30, TOP = 14;
+  const H = TOP + PH + GAPY + SH + 46;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+    "aria-label": `Day-ahead price and the share of generation with no fuel cost, `
+      + `every 15 minutes on ${day.date}` });
+  const x0 = 46, x1 = W - 10;
+  const bw = (x1 - x0) / hrs.length;
+  const px = hrs.map(h => h.price ?? 0);
+  const pLo = Math.min(0, ...px), pHi = Math.max(...px);
+  const yP = scale(pLo, pHi * 1.06, TOP + PH, TOP);
+
+  for (const t of ticks(pLo, pHi, 3)) {
+    svg.append(el("line", { class: Math.abs(t) < 1e-9 ? "axisline" : "gridline",
+                            x1: x0, x2: x1, y1: yP(t), y2: yP(t) }));
+    svg.append(el("text", { x: x0 - 7, y: yP(t) + 4, "text-anchor": "end" }, num(t)));
+  }
+  hrs.forEach((h, i) => {
+    const v = h.price ?? 0, y = Math.min(yP(v), yP(0));
+    svg.append(el("rect", { x: x0 + i * bw, y, width: Math.max(.6, bw - .6),
+                            height: Math.abs(yP(v) - yP(0)),
+                            fill: v < 0 ? "var(--in)" : "var(--out)", opacity: .85 }));
+  });
+  svg.append(el("text", { x: x0, y: TOP - 3 }, t.dayPriceAxis));
+
+  const sTop = TOP + PH + GAPY, yS = scale(0, 100, sTop + SH, sTop);
+  svg.append(el("line", { class: "gridline", x1: x0, x2: x1, y1: yS(100), y2: yS(100) }));
+  svg.append(el("line", { class: "axisline", x1: x0, x2: x1, y1: yS(0), y2: yS(0) }));
+  [0, 50, 100].forEach(t => svg.append(
+    el("text", { x: x0 - 7, y: yS(t) + 4, "text-anchor": "end" }, t + "%")));
+  let d = "";
+  hrs.forEach((h, i) => {
+    const cx = x0 + i * bw + bw / 2;
+    // fixed decimals here, not the locale formatter: SVG path data needs a decimal
+    // point in every language, and a comma would split the coordinate pair
+    d += `${i ? "L" : "M"}${cx.toFixed(1)} ${yS(share(h)).toFixed(1)}`;
+  });
+  svg.append(el("path", { d: d + `L${x1} ${yS(0)}L${x0} ${yS(0)}Z`,
+                          fill: "var(--m1)", opacity: .22 }));
+  svg.append(el("path", { d, fill: "none", stroke: "var(--m3)", "stroke-width": 2 }));
+  svg.append(el("text", { x: x0, y: sTop - 3 }, t.dayShareAxis));
+
+  const cheap = hrs.reduce((a, b) => (b.price ?? 0) < (a.price ?? 0) ? b : a, hrs[0]);
+  const dear = hrs.reduce((a, b) => (b.price ?? 0) > (a.price ?? 0) ? b : a, hrs[0]);
+  // Two stacked lines rather than a label at each bar: the cheapest and dearest intervals
+  // are often close together (13:15 and 19:45 on this day), so positioned labels sat on
+  // top of each other. A tick keeps the link to the bar; the reading gets its own line.
+  [[cheap, t.dayCheapest], [dear, t.dayDearest]].forEach(([h, lab], n) => {
+    const i = hrs.indexOf(h), cx = x0 + i * bw + bw / 2;
+    svg.append(el("line", { class: "axisline", x1: cx, x2: cx,
+                            y1: TOP + PH + 2, y2: TOP + PH + 8 }));
+    svg.append(el("text", { class: "val", x: x0, y: H - 20 + n * 15 },
+                  `${lab} ${h.hour}: ${eur(h.price, 0)}, ${num(share(h))}% ${t.dayFuelFree}`));
+  });
+  host.replaceChildren(svg);
+  return true;
+}
+
+/* ========================================================================== *
+ * act five: two monthly series
+ * ========================================================================== */
+function drawSeasons(host, months) {
+  const t = T(), ms = months.filter(m => m.price_gap != null);
+  if (ms.length < 3) return false;
+  const W = host.clientWidth || 700, ROW = 78, GAPY = 34, H = ROW * 2 + GAPY + 40;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+    "aria-label": "Price gap and net position by month" });
+  const x0 = 46, x1 = W - 10, band = (x1 - x0) / ms.length;
+  const bw = Math.min(40, Math.max(3, band - 8));
+  const rows = [
+    { key: "price_gap", title: t.seasonsRow1, diverging: false },
+    { key: "net_import_gwh", title: t.seasonsRow2, diverging: true },
+  ];
+  rows.forEach((row, r) => {
+    const top = 16 + r * (ROW + GAPY), bot = top + ROW;
+    const vals = ms.map(m => m[row.key] ?? 0);
+    const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
+    const pad = (hi - lo) * .12 || 1;
+    const y = scale(lo - pad, hi + pad, bot, top);
+    svg.append(el("text", { x: x0, y: top - 5 }, row.title));
+    for (const t of ticks(lo - pad, hi + pad, 2)) {
+      svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
+                              x1: x0, x2: x1, y1: y(t), y2: y(t) }));
+      svg.append(el("text", { x: x0 - 7, y: y(t) + 4, "text-anchor": "end" }, num(t)));
     }
-    document.getElementById("resDailyHint").textContent = hint;
-  }
-
-  // Full record, not the selected window -- see drawWind. Uses whole loaded months for
-  // the seasonal line only, which is why that sentence names its own basis.
-  const windCard = document.getElementById("cardWind");
-  windCard.hidden = false;                     // unhide before measuring
-  windCard.hidden = !drawWind(document.getElementById("plotWind"), state.wind);
-  if (!windCard.hidden) {
-    const a = state.wind, p0 = a.profile["0"], step = a.step_minutes || 60;
-    // the immediate neighbours, whatever the resolution calls them
-    const near = Object.values(a.profile)
-      .filter(v => Math.abs(v.minutes) > 0 && Math.abs(v.minutes) <= step);
-    const worst = near.length
-      ? Math.max(...near.map(v => Math.abs(v.share_of_forecast_pct))) : null;
-    document.getElementById("windHint").textContent =
-      `Across the ${num(a.negative_hours_equiv, 0)} hours' worth of `
-      + `${step}-minute blocks priced below zero, wind ran `
-      + `${num(p0.share_of_forecast_pct, 1)}% under its own day-ahead forecast — `
-      + `${num(p0.deficit_gwh, 0)} GWh. One block later, with the price back at or above `
-      + `zero, the same forecast is off by ${worst == null ? "almost nothing"
-          : "at most " + num(worst, 2) + "%"}. Measured over the whole record, `
-      + `${a.covers[0]} to ${a.covers[1]}, and not affected by the range above.`;
-  }
-
-  if (!windCard.hidden && state.wind.control_other_intervals?.share_of_forecast_pct != null) {
-    // Answers the other obvious objection -- that the forecast is simply biased low.
-    // It runs the other way, which is a stronger statement than "near nothing".
-    const c = state.wind.control_other_intervals;
-    document.getElementById("windControl").textContent =
-      `Nor is the forecast simply pitched low: across the other `
-      + `${num(c.hours_equiv, 0)} hours of the record wind ran `
-      + `${num(Math.abs(c.share_of_forecast_pct), 1)}% `
-      + `${c.share_of_forecast_pct < 0 ? "above" : "below"} it.`;
-  }
-  if (!windCard.hidden && state.wind.by_month?.length) {
-    // Episodic, not a steady toll: the deficit needs wind on the system, and summer's
-    // negative hours are solar-driven middays with little wind in them. From the panel's
-    // own file rather than the loaded months -- read off the loaded months it credited
-    // July and never mentioned the April episode that carries the whole result.
-    const ms = state.wind.by_month;
-    const top = ms.slice().sort((x, y) => y.deficit_gwh - x.deficit_gwh)[0];
-    const neg = ms.filter(m => m.share_of_forecast_pct < 0).length;
-    document.getElementById("windSeason").textContent =
-      `It is episodic rather than a steady toll: the deficit needs wind on the system to `
-      + `be visible at all, and summer's negative hours are solar-driven middays with `
-      + `little wind in them. ${dMonth(top.month + "-01")} alone carries `
-      + `${num(top.deficit_gwh, 0)} GWh of the ${num(state.wind.profile["0"].deficit_gwh, 0)}, `
-      + `at ${num(top.share_of_forecast_pct, 0)}% of its forecast, while `
-      + `${neg} of the ${ms.length} months run the other way. A window shorter than the `
-      + `record can show no effect, or the opposite one — over the last 30 days it is `
-      + `negative — which is why this panel does not follow the range above.`;
-  }
-
-  drawVolume(document.getElementById("plotVolume"), days);
-  const dayCard = document.getElementById("cardDay");
-  dayCard.hidden = false;                      // unhide before measuring
-  dayCard.hidden = !drawDay(document.getElementById("plotDay"), state.day);
-  if (!dayCard.hidden) {
-    const d = state.day, hs = d.hours;
-    const cheap = hs.reduce((a, b) => (b.price ?? 0) < (a.price ?? 0) ? b : a, hs[0]);
-    const dear  = hs.reduce((a, b) => (b.price ?? 0) > (a.price ?? 0) ? b : a, hs[0]);
-    document.getElementById("dayTitle").textContent = `How one day's price happens — ${d.date}`;
-    document.getElementById("dayHint").textContent =
-      `Everything that generated, stacked cheapest at the bottom, with the price beneath. `
-      + `At ${cheap.hour} solar alone ran to ${num(cheap.solar, 0)} GW and the price fell to `
-      + `€${num(cheap.price, Math.abs(cheap.price) < 10 ? 1 : 0)}; by ${dear.hour} it reached `
-      + `€${num(dear.price, 0)}. `
-      + `The mix turns over completely across the day — what sets the price is only ever `
-      + `the last unit that had to run. ${renShare(cheap)}% of what ran in that cheapest `
-      + `block came from something with no fuel bill, against ${renShare(dear)}% in the `
-      + `dearest; over the whole day, ${renShare(d.hours)}%.`;
-    document.getElementById("dayNote").textContent =
-      `Chosen automatically — ${d.chosen_because}. ${d.note} Where the stack rises above `
-      + `the demand line the surplus is being exported or stored — the line is grid load, `
-      + `so it leaves out power generated and consumed on site, and the gap is not a `
-      + `reading of the export figure above.`;
-  }
-
-  drawBorders(document.getElementById("plotBorder"), days);
-
-  const seasonsCard = document.getElementById("cardSeasons");
-  seasonsCard.hidden = false;                  // unhide before measuring
-  seasonsCard.hidden = !drawSeasons(document.getElementById("plotSeasons"), state.seasons);
-  if (!seasonsCard.hidden) {
-    const ms = state.seasons.months;
-    const gap = ms.map(m => m.price_gap), net = ms.map(m => m.net_import_gwh);
-    const lo = ms[gap.indexOf(Math.min(...gap))], hi = ms[gap.indexOf(Math.max(...gap))];
-    const cann = ms.filter(m => m.solar_vs_market != null);
-    const mildest = cann.reduce((a, b) => b.solar_vs_market > a.solar_vs_market ? b : a);
-    const deepest = cann.reduce((a, b) => b.solar_vs_market < a.solar_vs_market ? b : a);
-    const exporters = net.filter(v => v < 0).length;
-    document.getElementById("seasonsHint").textContent =
-      `${ms.length} complete months on the same three measures, whole record, independent `
-      + `of the range above. The price gap runs from €${num(lo.price_gap, 0)} in `
-      + `${dMonth(lo.month + "-01")} to €${num(hi.price_gap, 0)} in `
-      + `${dMonth(hi.month + "-01")}, and Germany was a net exporter in ${exporters} of `
-      + `them and a net importer in the rest.`;
-    // Describe the sign in words and keep the number unsigned, or "EUR-60 below" happens.
-    // And a month within a euro of the average is "level with it", not "EUR0 above it".
-    const side = v => Math.abs(v) < 1 ? "level with it"
-      : `€${num(Math.abs(v), 0)} ${v > 0 ? "above" : "below"} it`;
-    document.getElementById("seasonsRead").textContent =
-      `The sharpest of the three is solar: against the average price of its own month it `
-      + `came in ${side(deepest.solar_vs_market)} in ${dMonth(deepest.month + "-01")}, and `
-      + `${side(mildest.solar_vs_market)} in ${dMonth(mildest.month + "-01")} — the same `
-      + `technology in the same market, cannibalising its own price in one season and `
-      + `not the other.`;
-  }
-
-  const costsCard = document.getElementById("cardCosts");
-  costsCard.hidden = false;                    // unhide before measuring
-  // whole months on file, not the sliced window: this panel is monthly, and a
-  // half-month bar next to full ones would read as a collapse in spending
-  costsCard.hidden = !drawCosts(document.getElementById("plotCosts"), state.costs);
-
-  const levels = document.getElementById("cardLevels");
-  levels.hidden = false;                       // unhide before measuring
-  levels.hidden = !drawLevels(document.getElementById("plotLevels"), days, state.ref);
-  drawTable(days);
-
-  // after every render: the rects these attach to are replaced on each draw
-  for (const plot of document.querySelectorAll(".plot")) {
-    const card = plot.closest("section.card");
-    if (card && !card.hidden)
-      makeNavigable(plot, card.querySelector("h2")?.textContent?.trim() || "Chart");
-  }
-  document.getElementById("rangeNote").textContent =
-    `${dLong(days[0].date)} — ${dLong(days.at(-1).date)}`;
-
-  // sources present in what is actually on screen, so attribution tracks the view
-  document.getElementById("priceHint").textContent = days.some(d => d.imp_px_own != null)
-    ? "The German day-ahead price in the hours power was arriving, against the hours it "
-      + "was leaving — one price curve, read at different hours, so the gap is pure "
-      + "timing. Weighted by the volumes that actually stayed or came from German plants; "
-      + "power in transit is left out, since it is bought and sold in the same hour at the "
-      + "same price and only drags the two lines together."
-    : "Volume-weighted German price in the hours Germany imported, against the hours it "
-      + "exported. Both are the same price curve — the gap is timing.";
-
-  document.getElementById("keyImp").textContent = "when importing";
-  document.getElementById("keyExp").textContent = "when exporting";
-
-  const srcs = [...new Set(days.map(d => d.source))].sort();
-  const flows = [...new Set(days.map(d => d.flows))];
-  const netted = srcs.includes("energy-charts");   // the only netted source
-  // headline the transit share, because 60% of it passing through changes what
-  // the whole chart means
-  const gi = days.reduce((a, d) => a + (d.import_gwh ?? 0), 0);
-  const gt = days.reduce((a, d) => a + (d.transit_gwh ?? 0), 0);
-  const hasT = days.some(d => d.transit_gwh != null);
-  document.getElementById("volHint").textContent = hasT
-    ? `Energy crossing the border each day, gross in each direction. `
-      + `In each hour, up to ${Math.round(gt / (gi || 1) * 100)}% of what came in could `
-      + `have left again by another border — Germany as a corridor as much as a buyer. `
-      + `That middle band is a ceiling, not a measurement: electricity is fungible, so `
-      + `nothing marks an arriving megawatt-hour as bound for an export rather than for `
-      + `German demand.`
-    : legacyVolHint(days, netted);
-  function legacyVolHint(days, netted) { return netted
-    ? (srcs.length > 1
-        ? "Energy crossing the border each day. Part of this window comes from a source "
-          + "that reports flows already netted per border and hour, so gross volumes are "
-          + "not comparable across the whole range; the balance above is, being net-only "
-          + "by construction."
-        : "Energy crossing the border each day. This source reports flows already netted "
-          + "per border and hour, so gross volumes run roughly a quarter low; the balance "
-          + "above is unaffected by that, being net-only by construction.")
-    : "Energy crossing the border each day, gross in each direction."; }
-  document.getElementById("prov").textContent =
-    `${flows.join(" + ")} exchanges via ${srcs.join(" + ")}. `
-    + `${state.index.total_days} days on file (${state.index.first_date} to `
-    + `${state.index.last_date}), ${state.months.size} month file(s) loaded, last built `
-    + `${(state.index.generated_at || "").slice(0, 16).replace("T", " ")}.`;
-
-  document.getElementById("attrib").innerHTML = srcs
-    .map(s => ATTRIB[s] || `Source: ${s}.`).join(" ");
-
-  const notice = document.getElementById("notice");
-  notice.hidden = !srcs.includes("demo");
-  if (!notice.hidden) {
-    notice.innerHTML = srcs.length > 1
-      ? "<b>Partly synthetic.</b> Some days in this window came from the demo backend. "
-        + "Those numbers are invented and must not be quoted."
-      : "<b>Synthetic data.</b> This window came from the demo backend — the numbers "
-        + "are invented and mean nothing.";
-  }
+    ms.forEach((m, i) => {
+      const v = m[row.key] ?? 0, cx = x0 + band * (i + .5);
+      const fill = !row.diverging ? "var(--thru)"
+        : v >= 0 ? "var(--out)" : "var(--in)";
+      svg.append(el("rect", { x: cx - bw / 2, y: Math.min(y(v), y(0)), width: bw,
+                              height: Math.max(1, Math.abs(y(v) - y(0))), rx: 3, fill }));
+      if (r === rows.length - 1)
+        svg.append(el("text", { x: cx, y: H - 8, "text-anchor": "middle" },
+                      mShort(m.month)));
+    });
+  });
+  host.replaceChildren(svg);
+  return true;
 }
 
-/** Show a recoverable failure. boot() has its own fatal path for a missing index; this is
- *  for a range switch that could not load, which previously failed completely silently. */
-function showError(msg) {
-  const box = document.getElementById("err");
+/* ========================================================================== *
+ * act six: the discontinuity
+ * ========================================================================== */
+function drawWind(host, adj) {
+  const t = T(), prof = adj?.profile;
+  if (!prof) return false;
+  const lags = Object.keys(prof).sort((a, b) => prof[a].minutes - prof[b].minutes);
+  if (lags.length < 3) return false;
+  const W = host.clientWidth || 700, PH = 132, H = PH + 54;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+    "aria-label": t.windAxis });
+  const x0 = 46, x1 = W - 10, band = (x1 - x0) / lags.length;
+  const bw = Math.min(52, Math.max(4, band - 12));
+  const vals = lags.map(k => prof[k].share_of_forecast_pct);
+  const hi = Math.max(...vals, 1), lo = Math.min(...vals, 0);
+  const pad = (hi - lo) * .16;
+  const y = scale(lo - pad, hi + pad, 14 + PH, 14);
+  for (const t of ticks(lo - pad, hi + pad, 3)) {
+    svg.append(el("line", { class: t === 0 ? "axisline" : "gridline",
+                            x1: x0, x2: x1, y1: y(t), y2: y(t) }));
+    svg.append(el("text", { x: x0 - 7, y: y(t) + 4, "text-anchor": "end" }, num(t) + "%"));
+  }
+  lags.forEach((k, i) => {
+    const v = prof[k].share_of_forecast_pct, cx = x0 + band * (i + .5);
+    const zero = prof[k].minutes === 0;
+    svg.append(el("rect", { x: cx - bw / 2, y: Math.min(y(v), y(0)), width: bw,
+                            height: Math.max(1, Math.abs(y(v) - y(0))), rx: 3,
+                            fill: zero ? "var(--f1)" : "var(--thru)",
+                            opacity: zero ? 1 : .5 }));
+    if (zero || Math.abs(prof[k].minutes) >= 60 || band > 62)
+      svg.append(el("text", { class: zero ? "val" : "", x: cx, y: H - 22,
+                              "text-anchor": "middle" },
+                    zero ? t.windBlock : (prof[k].minutes > 0 ? "+" : "−")
+                      + num(Math.abs(prof[k].minutes))));
+    if (zero)
+      svg.append(el("text", { class: "val", x: cx, y: y(v) - 7, "text-anchor": "middle" },
+                    num(v, 1) + "%"));
+  });
+  svg.append(el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" }, t.windAxis));
+  host.replaceChildren(svg);
+  return true;
+}
+
+/* ========================================================================== *
+ * boot
+ * ========================================================================== */
+/** Everything that has to be rebuilt when the language changes: the charts carry their own
+ *  axis labels, so a switch is a full redraw rather than a text swap. */
+function drawAll() {
+  const t = T(), x = state.extra;
+  render();
+  if (x.day && drawDay(document.getElementById("plotDay"), x.day))
+    document.getElementById("dayCap").textContent = t.dayCap(x.day.date);
+  if (x.seasons && drawSeasons(document.getElementById("plotSeasons"), x.seasons.months)) {
+    const ms = x.seasons.months, gaps = ms.map(m => m.price_gap);
+    const lo = ms[gaps.indexOf(Math.min(...gaps))], hi = ms[gaps.indexOf(Math.max(...gaps))];
+    document.getElementById("seasonsCap").textContent = t.seasonsCap(
+      num(lo.price_gap), mLabel(lo.month), num(hi.price_gap), mLabel(hi.month),
+      num(ms.filter(m => m.net_import_gwh < 0).length), num(ms.length));
+  }
+  if (x.adj && drawWind(document.getElementById("plotWind"), x.adj))
+    document.getElementById("windCap").textContent = t.windCap(
+      num(x.adj.negative_hours_equiv), num(x.adj.profile["0"].share_of_forecast_pct, 1),
+      x.adj.covers[0], x.adj.covers[1]);
+  if (state.days.length)
+    document.getElementById("footRange").textContent = t.footRange(
+      state.days[0].date, state.days[state.days.length - 1].date, num(state.days.length));
+}
+
+function buildLangs() {
+  document.getElementById("langs").replaceChildren(
+    ...[["en", "EN"], ["de", "DE"]].map(([k, lab]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = lab;
+      b.lang = k;
+      b.setAttribute("aria-pressed", String(k === state.lang));
+      b.onclick = () => setLang(k);
+      return b;
+    }));
+}
+
+function setLang(lang) {
+  state.lang = lang;
+  document.documentElement.setAttribute("data-lang", lang);
+  document.documentElement.lang = lang;          // so screen readers switch voice
+  document.title = T().title;
+  try { localStorage.setItem("lang", lang); } catch (e) { /* private mode */ }
+  buildLangs();
+  if (state.days.length) drawAll();
+}
+
+function fail() {
+  const t = T(), box = document.getElementById("err");
   box.style.display = "block";
-  box.innerHTML = `<b>Could not load that range.</b><br>`
-    + `<span style="color:var(--ink-2)"></span>`;
-  box.querySelector("span").textContent = msg;
+  box.innerHTML = "<b></b><br>";
+  box.querySelector("b").textContent = t.errHead;
+  box.append(document.createTextNode(t.errBody));
 }
 
-function buildRanges() {
-  const host = document.getElementById("ranges");
-  const total = state.index.total_days;
-  host.replaceChildren(...RANGES.filter(r => !r.key || total > 7).map(r => {
-    const b = document.createElement("button");
-    b.textContent = r.label;
-    b.setAttribute("aria-pressed", String(r.key === state.range));
-    b.disabled = r.key > total;
-    if (b.disabled) b.style.opacity = .4;
-    b.onclick = async () => {
-      const prev = state.range;
-      [...host.children].forEach(c => c.setAttribute("aria-pressed", String(c === b)));
-      host.style.opacity = .6;              // hold the old render, no skeleton flash
-      try {
-        await setRange(r.key);
-      } catch (err) {
-        // Without this the rejection was unhandled: the button claimed the new range,
-        // render() never ran, and the previous chart stayed on screen looking current.
-        console.error(err);
-        state.range = prev;
-        [...host.children].forEach((c, i) => c.setAttribute("aria-pressed",
-          String(RANGES.filter(q => !q.key || total > 7)[i]?.key === prev)));
-        showError(`${r.label}: ${err.message || err}. Showing the previous range.`);
-      } finally {
-        host.style.opacity = 1;
-      }
-    };
-    return b;
-  }));
+async function boot() {
+  // remembered choice, else the browser's own preference, else English
+  let saved = null;
+  try { saved = localStorage.getItem("lang"); } catch (e) { /* private mode */ }
+  const prefersDe = (navigator.language || "").toLowerCase().startsWith("de");
+  setLang(saved === "de" || saved === "en" ? saved : (prefersDe ? "de" : "en"));
+
+  const grab = async (path) => {
+    try {
+      const r = await fetch(path, { cache: "no-cache" });
+      return r.ok ? await r.json() : null;
+    } catch (e) { return null; }
+  };
+  const index = await grab("data/index.json");
+  if (!index?.months?.length) { fail(); return; }
+  // index.months is a list of {month, days, ...} records, not bare strings
+  const keys = index.months.map(m => m.month);
+  // Every month up front: the period dial has to answer instantly, and the whole record is
+  // well under a megabyte. The dashboard lazy-loads because it defaults to 30 days.
+  const files = await Promise.all(keys.map(k => grab(`data/${k}.json`)));
+  state.days = files.filter(Boolean).flatMap(f => f.days || [])
+    .sort((a, b) => a.date < b.date ? -1 : 1);
+  if (!state.days.length) { fail(); return; }
+  state.months = keys;
+
+  const [seasons, day, adj, ref] = await Promise.all([
+    grab("data/seasons.json"), grab("data/example_day.json"),
+    grab("data/wind_adjacency.json"), grab("data/reference_prices.json"),
+  ]);
+  state.extra = { seasons, day, adj, ref };
+
+  drawAll();
+
+  let timer;
+  addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(drawAll, 140); });
 }
 
 document.getElementById("theme").onclick = () => {
   const now = document.documentElement.getAttribute("data-theme");
-  const dark = now ? now === "dark"
-    : matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = now ? now === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
   document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
-  render();                                   // re-read the swapped tokens
 };
 
-let t;
-addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120); });
-
-// Sequential and plain, rather than a promise chain: the reference levels are a
-// hand-refreshed snapshot, so a miss there must not stop the page, while a missing
-// a missing index must show the error box.
-async function boot() {
-  try {
-    const r = await fetch("data/reference_prices.json", { cache: "no-cache" });
-    state.ref = r.ok ? await r.json() : null;
-  } catch (e) {
-    state.ref = null;
-  }
-  try {
-    const r = await fetch("data/example_day.json", { cache: "no-cache" });
-    state.day = r.ok ? await r.json() : null;
-  } catch (e) {
-    state.day = null;
-  }
-  try {
-    const r = await fetch("data/system_costs.json", { cache: "no-cache" });
-    state.costs = r.ok ? await r.json() : null;
-  } catch (e) {
-    state.costs = null;
-  }
-  try {
-    const r = await fetch("data/wind_adjacency.json", { cache: "no-cache" });
-    state.wind = r.ok ? await r.json() : null;
-  } catch (e) {
-    state.wind = null;
-  }
-  try {
-    const r = await fetch("data/seasons.json", { cache: "no-cache" });
-    state.seasons = r.ok ? await r.json() : null;
-  } catch (e) {
-    state.seasons = null;
-  }
-  try {
-    const r = await fetch("data/index.json", { cache: "no-cache" });
-    if (!r.ok) throw new Error(`index.json: HTTP ${r.status}`);
-    state.index = await r.json();
-    if (!state.index.months || !state.index.months.length)
-      throw new Error("no month files listed in the index");
-    if (state.index.total_days < state.range) state.range = 0;
-    await ensureMonths(monthsFor(state.range));
-    for (const id of ["hero", "filters", "cardBalance", "cardPrice", "cardVolume",
-                      "cardBorder", "cardTable", "cardRead"])   // rest are data-dependent
-      document.getElementById(id).hidden = false;
-    buildRanges();
-    render();
-  } catch (e) {
-    const box = document.getElementById("err");
-    box.style.display = "block";
-    box.innerHTML = `<b>No data to show.</b><br>`
-      + `<span style="color:var(--ink-2)">${e.message}. Run `
-      + `<code>python3 build_data.py --date 2026-01 --end 2026-08</code> to fill `
-      + `<code>data/</code>, and serve with <code>./serve.py</code>.</span>`;
-  }
-}
 boot();
 </script>
 </body>

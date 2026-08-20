@@ -26,6 +26,7 @@ on:
     branches: [main]
     paths:
       - "index.html"
+      - "dashboard.html"
       - "data/**"
       - ".github/workflows/daily.yml"
   schedule:
@@ -107,9 +108,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html _site/
+          cp index.html dashboard.html _site/
           cp -r data _site/data
-          test -f _site/index.html && test -f _site/data/index.json
+          test -f _site/index.html && test -f _site/dashboard.html
+          test -f _site/data/index.json
           du -sh _site
 
       - uses: actions/configure-pages@v5

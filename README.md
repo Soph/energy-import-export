@@ -9,7 +9,8 @@ de_trade_balance.py    the analysis and CLI report
 build_data.py          reshapes a range into data/<month>.json + data/index.json
 data/                  the generated series: one file per calendar month, plus
                        the whole-record files the range-independent panels use
-index.html             the dashboard, one file, no dependencies
+index.html             the claim page: one claim, checked, EN/DE
+dashboard.html         the full data view, one file, no dependencies
 serve.py               serves it locally, bound to localhost
 ```
 
