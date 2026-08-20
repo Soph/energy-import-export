@@ -131,13 +131,16 @@ def market_values(backend, start, end, price: pd.Series) -> pd.DataFrame | None:
 
 
 def system_costs(backend, outdir: str) -> None:
-    """Write the TSO's monthly system-security costs, if the backend has them.
+    """Write the TSO's monthly system-security costs, with monthly congestion rent.
 
-    Its own file rather than a column on the daily records: it is monthly, it is
-    Germany-wide rather than per border, and each series publishes on a different lag
-    -- balancing reserve up to three months behind, the rest about one -- so days
-    would carry mostly nulls. Fetched from a fixed start so the file is complete
-    regardless of the range being refreshed.
+    Both sides in one file, on purpose. The rent could be summed from the daily
+    files, but then the panel would only work for months the reader happened to have
+    loaded -- and since the cost series lags about three months, the default recent
+    window has no cost data at all and the panel would be permanently empty. As a
+    monthly pair it is self-contained and always populated.
+
+    Its own file rather than columns on the daily records: it is monthly,
+    Germany-wide rather than per border, and each series publishes on a different lag.
     """
     if not hasattr(backend, "costs"):
         return
@@ -147,25 +150,50 @@ def system_costs(backend, outdir: str) -> None:
     except Exception as exc:
         print(f"  ! system costs: {type(exc).__name__}: {exc}", file=sys.stderr)
         return
+
+    # congestion rent per month, from whatever month files exist, complete ones only
+    rent, complete = {}, {}
+    for name in sorted(os.listdir(outdir)):
+        m = re.fullmatch(r"(\d{4}-\d{2})\.json", name)
+        if not m:
+            continue
+        try:
+            with open(os.path.join(outdir, name)) as fh:
+                days = json.load(fh)["days"]
+        except (OSError, ValueError, KeyError):
+            continue
+        month = m.group(1)
+        in_month = pd.Period(month).days_in_month
+        rent[month] = sum((d.get("rent_keur") or 0) for d in days) * 1000
+        complete[month] = len(days) == in_month
+
     months = []
     for ts, r in c.iterrows():
-        row = {"month": ts.strftime("%Y-%m")}
+        key = ts.strftime("%Y-%m")
+        row = {"month": key}
         row.update({k: _n(v, 0) for k, v in r.items()})
+        if key in rent and complete.get(key):
+            row["congestion_rent"] = _n(rent[key], 0)
         if any(v is not None for k, v in row.items() if k != "month"):
             months.append(row)
+
+    paired = sum(1 for m in months if m.get("congestion_rent") is not None
+                 and (m.get("grid_security") or 0) > 0)
     _write(os.path.join(outdir, "system_costs.json"), {
         "note": ("Monthly costs to the transmission operators of keeping the system "
-                 "secure, in EUR. grid_security is the redispatch family reported "
-                 "together -- redispatch, grid reserve, interruptible loads -- and "
-                 "cannot be split further here; measures instructed by distribution "
-                 "operators are not included. Series publish on different lags, so "
-                 "recent months are often partial."),
+                 "secure, in EUR, paired with the congestion rent earned on the DE-LU "
+                 "borders in the same month. grid_security is the redispatch family "
+                 "reported together -- redispatch, grid reserve, interruptible loads -- "
+                 "and cannot be split further here; measures instructed by distribution "
+                 "operators are not included. Cost series publish on different lags, so "
+                 "recent months are often absent. Rent appears only for months whose "
+                 "daily data is complete."),
         "source": "Bundesnetzagentur | SMARD.de, Kosten der ÜNB (region DE)",
         "licence": "CC BY 4.0",
         "generated_at": pd.Timestamp.now(tz=dtb.TZ).isoformat(timespec="seconds"),
         "months": months,
     })
-    print(f"  system_costs: {len(months)} month(s)")
+    print(f"  system_costs: {len(months)} month(s), {paired} with both sides")
 
 
 # Grouped into five, cheap-to-dear, because a merit order is an *ordered* category
@@ -236,6 +264,53 @@ def example_day(backend, outdir: str, start, end) -> None:
         "hours": hours,
     })
     print(f"  example_day: {pick} ({spread[pick]:.0f} EUR/MWh spread), {len(hours)} hours")
+
+
+def wind_shortfall(backend, start, end, price: pd.Series) -> pd.DataFrame | None:
+    """Per day: wind that did not run while prices were negative.
+
+    Restricted to negative-price hours on purpose. Summing max(0, forecast - actual)
+    across every hour looks like a curtailment measure and is not one: forecast error
+    is roughly symmetric, so clipping the negative side accumulates ordinary noise
+    into a large positive number. Measured over Jan-Aug it produced its worst "missing"
+    day on a date with no negative-price hour at all, which is the tell.
+
+    What survives that test is the price-conditioned signal: actual wind runs about
+    9.5% under forecast when the price is below zero and matches forecast in every
+    band above it. Below zero the support premium is withdrawn, so generating costs
+    the operator money and the blades get feathered. This isolates that, and carries
+    the all-hours signed gap alongside so the near-zero baseline stays visible.
+
+    It does not capture grid-ordered curtailment, which happens at any price and is
+    invisible to a price-conditioned test.
+    """
+    if not (hasattr(backend, "wind_forecast") and hasattr(backend, "generation")):
+        return None
+    fc, act = [], []
+    for ws, we in dtb.windows(start, end, "month"):
+        try:
+            fc.append(backend.wind_forecast(ws, we))
+            g = backend.generation(ws, we)
+            act.append(g[[c for c in ("wind_onshore", "wind_offshore") if c in g]].sum(axis=1))
+        except Exception as exc:
+            print(f"  ! wind shortfall {ws.date()}: {type(exc).__name__}: {exc}", file=sys.stderr)
+    if not fc or not act:
+        return None
+    j = pd.DataFrame({"fc": pd.concat(fc).sort_index(),
+                      "act": pd.concat(act).sort_index()}).join(price.rename("px"), how="inner")
+    j = j[(j.index >= start) & (j.index < end)].dropna(subset=["fc", "act"])
+    if j.empty:
+        return None
+    below = j.px < 0
+    j["cut"] = ((j.fc - j.act).clip(lower=0)).where(below, 0.0)
+    key = dtb.period_of(j.index, "day")
+    return pd.DataFrame({
+        "wind_forecast_gwh": j.fc.groupby(key).sum() / 1000,
+        "wind_actual_gwh": j.act.groupby(key).sum() / 1000,
+        "wind_gap_gwh": (j.fc - j.act).groupby(key).sum() / 1000,     # signed, all hours
+        "wind_cut_gwh": j.cut.groupby(key).sum() / 1000,              # negative-price hours only
+        "negative_price_hours": below.groupby(key).sum(),
+    })
 
 
 def wind_shortfall(backend, start, end, price: pd.Series) -> pd.DataFrame | None:

@@ -205,6 +205,11 @@
   footer { color: var(--muted); font-size: 12.5px; margin-top: 30px; }
   footer p { margin: 0 0 7px; }
   footer a { color: var(--ink-2); }
+  /* body links inherit the text colour: the palette is already carrying meaning
+     in these panels, and a browser-default blue would read as a fourth series. */
+  .read a, .flows a { color: inherit; text-decoration-color: var(--hairline);
+                      text-underline-offset: 2px; }
+  .read a:hover, .flows a:hover { text-decoration-color: currentColor; }
   #err { display: none; padding: 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hairline); }
 </style>
 </head>
@@ -311,7 +316,8 @@
     and the blades are feathered — a decision, and one that shows up as a deficit
     against the day-ahead forecast. Curtailment ordered by the grid operator, because
     northern wind cannot reach southern demand, happens at any price and leaves no
-    trace in this comparison; it sits in the redispatch spending two panels down.</p>
+    trace in this comparison; it sits in the redispatch spending under
+    <a href="#cardCosts">both sides of the ledger</a>.</p>
   </section>
 
   <section class="card" id="cardVolume" hidden>
@@ -358,9 +364,10 @@
         <p class="hint">What the borders earned in congestion rent, against what the
         transmission operators spent keeping the grid within limits. Related economics,
         but not one ledger: the rent is day-ahead income on the eleven DE-LU borders,
-        the spending is Germany-wide and includes the internal grid. Only complete
-        months on file appear, and only where the spending has published — it lags by
-        a month or more, so widen the range to see further back.</p>
+        the spending is Germany-wide and includes the internal grid. This one ignores the
+        range above and shows every month where both sides exist: the spending series
+        lags roughly three months behind, so the most recent months on the page have no
+        partner yet.</p>
       </div>
       <div class="key">
         <span><i style="background:var(--in)"></i>rent earned on borders</span>
@@ -1026,37 +1033,23 @@ function drawDay(host, day) {
  *  two different flows that happen to share a unit, so stacking them would invent a
  *  sum nobody should read.
  */
-function drawCosts(host, days, costs) {
-  if (!costs?.months?.length) { host.replaceChildren(); return false; }
-  // rent per month, but only months the loaded window covers completely
-  const rent = new Map(), seen = new Map();
-  for (const d of days) {
-    const k = d.date.slice(0, 7);
-    rent.set(k, (rent.get(k) || 0) + (d.rent_keur ?? 0) * 1000);
-    seen.set(k, (seen.get(k) || 0) + 1);
-  }
-  const dim = k => new Date(+k.slice(0, 4), +k.slice(5, 7), 0).getDate();
-  const rows = costs.months
-    .map(c => ({ month: c.month, spend: (c.grid_security ?? 0) + (c.countertrading ?? 0),
-                 rent: rent.get(c.month), full: seen.get(c.month) === dim(c.month) }))
-    .filter(r => r.spend > 0 && r.rent != null && r.full);
-  if (!rows.length) {
-    // A hidden card cannot explain itself, and at the default range no month is
-    // complete yet. Say so instead of vanishing, and do not fetch more to fix it.
-    const p = document.createElement("p");
-    p.className = "read";
-    p.textContent = "Nothing to pair yet: this needs a calendar month covered in full, "
-      + "and the spending series lags by a month or more. Switch the range to 90 days "
-      + "or All.";
-    host.replaceChildren(p);
-    return true;
-  }
+function drawCosts(host, costs) {
+  // Both series come from the costs file, so this panel does not depend on which
+  // months the range happens to have loaded. It used to sum the rent from the daily
+  // files, which made it empty at the default range forever: the spending series
+  // lags about three months, so the newest months on the page never have a partner.
+  const rows = (costs?.months ?? [])
+    .map(c => ({ month: c.month, rent: c.congestion_rent,
+                 spend: (c.grid_security ?? 0) + (c.countertrading ?? 0) }))
+    .filter(r => r.spend > 0 && r.rent != null);
+  if (!rows.length) { host.replaceChildren(); return false; }
+  const shown = rows.slice(-14);          // keep the columns readable on a phone
 
   const PH = 150, W = host.clientWidth || 720, H = PH + PAD.t + PAD.b;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
     "aria-label": "Congestion rent earned and grid security spending, by month" });
   const x0 = PAD.l, x1 = W - PAD.r, y0 = PAD.t, y1 = PAD.t + PH;
-  const hi = Math.max(...rows.flatMap(r => [r.rent, r.spend]));
+  const hi = Math.max(...shown.flatMap(r => [r.rent, r.spend]));
   const y = scale(0, hi * 1.08, y1, y0);
 
   for (const t of ticks(0, hi, 4)) {
@@ -1067,9 +1060,9 @@ function drawCosts(host, days, costs) {
   }
   svg.append(el("text", { x: x0 - 8, y: y0 - 2, "text-anchor": "end" }, "M€"));
 
-  const band = (x1 - x0) / rows.length;
+  const band = (x1 - x0) / shown.length;
   const bw = barW(band, 2);
-  rows.forEach((r, i) => {
+  shown.forEach((r, i) => {
     const cx = x0 + band * (i + .5);
     [[r.rent, "var(--in)", -1], [r.spend, "var(--out)", 1]].forEach(([v, fill, side]) => {
       const h = y(0) - y(v);
@@ -1423,7 +1416,7 @@ function render() {
   costsCard.hidden = false;                    // unhide before measuring
   // whole months on file, not the sliced window: this panel is monthly, and a
   // half-month bar next to full ones would read as a collapse in spending
-  costsCard.hidden = !drawCosts(document.getElementById("plotCosts"), loadedDays(), state.costs);
+  costsCard.hidden = !drawCosts(document.getElementById("plotCosts"), state.costs);
 
   const levels = document.getElementById("cardLevels");
   levels.hidden = false;                       // unhide before measuring

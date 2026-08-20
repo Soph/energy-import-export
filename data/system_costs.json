@@ -1,8 +1,8 @@
 {
- "note": "Monthly costs to the transmission operators of keeping the system secure, in EUR. grid_security is the redispatch family reported together -- redispatch, grid reserve, interruptible loads -- and cannot be split further here; measures instructed by distribution operators are not included. Series publish on different lags, so recent months are often partial.",
+ "note": "Monthly costs to the transmission operators of keeping the system secure, in EUR, paired with the congestion rent earned on the DE-LU borders in the same month. grid_security is the redispatch family reported together -- redispatch, grid reserve, interruptible loads -- and cannot be split further here; measures instructed by distribution operators are not included. Cost series publish on different lags, so recent months are often absent. Rent appears only for months whose daily data is complete.",
  "source": "Bundesnetzagentur | SMARD.de, Kosten der \u00dcNB (region DE)",
  "licence": "CC BY 4.0",
- "generated_at": "2026-08-19T22:58:06+02:00",
+ "generated_at": "2026-08-20T09:49:11+02:00",
  "months": [
   {
    "month": "2024-01",
@@ -152,31 +152,50 @@
    "month": "2026-01",
    "grid_security": 235629075.0,
    "countertrading": 8562291.0,
-   "balancing_reserve": 48088359.0
+   "balancing_reserve": 48088359.0,
+   "congestion_rent": 185150700.0
   },
   {
    "month": "2026-02",
    "grid_security": 93875817.0,
    "countertrading": 4121829.0,
-   "balancing_reserve": 30057685.0
+   "balancing_reserve": 30057685.0,
+   "congestion_rent": 139362300.0
   },
   {
    "month": "2026-03",
    "grid_security": 151759691.0,
    "countertrading": 4465419.0,
-   "balancing_reserve": 51996390.0
+   "balancing_reserve": 51996390.0,
+   "congestion_rent": 176447700.0
   },
   {
    "month": "2026-04",
    "grid_security": 114149002.0,
    "countertrading": 4544491.0,
-   "balancing_reserve": null
+   "balancing_reserve": null,
+   "congestion_rent": 150361800.0
   },
   {
    "month": "2026-05",
    "grid_security": 69455009.0,
    "countertrading": 2439849.0,
-   "balancing_reserve": null
+   "balancing_reserve": null,
+   "congestion_rent": 108352100.0
+  },
+  {
+   "month": "2026-06",
+   "grid_security": null,
+   "countertrading": null,
+   "balancing_reserve": null,
+   "congestion_rent": 117625300.0
+  },
+  {
+   "month": "2026-07",
+   "grid_security": null,
+   "countertrading": null,
+   "balancing_reserve": null,
+   "congestion_rent": 100217300.0
   }
  ]
 }
