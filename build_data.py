@@ -237,10 +237,14 @@ RENEWABLE = ("solar", "wind", "hydro_bio")
 def example_day(backend, outdir: str, start, end) -> None:
     """Write one real day, hour by hour, as a worked example of how a price happens.
 
-    Picks the day with the widest intraday price spread, because that is the one where
-    the mechanism is visible: the stack fills bottom-up with whatever is cheapest, and
-    the price follows whatever had to run last. Records which day and why, so the choice
-    is not mistaken for a hand-picked illustration.
+    Picks the widest intraday spread *among days that reach below zero*, because the panel
+    exists to show renewables setting the cheap hours -- and widest-spread alone does not.
+    Over one summer the two criteria agreed. Over eight years, widest-spread selects the
+    worst scarcity event on record: 2024-12-12, a Dunkelflaute with a 829 EUR/MWh spread,
+    18.5% renewable generation, no price below +107, and a stack sitting a quarter below
+    the demand line all day, so even the "surplus is exported or stored" note did not
+    apply. Correct data, wrong illustration. Requiring a negative hour guarantees the day
+    demonstrates the mechanism the panel is about.
 
     Only replaces the day on file if this range beats it. The candidate is the widest day
     in the *refreshed* range, and the daily job refreshes three days -- so without this
@@ -270,8 +274,13 @@ def example_day(backend, outdir: str, start, end) -> None:
         return
     step_minutes = (j.index.to_series().diff().dropna().median().total_seconds() / 60
                     if len(j) > 1 else 60.0)
-    spread = j.groupby(dtb.period_of(j.index, "day"))["price"].agg(lambda s: s.max() - s.min())
-    pick = spread.idxmax()
+    key = dtb.period_of(j.index, "day")
+    spread = j.groupby(key)["price"].agg(lambda s: s.max() - s.min())
+    lowest = j.groupby(key)["price"].min()
+    below = spread[lowest < 0]
+    pick = (below if not below.empty else spread).idxmax()
+    reason = "widest intraday spread on a day the price went below zero" if not below.empty \
+             else "widest intraday spread (no day in range went below zero)"
     path = os.path.join(outdir, "example_day.json")
     try:
         with open(path) as fh:
@@ -306,14 +315,16 @@ def example_day(backend, outdir: str, start, end) -> None:
         # The record now spans both market eras, and the widest-spread day can fall in
         # either. The page states the resolution rather than promising one.
         "step_minutes": _n(step_minutes, 0),
-        "chosen_because": (f"widest intraday price spread on record: "
-                           f"{spread[pick]:.0f} EUR/MWh"),
+        "chosen_because": f"{reason}: {spread[pick]:.0f} EUR/MWh",
         "note": ("Generation is what actually ran, grouped cheap-to-dear. The ordering is "
                  "the conventional merit order, not observed bids -- what each unit offered "
                  "is not public, so the stack shows volumes, not costs."),
         "source": "Bundesnetzagentur | SMARD.de",
-        "buckets": list(STACK),
-        "renewable_buckets": list(RENEWABLE),
+        # Only buckets that actually ran. Nuclear is null for every hour after April 2023,
+        # and listing it put a swatch in the legend for a band that never appears.
+        "buckets": [b for b in STACK if any((h.get(b) or 0) > 0 for h in hours)],
+        "renewable_buckets": [b for b in RENEWABLE
+                              if any((h.get(b) or 0) > 0 for h in hours)],
         "hours": hours,
     })
     print(f"  example_day: {pick} ({spread[pick]:.0f} EUR/MWh spread), {len(hours)} hours")

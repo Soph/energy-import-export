@@ -396,7 +396,9 @@ const TXT = {
     dayPriceAxis: "clearing price, €/MWh", dayShareAxis: "renewable share of generation",
     dayCheapest: "cheapest", dayDearest: "dearest", dayFuelFree: "renewable", oclock: "",
     resQuarter: "in quarter-hour blocks", resHour: "in hourly blocks, as the market cleared then",
-    dayCap: (d, res) => `${d}, ${res}, chosen automatically as the widest intraday price spread on record. Red is `
+    whyNeg: "the widest price spread of any day that went below zero",
+    whyFlat: "the widest price spread in the record",
+    dayCap: (d, res, why) => `${d}, ${res}, chosen automatically: ${why}. Red is `
       + `a positive clearing price, blue is below zero. The line beneath is the share of `
       + `generation that was renewable.`,
     seasonsRow1: "price gap, arriving minus leaving (€/MWh)",
@@ -466,8 +468,10 @@ const TXT = {
     dayCheapest: "günstigste", dayDearest: "teuerste", dayFuelFree: "erneuerbar",
     oclock: " Uhr",
     resQuarter: "in Viertelstunden", resHour: "in Stunden, wie der Markt damals räumte",
-    dayCap: (d, res) => `${d}, ${res}, automatisch gewählt als größte Preisspanne innerhalb eines Tages im `
-      + `ganzen Zeitraum. Rot ist ein positiver Räumungspreis, blau unter null. Die Linie darunter `
+    whyNeg: "die größte Preisspanne aller Tage, die unter null gingen",
+    whyFlat: "die größte Preisspanne im ganzen Zeitraum",
+    dayCap: (d, res, why) => `${d}, ${res}, automatisch gewählt: ${why}. `
+      + `Rot ist ein positiver Markträumungspreis, blau unter null. Die Linie darunter `
       + `zeigt den Anteil der erneuerbaren Erzeugung.`,
     seasonsRow1: "Preisdifferenz, herein minus hinaus (€/MWh)",
     seasonsRow2: "Nettoposition (GWh) – unter der Linie heißt Export",
@@ -859,7 +863,8 @@ function drawAll() {
   if (x.day && drawDay(document.getElementById("plotDay"), x.day)) {
     // resolution from the row count: the widest day can come from either market era
     const res = x.day.hours.length >= 96 ? t.resQuarter : t.resHour;
-    document.getElementById("dayCap").textContent = t.dayCap(dLong(x.day.date), res);
+    const why = x.day.hours.some(h => (h.price ?? 0) < 0) ? t.whyNeg : t.whyFlat;
+    document.getElementById("dayCap").textContent = t.dayCap(dLong(x.day.date), res, why);
   }
   if (x.seasons && drawSeasons(document.getElementById("plotSeasons"), x.seasons.months)) {
     const ms = x.seasons.months, gaps = ms.map(m => m.price_gap);

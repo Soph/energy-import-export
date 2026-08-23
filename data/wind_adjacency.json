@@ -1,65 +1,65 @@
 {
  "control_other_intervals": {
-  "intervals": 29483,
-  "hours_equiv": 7371.0,
-  "deficit_gwh": -1341.8,
-  "share_of_forecast_pct": -1.12
+  "intervals": 29550,
+  "hours_equiv": 7388.0,
+  "deficit_gwh": -1221.4,
+  "share_of_forecast_pct": -1.02
  },
  "note": "Wind deficit against day-ahead forecast, as a share of that forecast, by distance in minutes from a market interval whose day-ahead price was below zero. Lag 0 is the negative interval itself; other lags exclude intervals that were themselves below zero, so they are a clean control. A shortfall one interval wide cannot be forecast error. by_month covers the negative-price intervals only, over the same record.",
  "profile": {
   "-4": {
    "minutes": -60,
-   "intervals": 335,
-   "share_of_forecast_pct": 0.9,
-   "deficit_gwh": 12.3
+   "intervals": 339,
+   "share_of_forecast_pct": 0.81,
+   "deficit_gwh": 11.2
   },
   "-3": {
    "minutes": -45,
-   "intervals": 257,
-   "share_of_forecast_pct": 1.13,
-   "deficit_gwh": 12.1
+   "intervals": 260,
+   "share_of_forecast_pct": 1.03,
+   "deficit_gwh": 11.1
   },
   "-2": {
    "minutes": -30,
-   "intervals": 189,
-   "share_of_forecast_pct": 1.25,
-   "deficit_gwh": 10.1
+   "intervals": 191,
+   "share_of_forecast_pct": 1.16,
+   "deficit_gwh": 9.5
   },
   "-1": {
    "minutes": -15,
-   "intervals": 122,
-   "share_of_forecast_pct": 1.43,
-   "deficit_gwh": 8.0
+   "intervals": 123,
+   "share_of_forecast_pct": 1.38,
+   "deficit_gwh": 7.8
   },
   "0": {
    "minutes": 0,
-   "intervals": 1809,
-   "share_of_forecast_pct": 9.23,
-   "deficit_gwh": 753.5
+   "intervals": 1838,
+   "share_of_forecast_pct": 9.7,
+   "deficit_gwh": 802.3
   },
   "1": {
    "minutes": 15,
-   "intervals": 122,
-   "share_of_forecast_pct": 1.25,
-   "deficit_gwh": 7.7
+   "intervals": 123,
+   "share_of_forecast_pct": 1.89,
+   "deficit_gwh": 11.8
   },
   "2": {
    "minutes": 30,
-   "intervals": 189,
-   "share_of_forecast_pct": 0.89,
-   "deficit_gwh": 8.3
+   "intervals": 191,
+   "share_of_forecast_pct": 1.81,
+   "deficit_gwh": 16.9
   },
   "3": {
    "minutes": 45,
-   "intervals": 257,
-   "share_of_forecast_pct": 0.57,
-   "deficit_gwh": 7.1
+   "intervals": 260,
+   "share_of_forecast_pct": 1.63,
+   "deficit_gwh": 20.4
   },
   "4": {
    "minutes": 60,
-   "intervals": 335,
-   "share_of_forecast_pct": 0.1,
-   "deficit_gwh": 1.6
+   "intervals": 339,
+   "share_of_forecast_pct": 1.21,
+   "deficit_gwh": 19.6
   }
  },
  "by_month": [
@@ -121,19 +121,19 @@
   },
   {
    "month": "2026-08",
-   "intervals": 126,
-   "deficit_gwh": 14.7,
-   "forecast_gwh": 283.6,
-   "share_of_forecast_pct": 5.2
+   "intervals": 155,
+   "deficit_gwh": 63.5,
+   "forecast_gwh": 385.6,
+   "share_of_forecast_pct": 16.46
   }
  ],
  "step_minutes": 15.0,
- "negative_intervals": 1809,
- "negative_hours_equiv": 452.2,
- "intervals_total": 31292,
+ "negative_intervals": 1838,
+ "negative_hours_equiv": 459.5,
+ "intervals_total": 31388,
  "covers": [
   "2025-10-01",
-  "2026-08-22"
+  "2026-08-23"
  ],
- "generated_at": "2026-08-23T12:48:09+02:00"
+ "generated_at": "2026-08-23T14:02:24+02:00"
 }

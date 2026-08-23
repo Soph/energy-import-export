@@ -1175,6 +1175,11 @@ function renShare(h) {
 function drawDay(host, day) {
   if (!day?.hours?.length) { host.replaceChildren(); return false; }
   const hrs = day.hours;
+  // Only the buckets that actually ran. Nuclear is null for every hour after April 2023,
+  // so a fixed legend put a swatch against a band that is never drawn -- and on a
+  // pre-2023 day it correctly comes back.
+  const present = new Set(day.buckets || STACK_ORDER.map(r => r[0]));
+  const order = STACK_ORDER.filter(r => present.has(r[0]));
   const SH = 168, PH2 = 66, GAPY = 30;
   const W = host.clientWidth || 720, H = SH + GAPY + PH2 + PAD.t + PAD.b;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
@@ -1182,7 +1187,7 @@ function drawDay(host, day) {
   const x0 = PAD.l, x1 = W - PAD.r, sTop = PAD.t, sBot = PAD.t + SH;
   const pTop = sBot + GAPY, pBot = pTop + PH2;
 
-  const tot = h => STACK_ORDER.reduce((a, [k]) => a + (h[k] ?? 0), 0);
+  const tot = h => order.reduce((a, [k]) => a + (h[k] ?? 0), 0);
   const gMax = Math.max(...hrs.map(h => Math.max(tot(h), h.load_gw ?? 0)));
   const yG = scale(0, gMax * 1.05, sBot, sTop);
   const px = hrs.map(h => h.price ?? 0);
@@ -1212,14 +1217,14 @@ function drawDay(host, day) {
   hrs.forEach((h, i) => {
     const cx = x0 + band * (i + .5);
     let acc = 0;
-    STACK_ORDER.forEach(([k], si) => {
+    order.forEach(([k], si) => {
       const v = h[k] ?? 0;
       if (v <= 0) { acc += v; return; }
       const top = yG(acc + v), hh = Math.max(0, yG(acc) - yG(acc + v) - (si ? GAP : 0));
-      const outer = si === STACK_ORDER.length - 1;
+      const outer = si === order.length - 1;
       svg.append(outer
-        ? el("path", { d: barPath(cx - bw / 2, top, bw, hh, RAD, true), fill: STACK_ORDER[si][2] })
-        : el("rect", { x: cx - bw / 2, y: top, width: bw, height: hh, fill: STACK_ORDER[si][2] }));
+        ? el("path", { d: barPath(cx - bw / 2, top, bw, hh, RAD, true), fill: order[si][2] })
+        : el("rect", { x: cx - bw / 2, y: top, width: bw, height: hh, fill: order[si][2] }));
       acc += v;
     });
     // load across the stack: anything above the line left the country
@@ -1253,7 +1258,7 @@ function drawDay(host, day) {
   host.replaceChildren(svg);
 
   document.getElementById("dayKey").innerHTML =
-    STACK_ORDER.map(([, lab, c]) => `<span><i style="background:${c}"></i>${lab}</span>`).join("")
+    order.map(([, lab, c]) => `<span><i style="background:${c}"></i>${lab}</span>`).join("")
     + `<span><i style="background:var(--ink-2);height:2px;width:14px;border-radius:2px"></i>German demand</span>`;
   return true;
 }
