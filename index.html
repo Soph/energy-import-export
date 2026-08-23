@@ -493,6 +493,12 @@ const T = () => TXT[state.lang];
 
 const SVG = "http://www.w3.org/2000/svg";
 const el = (tag, attrs = {}, text) => {
+  // A label that is not a primitive means a variable got crossed somewhere; it renders as
+  // "[object Object]" and nothing complains. That shipped once, when a loop-variable rename
+  // left a num(t) behind pointing at the translations object -- t was still in scope, so it
+  // ran without error and quietly printed an object on the price axis. Loud now.
+  if (text != null && typeof text !== "string" && typeof text !== "number")
+    console.error(`el(${tag}): label is ${typeof text}, not text:`, text);
   const n = document.createElementNS(SVG, tag);
   for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
   if (text != null) n.textContent = text;
@@ -713,7 +719,7 @@ function drawDay(host, day) {
   for (const k of ticks(pLo, pHi, 3)) {
     svg.append(el("line", { class: Math.abs(k) < 1e-9 ? "axisline" : "gridline",
                             x1: x0, x2: x1, y1: yP(k), y2: yP(k) }));
-    svg.append(el("text", { x: x0 - 7, y: yP(k) + 4, "text-anchor": "end" }, num(t)));
+    svg.append(el("text", { x: x0 - 7, y: yP(k) + 4, "text-anchor": "end" }, num(k)));
   }
   hrs.forEach((h, i) => {
     const v = h.price ?? 0, y = Math.min(yP(v), yP(0));

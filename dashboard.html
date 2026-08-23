@@ -599,6 +599,11 @@ const money = (k, dp = 1) => {
 
 const SVGNS = "http://www.w3.org/2000/svg";
 function el(name, attrs = {}, text) {
+  // A label that is not a primitive renders as "[object Object]" and nothing complains.
+  // That shipped once on the other page, when a loop-variable rename left a num(t) behind
+  // pointing at the translations object: t was still in scope, so it ran without error.
+  if (text != null && typeof text !== "string" && typeof text !== "number")
+    console.error(`el(${name}): label is ${typeof text}, not text:`, text);
   const n = document.createElementNS(SVGNS, name);
   for (const k in attrs) if (attrs[k] != null) n.setAttribute(k, attrs[k]);
   if (text != null) n.textContent = text;
