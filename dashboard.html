@@ -1305,8 +1305,12 @@ function drawCosts(host, costs) {
       svg.append(el("path", { d: barPath(cx + side * (GAP / 2) - (side < 0 ? bw : 0),
                                          y(v), bw, h, RAD, true), fill }));
     });
-    svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" },
-                  r.month.slice(5) + "/" + r.month.slice(2, 4)));
+    // every label was drawn unconditionally; thin to the year once they cannot fit
+    if (shown.length <= 8)
+      svg.append(el("text", { x: cx, y: y1 + 17, "text-anchor": "middle" },
+                    r.month.slice(5) + "/" + r.month.slice(2, 4)));
+    else if (i === 0 || shown[i - 1].month.slice(0, 4) !== r.month.slice(0, 4))
+      svg.append(el("text", { x: cx - band / 2 + 3, y: y1 + 17 }, r.month.slice(0, 4)));
     const hit = el("rect", { class: "hit", x: cx - band / 2, y: y0, width: band, height: PH });
     const html = `<div class="t-date">${r.month}</div>`
       + `<div class="t-row"><span>Rent earned on borders</span><span>€${num(r.rent / 1e6, 1)}M</span></div>`
@@ -1387,10 +1391,18 @@ function drawSeasons(host, seasons) {
       svg.append(el("path", { d: barPath(cx - bw / 2, Math.min(y(v), y(0)), bw, h, RAD, v >= 0),
                               fill, opacity: row.diverging && row.key !== "net_import_gwh"
                                 ? .62 : 1 }));
-      if (r === rows.length - 1)
-        // month only: "Jan '26" at 7 months in a 238px plot overlaps its neighbour
-        svg.append(el("text", { x: cx, y: H - 6, "text-anchor": "middle" },
-                      MONTHS[+m.month.slice(5, 7) - 1]));
+      // Month names while they fit; year boundaries once they do not. At 91 months a
+      // per-month label has 8px for a 24px word.
+      if (r === rows.length - 1) {
+        if (ms.length <= 18)
+          svg.append(el("text", { x: cx, y: H - 6, "text-anchor": "middle" },
+                        MONTHS[+m.month.slice(5, 7) - 1]));
+        else if (i === 0 || ms[i - 1].month.slice(0, 4) !== m.month.slice(0, 4)) {
+          const edge = cx - band / 2;
+          svg.append(el("line", { class: "axisline", x1: edge, x2: edge, y1: bot, y2: bot + 5 }));
+          svg.append(el("text", { x: edge + 3, y: H - 6 }, m.month.slice(0, 4)));
+        }
+      }
       const hit = el("rect", { class: "hit", x: cx - band / 2, y: top, width: band, height: ROW });
       const html = `<div class="t-date">${dMonth(m.month + "-01")}</div>`
         + `<div class="t-row"><span>Price gap</span><span>€${num(m.price_gap, 1)}</span></div>`
