@@ -200,7 +200,10 @@ def system_costs(backend, outdir: str) -> None:
 # Grouped into five, cheap-to-dear, because a merit order is an *ordered* category
 # and eight-plus technologies in one stack stops being readable. Nuclear is omitted
 # rather than bucketed: Germany's last reactors closed in 2023 and the series is zero.
-# Cheap-to-dear, and grouped so the renewable/conventional line is horizontal in the stack.
+# Renewables first, then pumped storage, then the conventional plant by ascending marginal
+# cost -- so the renewable/conventional line is horizontal in the stack. Not a strict merit
+# order: storage discharges into peak prices and in a true merit order would sit near the
+# top, but keeping it between the two families is what makes the boundary legible.
 # Note what this split is and is not: the first three are SMARD's own "Erneuerbare
 # Energietraeger" list, which includes Biomasse -- a combustion plant that buys fuel, and
 # about 11% of the bucket. So this is a renewable/conventional boundary, NOT a
@@ -215,9 +218,17 @@ STACK = {
     "wind":      [1004067, 1001225],
     "hydro_bio": [1001226, 1004066, 1001228],            # hydro, biomass, other RES
     "storage":   [1004070],                              # pumped storage, discharging
+    "nuclear":   [1001224],                              # zero after 15 April 2023
     "coal":      [1001223, 1004069],                     # lignite, hard coal
     "gas_other": [1004071, 1001227],                     # gas, other conventional
 }
+# Nuclear is here even though it is identically zero for every day after 15 April 2023,
+# when the last three reactors shut. Leaving it out was safe while the record started in
+# 2026 -- and it was checked, the module summed to zero. It stops being safe the moment any
+# pre-2023 day is fetched: nuclear ran at 2.6-7.6 GW, and because the renewable share is
+# renewables over *total* generation, dropping it from the denominator inflated the share.
+# Measured on 2021-06-05 the page would have shown 50.2% renewable where the truth is
+# 41.8%, an 8.4-point overstatement that is invisible in 2026 data.
 # The renewable buckets, matching SMARD's own category list. Used for the renewable
 # share the pages quote. Deliberately not called "fuel-free": Biomasse burns.
 RENEWABLE = ("solar", "wind", "hydro_bio")
@@ -257,6 +268,8 @@ def example_day(backend, outdir: str, start, end) -> None:
     j = j[(j.index >= start) & (j.index < end)].dropna(subset=["price"])
     if j.empty:
         return
+    step_minutes = (j.index.to_series().diff().dropna().median().total_seconds() / 60
+                    if len(j) > 1 else 60.0)
     spread = j.groupby(dtb.period_of(j.index, "day"))["price"].agg(lambda s: s.max() - s.min())
     pick = spread.idxmax()
     path = os.path.join(outdir, "example_day.json")
@@ -271,10 +284,14 @@ def example_day(backend, outdir: str, start, end) -> None:
         return
     day = j[dtb.period_of(j.index, "day") == pick]
 
+    # every module in STACK needs an entry here, or the bucket raises on lookup
     LABEL = {1004068: "Photovoltaik", 1004067: "Wind Onshore", 1001225: "Wind Offshore",
              1001226: "Wasserkraft", 1004070: "Pumpspeicher", 1004066: "Biomasse",
-             1001228: "Sonstige Erneuerbare", 1001223: "Braunkohle",
-             1004069: "Steinkohle", 1004071: "Erdgas", 1001227: "Sonstige Konventionelle"}
+             1001228: "Sonstige Erneuerbare", 1001224: "Kernenergie",
+             1001223: "Braunkohle", 1004069: "Steinkohle", 1004071: "Erdgas",
+             1001227: "Sonstige Konventionelle"}
+    missing = [i for v in STACK.values() for i in v if i not in LABEL]
+    assert not missing, f"STACK modules with no LABEL: {missing}"
     hours = []
     for ts, r in day.iterrows():
         row = {"hour": ts.strftime("%H:%M"), "price": _n(r["price"]), "load_gw": _n(r["load"] / 1000)}
@@ -286,6 +303,9 @@ def example_day(backend, outdir: str, start, end) -> None:
     _write(path, {
         "date": pick,
         "spread_eur_mwh": _n(spread[pick]),
+        # The record now spans both market eras, and the widest-spread day can fall in
+        # either. The page states the resolution rather than promising one.
+        "step_minutes": _n(step_minutes, 0),
         "chosen_because": (f"widest intraday price spread on record: "
                            f"{spread[pick]:.0f} EUR/MWh"),
         "note": ("Generation is what actually ran, grouped cheap-to-dear. The ordering is "
@@ -355,7 +375,7 @@ def wind_shortfall(backend, start, end, price: pd.Series
         # too, as a per-window control -- but the panel establishes that per-window is
         # meaningless for this effect, so the split is only computed over the full record,
         # in wind_adjacency.json. Nothing read these six fields.
-        "negative_price_intervals": below.groupby(key).sum(),
+        "negative_price_hours": below.groupby(key).sum() * hrs,
     })
     return daily, adjacency(j, below, step)
 
@@ -466,6 +486,11 @@ def seasons(outdir: str) -> None:
         tot = lambda f: sum((d.get(f) or 0) for d in days)
         wavg = lambda pf, vf: (sum((d.get(pf) or 0) * (d.get(vf) or 0) for d in days)
                                / tot(vf)) if tot(vf) else None
+        # Raw numerator/denominator pairs as well as the ratios. The claim page needs to
+        # aggregate arbitrary periods, and a mean of monthly means is not the mean -- with
+        # these it can sum months and divide, which is exact. It also means that page loads
+        # one small file instead of every month file; at 92 months that was 7.5 MB.
+        wsum = lambda pf, vf: sum((d.get(pf) or 0) * (d.get(vf) or 0) for d in days)
         imp_px, exp_px = wavg("imp_px_own", "stayed_gwh"), wavg("exp_px_own", "from_de_plants_gwh")
         solar_mv = wavg("solar_mv", "solar_gwh")
         # mean of daily means: every day carries equal weight, which is what "an average
@@ -482,6 +507,20 @@ def seasons(outdir: str) -> None:
             "solar_mv": _n(solar_mv, 1),
             "solar_vs_market": _n(solar_mv - da, 1) if solar_mv is not None else None,
             "rent_meur": _n(tot("rent_keur") / 1000, 1),
+            # everything below is for exact re-aggregation, not for reading
+            "bal_keur": _n(tot("bal_de_keur"), 1),
+            "rent_keur": _n(tot("rent_keur"), 1),
+            "import_gwh": _n(tot("import_gwh"), 1),
+            "export_gwh": _n(tot("export_gwh"), 1),
+            "transit_gwh": _n(tot("transit_gwh"), 1),
+            "stayed_gwh": _n(tot("stayed_gwh"), 1),
+            "from_de_plants_gwh": _n(tot("from_de_plants_gwh"), 1),
+            "load_gwh": _n(tot("load_gw") * 24, 1),
+            "w_imp_de": _n(wsum("imp_px_de", "import_gwh"), 1),
+            "w_exp_de": _n(wsum("exp_px_de", "export_gwh"), 1),
+            "w_imp_own": _n(wsum("imp_px_own", "stayed_gwh"), 1),
+            "w_exp_own": _n(wsum("exp_px_own", "from_de_plants_gwh"), 1),
+            "step_minutes": _n(max((d.get("step_minutes") or 60) for d in days), 0),
         })
     if not months:
         return
@@ -517,7 +556,16 @@ def write_adjacency(outdir: str, adj: dict | None) -> None:
             old = json.load(fh)
     except (OSError, ValueError):
         old = None
-    if old and old.get("negative_hours_equiv", 0) > adj["negative_hours_equiv"]:
+    # A coarser run must never replace a finer one. The lag axis is in minutes, so an
+    # hourly run would relabel the discontinuity as an hour wide when the finer data shows
+    # it is fifteen minutes -- a weaker claim presented as the same one. Backfilling 2019
+    # or 2021, which are necessarily hourly, would otherwise silently do this.
+    if old and old.get("step_minutes", 60) < adj["step_minutes"]:
+        print(f"  wind_adjacency: kept ({old['step_minutes']}min on file is finer than this "
+              f"run's {adj['step_minutes']}min)")
+        return
+    if old and old.get("step_minutes", 60) == adj["step_minutes"] \
+           and old.get("negative_hours_equiv", 0) > adj["negative_hours_equiv"]:
         print(f"  wind_adjacency: kept ({old['negative_hours_equiv']}h of negative prices "
               f"on file beats this run's {adj['negative_hours_equiv']}h)")
         return
@@ -534,6 +582,14 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
                 mv: pd.DataFrame | None = None,
                 wind: pd.DataFrame | None = None) -> list[dict]:
     """One record per calendar day, with its per-border breakdown nested."""
+    # Recorded per day because the record now spans two market eras: hourly before the
+    # 15-minute MTU went live on 1 October 2025, quarter-hourly after. Anything that counts
+    # intervals is only comparable if you know which grid produced it.
+    # the frame is indexed (border, mtu); the timestamps are level "mtu"
+    idx = d.index.get_level_values("mtu") if isinstance(d.index, pd.MultiIndex) else d.index
+    uniq = pd.DatetimeIndex(pd.Index(idx).unique()).sort_values()
+    step_minutes = (uniq.to_series().diff().dropna().median().total_seconds() / 60
+                    if len(uniq) > 1 else 60.0)
     day = dtb.per_period(d, "day")
     per_bd = dtb.per_border_period(d, "day")
 
@@ -588,6 +644,7 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
             "date": date,
             "source": source,
             "flows": flows,
+            "step_minutes": _n(step_minutes, 0),
             "price_de_mean": _n(px.get(date)),
             "load_gw": _n(dm["load_gw"]) if dm is not None else None,
             "residual_gw": _n(dm["residual_gw"]) if dm is not None else None,
@@ -606,7 +663,7 @@ def day_records(d: pd.DataFrame, source: str, flows: str,
             "rent_keur": _n(r["rent_kEUR"], 1),
             "borders": borders,
             **({k: _n(v) for k, v in mrow.items()} if mrow is not None else {}),
-            **({k: _n(v, 0 if k == "negative_price_intervals" else 2)
+            **({k: _n(v, 1 if k == "negative_price_hours" else 2)
                 for k, v in wrow.items()} if wrow is not None else {}),
         })
     return out

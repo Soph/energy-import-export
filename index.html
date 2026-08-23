@@ -261,8 +261,8 @@ die meisten vermuten, die ihn nachsprechen. Der Reihe nach: diese Zahl, die beid
 <p lang="de">Deutschland importiert in seinen teuren Stunden gerade <em>deshalb</em>, weil importierter Strom die deutsche Alternative unterbietet. Jede importierte Megawattstunde verdrängt ein teureres deutsches Kraftwerk und drückt damit den deutschen Preis <em>nach unten</em>. Exportiert wird in billigen Stunden, weil dann mehr Strom da ist, als das Land verbrauchen kann.</p>
   <p lang="en">A system that did the reverse — exporting when power was scarce and importing when it
   was abundant — is the one that would deserve the word. Here is a real day, at the
-  fifteen-minute resolution the market actually settles in:</p>
-<p lang="de">Ein System, das umgekehrt vorgeht – exportieren bei Knappheit, importieren bei Überschuss –, hätte das Wort verdient. Hier ein echter Tag, viertelstündlich, so wie der Markt tatsächlich abrechnet:</p>
+  resolution the market settled in at the time:</p>
+<p lang="de">Ein System, das umgekehrt vorgeht – exportieren bei Knappheit, importieren bei Überschuss –, hätte das Wort verdient. Hier ein echter Tag, in der Auflösung, in der der Markt damals abgerechnet hat:</p>
   <figure>
     <div id="plotDay"></div>
     <figcaption id="dayCap"></figcaption>
@@ -395,7 +395,8 @@ const TXT = {
       + `value of an hour has started to move by a factor of several, every day.`,
     dayPriceAxis: "clearing price, €/MWh", dayShareAxis: "renewable share of generation",
     dayCheapest: "cheapest", dayDearest: "dearest", dayFuelFree: "renewable", oclock: "",
-    dayCap: d => `${d}, chosen automatically as the widest intraday price spread on record. Red is `
+    resQuarter: "in quarter-hour blocks", resHour: "in hourly blocks, as the market cleared then",
+    dayCap: (d, res) => `${d}, ${res}, chosen automatically as the widest intraday price spread on record. Red is `
       + `a positive clearing price, blue is below zero. The line beneath is the share of `
       + `generation that was renewable.`,
     seasonsRow1: "price gap, arriving minus leaving (€/MWh)",
@@ -464,7 +465,8 @@ const TXT = {
     dayShareAxis: "Anteil der erneuerbaren Erzeugung",
     dayCheapest: "günstigste", dayDearest: "teuerste", dayFuelFree: "erneuerbar",
     oclock: " Uhr",
-    dayCap: d => `${d}, automatisch gewählt als größte Preisspanne innerhalb eines Tages im `
+    resQuarter: "in Viertelstunden", resHour: "in Stunden, wie der Markt damals räumte",
+    dayCap: (d, res) => `${d}, ${res}, automatisch gewählt als größte Preisspanne innerhalb eines Tages im `
       + `ganzen Zeitraum. Rot ist ein positiver Räumungspreis, blau unter null. Die Linie darunter `
       + `zeigt den Anteil der erneuerbaren Erzeugung.`,
     seasonsRow1: "Preisdifferenz, herein minus hinaus (€/MWh)",
@@ -545,40 +547,44 @@ const BASES = {
   // interval -- the most that could have been offset within the same hour. Stripping it
   // makes the claim look strongest, which is exactly why the dial exists.
   gross:    { key: "basisGross",
-              ip: "imp_px_de",  iv: "import_gwh",
-              ep: "exp_px_de",  ev: "export_gwh" },
+              wn: "w_imp_de",  wd: "import_gwh",
+              en: "w_exp_de",  ed: "export_gwh" },
   stripped: { key: "basisStripped",
-              ip: "imp_px_own", iv: "stayed_gwh",
-              ep: "exp_px_own", ev: "from_de_plants_gwh" },
+              wn: "w_imp_own", wd: "stayed_gwh",
+              en: "w_exp_own", ed: "from_de_plants_gwh" },
 };
-const state = { lang: "en", basis: "stripped", period: "all", days: [], months: [], extra: {} };
+const state = { lang: "en", basis: "stripped", period: "all", index: null, months: null, extra: {} };
 
-const inPeriod = () => state.period === "all"
-  ? state.days : state.days.filter(d => d.date.startsWith(state.period));
+/** The months in the selected period: everything, or one year. */
+const inPeriod = () => (state.months || []).filter(
+  m => state.period === "all" || m.month.startsWith(state.period));
 
-function agg(days, basisKey) {
+/** Aggregate a set of months exactly.
+ *
+ *  Sums of numerators over sums of denominators, never a mean of monthly means -- those
+ *  differ whenever the months carry different volumes. The raw pairs live in seasons.json
+ *  for this reason, which is also why this page now loads one 52 KB file instead of 92
+ *  month files totalling 7.5 MB.
+ */
+function agg(months, basisKey) {
   const B = BASES[basisKey];
-  const sum = f => days.reduce((a, d) => a + (d[f] ?? 0), 0);
-  const vw = (pf, vf) => {
-    let n = 0, v = 0;
-    for (const d of days) { const q = d[vf] ?? 0; n += (d[pf] ?? 0) * q; v += q; }
-    return v > 0 ? n / v : null;
-  };
-  const paid = vw(B.ip, B.iv), earned = vw(B.ep, B.ev);
-  const consumedGwh = sum("load_gw") * 24;      // load_gw is a daily mean
+  const sum = f => months.reduce((a, m) => a + (m[f] ?? 0), 0);
+  const div = (n, d) => sum(d) > 0 ? sum(n) / sum(d) : null;
+  const paid = div(B.wn, B.wd), earned = div(B.en, B.ed);
+  const consumedGwh = sum("load_gwh");
   return {
-    days: days.length, paid, earned,
-    gap: paid != null && earned != null ? paid - earned : null,
+    months: months.length,
+    days: months.reduce((a, m) => a + (m.days ?? 0), 0),
+    paid, earned,
     ratio: paid != null && earned > 1 ? paid / earned : null,
-    balance: sum("bal_de_keur") * 1000,
+    balance: sum("bal_keur") * 1000,
     net: sum("net_import_gwh"),
     rent: sum("rent_keur") * 1000,
     consumedGwh,
-    perMwh: consumedGwh > 0 ? sum("bal_de_keur") * 1000 / (consumedGwh * 1000) : null,
+    perMwh: consumedGwh > 0 ? sum("bal_keur") * 1000 / (consumedGwh * 1000) : null,
     transitShare: sum("import_gwh") > 0 ? sum("transit_gwh") / sum("import_gwh") : null,
   };
 }
-
 function buildDials() {
   const t = T();
   document.getElementById("lblBasis").textContent = t.lblBasis;
@@ -594,8 +600,11 @@ function buildDials() {
   seg(document.getElementById("dialBasis"),
       Object.entries(BASES).map(([k, v]) => [k, t[v.key]]),
       state.basis, k => { state.basis = k; });
+  // by year, not by month: 91 month buttons is not a control, and a year is the unit the
+  // nuclear-era comparison is actually made in
+  const years = [...new Set((state.months || []).map(m => m.month.slice(0, 4)))].sort();
   seg(document.getElementById("dialPeriod"),
-      [["all", t.periodAll], ...state.months.map(m => [m, mShort(m)])],
+      [["all", t.periodAll], ...years.map(y => [y, y])],
       state.period, k => { state.period = k; });
 }
 
@@ -633,7 +642,7 @@ function render() {
   drawBars(document.getElementById("plotBars"), a);
 
   const period = state.period === "all"
-    ? t.wholeRecord(num(a.days)) : t.inPeriod(mLabel(state.period));
+    ? t.wholeRecord(num(a.days)) : t.inPeriod(state.period);
   let v = `<span class="big">${eur(a.paid, 0)} → ${eur(a.earned, 0)}</span>`;
   // the dash is language-dependent: German takes the en dash, English the em dash
   const dash = state.lang === "de" ? " \u2013 " : " \u2014 ";
@@ -776,9 +785,20 @@ function drawSeasons(host, months) {
         : v >= 0 ? "var(--out)" : "var(--in)";
       svg.append(el("rect", { x: cx - bw / 2, y: Math.min(y(v), y(0)), width: bw,
                               height: Math.max(1, Math.abs(y(v) - y(0))), rx: 3, fill }));
-      if (r === rows.length - 1)
-        svg.append(el("text", { x: cx, y: H - 8, "text-anchor": "middle" },
-                      mShort(m.month)));
+      // With 91 months a per-month label gets 8px of space for a 24px word, so the axis
+      // becomes years: label only where the year turns, with a tick. Under ~18 months
+      // there is room for month names and they are the more useful label.
+      if (r === rows.length - 1) {
+        if (ms.length <= 18)
+          svg.append(el("text", { x: cx, y: H - 8, "text-anchor": "middle" },
+                        mShort(m.month)));
+        else if (i === 0 || ms[i - 1].month.slice(0, 4) !== m.month.slice(0, 4)) {
+          const edge = cx - band / 2;
+          svg.append(el("line", { class: "axisline", x1: edge, x2: edge,
+                                  y1: bot, y2: bot + 5 }));
+          svg.append(el("text", { x: edge + 3, y: H - 8 }, m.month.slice(0, 4)));
+        }
+      }
     });
   });
   host.replaceChildren(svg);
@@ -836,8 +856,11 @@ function drawWind(host, adj) {
 function drawAll() {
   const t = T(), x = state.extra;
   render();
-  if (x.day && drawDay(document.getElementById("plotDay"), x.day))
-    document.getElementById("dayCap").textContent = t.dayCap(dLong(x.day.date));
+  if (x.day && drawDay(document.getElementById("plotDay"), x.day)) {
+    // resolution from the row count: the widest day can come from either market era
+    const res = x.day.hours.length >= 96 ? t.resQuarter : t.resHour;
+    document.getElementById("dayCap").textContent = t.dayCap(dLong(x.day.date), res);
+  }
   if (x.seasons && drawSeasons(document.getElementById("plotSeasons"), x.seasons.months)) {
     const ms = x.seasons.months, gaps = ms.map(m => m.price_gap);
     const lo = ms[gaps.indexOf(Math.min(...gaps))], hi = ms[gaps.indexOf(Math.max(...gaps))];
@@ -849,10 +872,10 @@ function drawAll() {
     document.getElementById("windCap").textContent = t.windCap(
       num(x.adj.negative_hours_equiv), pct(x.adj.profile["0"].share_of_forecast_pct, 1),
       dLong(x.adj.covers[0]), dLong(x.adj.covers[1]));
-  if (state.days.length)
+  if (state.index)
     document.getElementById("footRange").textContent = t.footRange(
-      dLong(state.days[0].date), dLong(state.days[state.days.length - 1].date),
-      num(state.days.length));
+      dLong(state.index.first_date), dLong(state.index.last_date),
+      num(state.index.total_days));
 }
 
 function buildLangs() {
@@ -878,7 +901,7 @@ function setLang(lang) {
   if (desc) desc.setAttribute("content", T().description);
   try { localStorage.setItem("lang", lang); } catch (e) { /* private mode */ }
   buildLangs();
-  if (state.days.length) drawAll();
+  if (state.months) drawAll();
 }
 
 function fail() {
@@ -902,22 +925,16 @@ async function boot() {
       return r.ok ? await r.json() : null;
     } catch (e) { return null; }
   };
-  const index = await grab("data/index.json");
-  if (!index?.months?.length) { fail(); return; }
-  // index.months is a list of {month, days, ...} records, not bare strings
-  const keys = index.months.map(m => m.month);
-  // Every month up front: the period dial has to answer instantly, and the whole record is
-  // well under a megabyte. The dashboard lazy-loads because it defaults to 30 days.
-  const files = await Promise.all(keys.map(k => grab(`data/${k}.json`)));
-  state.days = files.filter(Boolean).flatMap(f => f.days || [])
-    .sort((a, b) => a.date < b.date ? -1 : 1);
-  if (!state.days.length) { fail(); return; }
-  state.months = keys;
-
-  const [seasons, day, adj, ref] = await Promise.all([
-    grab("data/seasons.json"), grab("data/example_day.json"),
+  // Monthly aggregates only. This page used to load every month file so the dials could
+  // answer instantly; at 92 months that became 7.5 MB on first paint. seasons.json carries
+  // the numerator/denominator pairs needed to re-aggregate any period exactly, in 52 KB.
+  const [index, seasons, day, adj, ref] = await Promise.all([
+    grab("data/index.json"), grab("data/seasons.json"), grab("data/example_day.json"),
     grab("data/wind_adjacency.json"), grab("data/reference_prices.json"),
   ]);
+  if (!index || !seasons?.months?.length) { fail(); return; }
+  state.index = index;
+  state.months = seasons.months;
   state.extra = { seasons, day, adj, ref };
 
   drawAll();

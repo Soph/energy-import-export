@@ -1,0 +1,3756 @@
+{
+ "month": "2024-05",
+ "days": [
+  {
+   "date": "2024-05-01",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 4.39,
+   "load_gw": 41.18,
+   "residual_gw": 9.01,
+   "import_gwh": 127.23,
+   "export_gwh": 194.77,
+   "net_import_gwh": -67.54,
+   "transit_gwh": 84.23,
+   "stayed_gwh": 42.99,
+   "from_de_plants_gwh": 110.54,
+   "imp_px_own": 49.71,
+   "exp_px_own": -46.66,
+   "imp_px_de": 25.57,
+   "exp_px_de": -20.75,
+   "bal_de_keur": -7294.6,
+   "bal_zonal_keur": -7265.1,
+   "rent_keur": 7155.4,
+   "borders": {
+    "AT": {
+     "import_gwh": 7.43,
+     "export_gwh": 18.21,
+     "net_import_gwh": -10.78,
+     "bal_de_keur": -309.6,
+     "rent_keur": 79.3,
+     "mean_spread": -2.97
+    },
+    "BE": {
+     "import_gwh": 17.99,
+     "export_gwh": 10.53,
+     "net_import_gwh": 7.46,
+     "bal_de_keur": -213.6,
+     "rent_keur": 16.4,
+     "mean_spread": -4.59
+    },
+    "CH": {
+     "import_gwh": 14.33,
+     "export_gwh": 7.5,
+     "net_import_gwh": 6.83,
+     "bal_de_keur": -1021.7,
+     "rent_keur": 446.8,
+     "mean_spread": -26.43
+    },
+    "CZ": {
+     "import_gwh": 13.53,
+     "export_gwh": 14.44,
+     "net_import_gwh": -0.91,
+     "bal_de_keur": -311.3,
+     "rent_keur": 4.6,
+     "mean_spread": -1.74
+    },
+    "DK_1": {
+     "import_gwh": 21.18,
+     "export_gwh": 28.1,
+     "net_import_gwh": -6.92,
+     "bal_de_keur": -1775.5,
+     "rent_keur": 1128.3,
+     "mean_spread": -18.52
+    },
+    "DK_2": {
+     "import_gwh": 10.91,
+     "export_gwh": 7.78,
+     "net_import_gwh": 3.13,
+     "bal_de_keur": -746.2,
+     "rent_keur": 429.3,
+     "mean_spread": -15.53
+    },
+    "FR": {
+     "import_gwh": 11.08,
+     "export_gwh": 31.42,
+     "net_import_gwh": -20.33,
+     "bal_de_keur": -2670.7,
+     "rent_keur": 2314.6,
+     "mean_spread": -9.55
+    },
+    "NL": {
+     "import_gwh": 6.29,
+     "export_gwh": 43.68,
+     "net_import_gwh": -37.38,
+     "bal_de_keur": 1498.2,
+     "rent_keur": 1473.5,
+     "mean_spread": -21.62
+    },
+    "NO_2": {
+     "import_gwh": 8.32,
+     "export_gwh": 12.84,
+     "net_import_gwh": -4.52,
+     "bal_de_keur": -826.2,
+     "rent_keur": 569.3,
+     "mean_spread": -19.49
+    },
+    "PL": {
+     "import_gwh": 10.7,
+     "export_gwh": 15.6,
+     "net_import_gwh": -4.9,
+     "bal_de_keur": -396.9,
+     "rent_keur": 384.1,
+     "mean_spread": -32.07
+    },
+    "SE_4": {
+     "import_gwh": 5.48,
+     "export_gwh": 4.68,
+     "net_import_gwh": 0.8,
+     "bal_de_keur": -521.2,
+     "rent_keur": 309.4,
+     "mean_spread": -15.53
+    }
+   },
+   "solar_gwh": 346.47,
+   "solar_mv": -51.06,
+   "wind_onshore_gwh": 348.23,
+   "wind_onshore_mv": 15.67,
+   "wind_offshore_gwh": 77.56,
+   "wind_offshore_mv": 18.06,
+   "wind_forecast_gwh": 487.11,
+   "wind_actual_gwh": 425.79,
+   "negative_price_hours": 8.0
+  },
+  {
+   "date": "2024-05-02",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 36.42,
+   "load_gw": 52.55,
+   "residual_gw": 14.88,
+   "import_gwh": 140.82,
+   "export_gwh": 169.58,
+   "net_import_gwh": -28.77,
+   "transit_gwh": 109.85,
+   "stayed_gwh": 30.97,
+   "from_de_plants_gwh": 59.74,
+   "imp_px_own": 75.29,
+   "exp_px_own": 0.5,
+   "imp_px_de": 51.05,
+   "exp_px_de": 28.81,
+   "bal_de_keur": -2302.1,
+   "bal_zonal_keur": -394.2,
+   "rent_keur": 2748.9,
+   "borders": {
+    "AT": {
+     "import_gwh": 4.47,
+     "export_gwh": 31.86,
+     "net_import_gwh": -27.38,
+     "bal_de_keur": 983.1,
+     "rent_keur": -111.8,
+     "mean_spread": 3.97
+    },
+    "BE": {
+     "import_gwh": 23.0,
+     "export_gwh": 22.13,
+     "net_import_gwh": 0.87,
+     "bal_de_keur": -272.1,
+     "rent_keur": 73.5,
+     "mean_spread": 3.28
+    },
+    "CH": {
+     "import_gwh": 19.94,
+     "export_gwh": 8.92,
+     "net_import_gwh": 11.02,
+     "bal_de_keur": -1387.7,
+     "rent_keur": 435.3,
+     "mean_spread": -16.75
+    },
+    "CZ": {
+     "import_gwh": 4.11,
+     "export_gwh": 26.38,
+     "net_import_gwh": -22.28,
+     "bal_de_keur": 825.1,
+     "rent_keur": 51.2,
+     "mean_spread": -2.12
+    },
+    "DK_1": {
+     "import_gwh": 23.24,
+     "export_gwh": 12.5,
+     "net_import_gwh": 10.74,
+     "bal_de_keur": -1353.3,
+     "rent_keur": 567.0,
+     "mean_spread": 13.87
+    },
+    "DK_2": {
+     "import_gwh": 14.04,
+     "export_gwh": 5.41,
+     "net_import_gwh": 8.63,
+     "bal_de_keur": -586.8,
+     "rent_keur": 228.4,
+     "mean_spread": 13.78
+    },
+    "FR": {
+     "import_gwh": 19.81,
+     "export_gwh": 5.74,
+     "net_import_gwh": 14.08,
+     "bal_de_keur": -885.8,
+     "rent_keur": 550.1,
+     "mean_spread": 18.9
+    },
+    "NL": {
+     "import_gwh": 12.98,
+     "export_gwh": 26.92,
+     "net_import_gwh": -13.95,
+     "bal_de_keur": 812.5,
+     "rent_keur": 353.8,
+     "mean_spread": -10.4
+    },
+    "NO_2": {
+     "import_gwh": 6.0,
+     "export_gwh": 9.36,
+     "net_import_gwh": -3.35,
+     "bal_de_keur": -443.0,
+     "rent_keur": 286.4,
+     "mean_spread": 11.81
+    },
+    "PL": {
+     "import_gwh": 6.42,
+     "export_gwh": 17.54,
+     "net_import_gwh": -11.11,
+     "bal_de_keur": 493.0,
+     "rent_keur": 107.1,
+     "mean_spread": -13.18
+    },
+    "SE_4": {
+     "import_gwh": 6.81,
+     "export_gwh": 2.85,
+     "net_import_gwh": 3.96,
+     "bal_de_keur": -487.2,
+     "rent_keur": 207.8,
+     "mean_spread": 13.78
+    }
+   },
+   "solar_gwh": 307.91,
+   "solar_mv": 13.27,
+   "wind_onshore_gwh": 474.69,
+   "wind_onshore_mv": 38.61,
+   "wind_offshore_gwh": 121.69,
+   "wind_offshore_mv": 38.81,
+   "wind_forecast_gwh": 612.64,
+   "wind_actual_gwh": 596.38,
+   "negative_price_hours": 5.0
+  },
+  {
+   "date": "2024-05-03",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 77.81,
+   "load_gw": 54.2,
+   "residual_gw": 30.11,
+   "import_gwh": 271.27,
+   "export_gwh": 64.13,
+   "net_import_gwh": 207.13,
+   "transit_gwh": 64.13,
+   "stayed_gwh": 207.13,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 82.11,
+   "exp_px_own": null,
+   "imp_px_de": 80.49,
+   "exp_px_de": 75.28,
+   "bal_de_keur": -17007.5,
+   "bal_zonal_keur": -10613.3,
+   "rent_keur": 6335.2,
+   "borders": {
+    "AT": {
+     "import_gwh": 11.97,
+     "export_gwh": 15.71,
+     "net_import_gwh": -3.74,
+     "bal_de_keur": 87.0,
+     "rent_keur": 4.4,
+     "mean_spread": 3.56
+    },
+    "BE": {
+     "import_gwh": 23.15,
+     "export_gwh": 5.01,
+     "net_import_gwh": 18.14,
+     "bal_de_keur": -1321.9,
+     "rent_keur": 423.1,
+     "mean_spread": 23.74
+    },
+    "CH": {
+     "import_gwh": 65.61,
+     "export_gwh": 1.01,
+     "net_import_gwh": 64.6,
+     "bal_de_keur": -5483.6,
+     "rent_keur": 707.1,
+     "mean_spread": 9.65
+    },
+    "CZ": {
+     "import_gwh": 7.92,
+     "export_gwh": 11.26,
+     "net_import_gwh": -3.34,
+     "bal_de_keur": 112.1,
+     "rent_keur": 1.2,
+     "mean_spread": -1.51
+    },
+    "DK_1": {
+     "import_gwh": 46.28,
+     "export_gwh": 4.76,
+     "net_import_gwh": 41.52,
+     "bal_de_keur": -3222.7,
+     "rent_keur": 1191.6,
+     "mean_spread": 28.32
+    },
+    "DK_2": {
+     "import_gwh": 16.88,
+     "export_gwh": 0.71,
+     "net_import_gwh": 16.17,
+     "bal_de_keur": -1252.5,
+     "rent_keur": 459.7,
+     "mean_spread": 28.2
+    },
+    "FR": {
+     "import_gwh": 36.49,
+     "export_gwh": 0.26,
+     "net_import_gwh": 36.24,
+     "bal_de_keur": -2821.7,
+     "rent_keur": 1939.2,
+     "mean_spread": 53.34
+    },
+    "NL": {
+     "import_gwh": 17.36,
+     "export_gwh": 21.1,
+     "net_import_gwh": -3.75,
+     "bal_de_keur": 274.7,
+     "rent_keur": 83.4,
+     "mean_spread": -1.4
+    },
+    "NO_2": {
+     "import_gwh": 21.27,
+     "export_gwh": 0.0,
+     "net_import_gwh": 21.27,
+     "bal_de_keur": -1743.6,
+     "rent_keur": 939.7,
+     "mean_spread": 41.16
+    },
+    "PL": {
+     "import_gwh": 9.56,
+     "export_gwh": 4.3,
+     "net_import_gwh": 5.26,
+     "bal_de_keur": -486.8,
+     "rent_keur": 112.0,
+     "mean_spread": 3.35
+    },
+    "SE_4": {
+     "import_gwh": 14.76,
+     "export_gwh": 0.0,
+     "net_import_gwh": 14.76,
+     "bal_de_keur": -1148.5,
+     "rent_keur": 473.7,
+     "mean_spread": 32.09
+    }
+   },
+   "solar_gwh": 170.99,
+   "solar_mv": 72.49,
+   "wind_onshore_gwh": 310.02,
+   "wind_onshore_mv": 73.75,
+   "wind_offshore_gwh": 97.17,
+   "wind_offshore_mv": 75.89,
+   "wind_forecast_gwh": 464.82,
+   "wind_actual_gwh": 407.2,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-04",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 75.15,
+   "load_gw": 45.46,
+   "residual_gw": 30.52,
+   "import_gwh": 301.28,
+   "export_gwh": 59.13,
+   "net_import_gwh": 242.14,
+   "transit_gwh": 59.13,
+   "stayed_gwh": 242.14,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 81.09,
+   "exp_px_own": null,
+   "imp_px_de": 79.9,
+   "exp_px_de": 75.03,
+   "bal_de_keur": -19634.7,
+   "bal_zonal_keur": -15291.8,
+   "rent_keur": 4188.7,
+   "borders": {
+    "AT": {
+     "import_gwh": 37.89,
+     "export_gwh": 0.6,
+     "net_import_gwh": 37.29,
+     "bal_de_keur": -2701.9,
+     "rent_keur": 372.7,
+     "mean_spread": 9.35
+    },
+    "BE": {
+     "import_gwh": 25.99,
+     "export_gwh": 7.39,
+     "net_import_gwh": 18.6,
+     "bal_de_keur": -1498.0,
+     "rent_keur": 421.2,
+     "mean_spread": 19.44
+    },
+    "CH": {
+     "import_gwh": 55.54,
+     "export_gwh": 0.68,
+     "net_import_gwh": 54.86,
+     "bal_de_keur": -4891.2,
+     "rent_keur": 505.2,
+     "mean_spread": 5.28
+    },
+    "CZ": {
+     "import_gwh": 29.59,
+     "export_gwh": 1.39,
+     "net_import_gwh": 28.2,
+     "bal_de_keur": -2120.5,
+     "rent_keur": 67.1,
+     "mean_spread": 2.12
+    },
+    "DK_1": {
+     "import_gwh": 29.71,
+     "export_gwh": 15.23,
+     "net_import_gwh": 14.48,
+     "bal_de_keur": -1881.5,
+     "rent_keur": 0.0,
+     "mean_spread": 0.0
+    },
+    "DK_2": {
+     "import_gwh": 8.58,
+     "export_gwh": 2.25,
+     "net_import_gwh": 6.33,
+     "bal_de_keur": -562.0,
+     "rent_keur": 0.0,
+     "mean_spread": 0.0
+    },
+    "FR": {
+     "import_gwh": 42.28,
+     "export_gwh": 0.3,
+     "net_import_gwh": 41.98,
+     "bal_de_keur": -3020.6,
+     "rent_keur": 1641.2,
+     "mean_spread": 43.34
+    },
+    "NL": {
+     "import_gwh": 7.19,
+     "export_gwh": 27.51,
+     "net_import_gwh": -20.32,
+     "bal_de_keur": 1981.0,
+     "rent_keur": -85.7,
+     "mean_spread": 2.36
+    },
+    "NO_2": {
+     "import_gwh": 28.13,
+     "export_gwh": 0.77,
+     "net_import_gwh": 27.36,
+     "bal_de_keur": -2383.0,
+     "rent_keur": 1164.5,
+     "mean_spread": 34.22
+    },
+    "PL": {
+     "import_gwh": 27.09,
+     "export_gwh": 3.0,
+     "net_import_gwh": 24.09,
+     "bal_de_keur": -1846.2,
+     "rent_keur": -163.5,
+     "mean_spread": -6.8
+    },
+    "SE_4": {
+     "import_gwh": 9.28,
+     "export_gwh": 0.0,
+     "net_import_gwh": 9.28,
+     "bal_de_keur": -710.9,
+     "rent_keur": 266.0,
+     "mean_spread": 18.52
+    }
+   },
+   "solar_gwh": 263.12,
+   "solar_mv": 42.32,
+   "wind_onshore_gwh": 72.41,
+   "wind_onshore_mv": 83.18,
+   "wind_offshore_gwh": 22.98,
+   "wind_offshore_mv": 80.86,
+   "wind_forecast_gwh": 104.75,
+   "wind_actual_gwh": 95.39,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-05",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 54.16,
+   "load_gw": 43.43,
+   "residual_gw": 18.88,
+   "import_gwh": 143.44,
+   "export_gwh": 92.99,
+   "net_import_gwh": 50.45,
+   "transit_gwh": 58.33,
+   "stayed_gwh": 85.11,
+   "from_de_plants_gwh": 34.66,
+   "imp_px_own": 81.79,
+   "exp_px_own": -0.24,
+   "imp_px_de": 68.95,
+   "exp_px_de": 31.41,
+   "bal_de_keur": -6969.9,
+   "bal_zonal_keur": -4425.8,
+   "rent_keur": 2884.7,
+   "borders": {
+    "AT": {
+     "import_gwh": 17.08,
+     "export_gwh": 1.72,
+     "net_import_gwh": 15.37,
+     "bal_de_keur": -590.8,
+     "rent_keur": 69.4,
+     "mean_spread": 4.55
+    },
+    "BE": {
+     "import_gwh": 4.71,
+     "export_gwh": 4.14,
+     "net_import_gwh": 0.57,
+     "bal_de_keur": -243.6,
+     "rent_keur": -7.2,
+     "mean_spread": -3.33
+    },
+    "CH": {
+     "import_gwh": 16.08,
+     "export_gwh": 9.61,
+     "net_import_gwh": 6.47,
+     "bal_de_keur": -1291.2,
+     "rent_keur": 131.4,
+     "mean_spread": 6.32
+    },
+    "CZ": {
+     "import_gwh": 8.89,
+     "export_gwh": 0.97,
+     "net_import_gwh": 7.92,
+     "bal_de_keur": -494.2,
+     "rent_keur": 7.6,
+     "mean_spread": 0.71
+    },
+    "DK_1": {
+     "import_gwh": 2.28,
+     "export_gwh": 15.28,
+     "net_import_gwh": -13.0,
+     "bal_de_keur": 217.9,
+     "rent_keur": 15.6,
+     "mean_spread": -0.46
+    },
+    "DK_2": {
+     "import_gwh": 5.23,
+     "export_gwh": 10.03,
+     "net_import_gwh": -4.81,
+     "bal_de_keur": -184.9,
+     "rent_keur": 17.4,
+     "mean_spread": -0.85
+    },
+    "FR": {
+     "import_gwh": 59.17,
+     "export_gwh": 9.2,
+     "net_import_gwh": 49.96,
+     "bal_de_keur": -3836.0,
+     "rent_keur": 1756.2,
+     "mean_spread": 25.13
+    },
+    "NL": {
+     "import_gwh": 0.26,
+     "export_gwh": 22.22,
+     "net_import_gwh": -21.96,
+     "bal_de_keur": 1426.0,
+     "rent_keur": 153.3,
+     "mean_spread": -5.98
+    },
+    "NO_2": {
+     "import_gwh": 13.77,
+     "export_gwh": 7.88,
+     "net_import_gwh": 5.89,
+     "bal_de_keur": -1180.3,
+     "rent_keur": 592.0,
+     "mean_spread": 20.03
+    },
+    "PL": {
+     "import_gwh": 12.27,
+     "export_gwh": 7.63,
+     "net_import_gwh": 4.64,
+     "bal_de_keur": -489.2,
+     "rent_keur": 52.6,
+     "mean_spread": -12.3
+    },
+    "SE_4": {
+     "import_gwh": 3.7,
+     "export_gwh": 4.29,
+     "net_import_gwh": -0.59,
+     "bal_de_keur": -303.6,
+     "rent_keur": 96.5,
+     "mean_spread": 4.93
+    }
+   },
+   "solar_gwh": 225.63,
+   "solar_mv": 12.89,
+   "wind_onshore_gwh": 311.88,
+   "wind_onshore_mv": 48.57,
+   "wind_offshore_gwh": 51.87,
+   "wind_offshore_mv": 41.15,
+   "wind_forecast_gwh": 328.85,
+   "wind_actual_gwh": 363.75,
+   "negative_price_hours": 3.0
+  },
+  {
+   "date": "2024-05-06",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 93.18,
+   "load_gw": 54.28,
+   "residual_gw": 39.63,
+   "import_gwh": 319.96,
+   "export_gwh": 34.7,
+   "net_import_gwh": 285.26,
+   "transit_gwh": 34.7,
+   "stayed_gwh": 285.26,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 95.02,
+   "exp_px_own": null,
+   "imp_px_de": 94.42,
+   "exp_px_de": 89.44,
+   "bal_de_keur": -27106.0,
+   "bal_zonal_keur": -23708.1,
+   "rent_keur": 3427.2,
+   "borders": {
+    "AT": {
+     "import_gwh": 19.95,
+     "export_gwh": 1.91,
+     "net_import_gwh": 18.04,
+     "bal_de_keur": -1740.2,
+     "rent_keur": 252.4,
+     "mean_spread": 10.09
+    },
+    "BE": {
+     "import_gwh": 20.99,
+     "export_gwh": 6.62,
+     "net_import_gwh": 14.37,
+     "bal_de_keur": -1431.6,
+     "rent_keur": 89.0,
+     "mean_spread": 3.55
+    },
+    "CH": {
+     "import_gwh": 39.5,
+     "export_gwh": 8.38,
+     "net_import_gwh": 31.12,
+     "bal_de_keur": -3681.6,
+     "rent_keur": 269.6,
+     "mean_spread": 0.98
+    },
+    "CZ": {
+     "import_gwh": 24.67,
+     "export_gwh": 1.45,
+     "net_import_gwh": 23.22,
+     "bal_de_keur": -2171.4,
+     "rent_keur": 106.6,
+     "mean_spread": 4.38
+    },
+    "DK_1": {
+     "import_gwh": 33.45,
+     "export_gwh": 6.02,
+     "net_import_gwh": 27.43,
+     "bal_de_keur": -2654.5,
+     "rent_keur": 11.5,
+     "mean_spread": 0.59
+    },
+    "DK_2": {
+     "import_gwh": 20.9,
+     "export_gwh": 2.11,
+     "net_import_gwh": 18.79,
+     "bal_de_keur": -1729.1,
+     "rent_keur": 55.1,
+     "mean_spread": 2.71
+    },
+    "FR": {
+     "import_gwh": 73.38,
+     "export_gwh": 0.09,
+     "net_import_gwh": 73.29,
+     "bal_de_keur": -6391.4,
+     "rent_keur": 1552.8,
+     "mean_spread": 24.7
+    },
+    "NL": {
+     "import_gwh": 31.53,
+     "export_gwh": 4.83,
+     "net_import_gwh": 26.7,
+     "bal_de_keur": -2369.5,
+     "rent_keur": -5.9,
+     "mean_spread": -0.61
+    },
+    "NO_2": {
+     "import_gwh": 25.5,
+     "export_gwh": 0.53,
+     "net_import_gwh": 24.97,
+     "bal_de_keur": -2403.0,
+     "rent_keur": 792.6,
+     "mean_spread": 31.34
+    },
+    "PL": {
+     "import_gwh": 17.5,
+     "export_gwh": 2.76,
+     "net_import_gwh": 14.75,
+     "bal_de_keur": -1391.8,
+     "rent_keur": -11.6,
+     "mean_spread": -1.34
+    },
+    "SE_4": {
+     "import_gwh": 12.59,
+     "export_gwh": 0.0,
+     "net_import_gwh": 12.59,
+     "bal_de_keur": -1142.0,
+     "rent_keur": 314.9,
+     "mean_spread": 21.52
+    }
+   },
+   "solar_gwh": 219.68,
+   "solar_mv": 83.38,
+   "wind_onshore_gwh": 119.39,
+   "wind_onshore_mv": 94.51,
+   "wind_offshore_gwh": 12.64,
+   "wind_offshore_mv": 91.88,
+   "wind_forecast_gwh": 136.37,
+   "wind_actual_gwh": 132.03,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-07",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 93.04,
+   "load_gw": 55.42,
+   "residual_gw": 42.22,
+   "import_gwh": 330.11,
+   "export_gwh": 32.24,
+   "net_import_gwh": 297.87,
+   "transit_gwh": 32.24,
+   "stayed_gwh": 297.87,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 93.86,
+   "exp_px_own": null,
+   "imp_px_de": 93.68,
+   "exp_px_de": 92.03,
+   "bal_de_keur": -27958.2,
+   "bal_zonal_keur": -23680.1,
+   "rent_keur": 4275.3,
+   "borders": {
+    "AT": {
+     "import_gwh": 15.11,
+     "export_gwh": 5.69,
+     "net_import_gwh": 9.42,
+     "bal_de_keur": -962.6,
+     "rent_keur": -0.9,
+     "mean_spread": 2.03
+    },
+    "BE": {
+     "import_gwh": 19.53,
+     "export_gwh": 1.41,
+     "net_import_gwh": 18.12,
+     "bal_de_keur": -1696.5,
+     "rent_keur": 297.0,
+     "mean_spread": 13.33
+    },
+    "CH": {
+     "import_gwh": 41.49,
+     "export_gwh": 3.67,
+     "net_import_gwh": 37.82,
+     "bal_de_keur": -4197.6,
+     "rent_keur": 135.8,
+     "mean_spread": 0.37
+    },
+    "CZ": {
+     "import_gwh": 14.76,
+     "export_gwh": 2.73,
+     "net_import_gwh": 12.03,
+     "bal_de_keur": -1190.5,
+     "rent_keur": -0.2,
+     "mean_spread": 0.19
+    },
+    "DK_1": {
+     "import_gwh": 45.34,
+     "export_gwh": 5.58,
+     "net_import_gwh": 39.76,
+     "bal_de_keur": -3816.0,
+     "rent_keur": 171.9,
+     "mean_spread": 4.18
+    },
+    "DK_2": {
+     "import_gwh": 20.86,
+     "export_gwh": 2.22,
+     "net_import_gwh": 18.64,
+     "bal_de_keur": -1687.6,
+     "rent_keur": 116.5,
+     "mean_spread": 5.44
+    },
+    "FR": {
+     "import_gwh": 92.55,
+     "export_gwh": 0.0,
+     "net_import_gwh": 92.55,
+     "bal_de_keur": -8156.4,
+     "rent_keur": 2508.0,
+     "mean_spread": 29.27
+    },
+    "NL": {
+     "import_gwh": 30.05,
+     "export_gwh": 3.71,
+     "net_import_gwh": 26.34,
+     "bal_de_keur": -2167.3,
+     "rent_keur": 291.7,
+     "mean_spread": 5.95
+    },
+    "NO_2": {
+     "import_gwh": 26.69,
+     "export_gwh": 0.57,
+     "net_import_gwh": 26.11,
+     "bal_de_keur": -2519.3,
+     "rent_keur": 427.0,
+     "mean_spread": 15.43
+    },
+    "PL": {
+     "import_gwh": 10.89,
+     "export_gwh": 6.67,
+     "net_import_gwh": 4.22,
+     "bal_de_keur": -407.4,
+     "rent_keur": 10.0,
+     "mean_spread": -3.43
+    },
+    "SE_4": {
+     "import_gwh": 12.85,
+     "export_gwh": 0.0,
+     "net_import_gwh": 12.85,
+     "bal_de_keur": -1157.0,
+     "rent_keur": 318.4,
+     "mean_spread": 21.72
+    }
+   },
+   "solar_gwh": 175.76,
+   "solar_mv": 83.05,
+   "wind_onshore_gwh": 130.41,
+   "wind_onshore_mv": 91.98,
+   "wind_offshore_gwh": 10.72,
+   "wind_offshore_mv": 86.75,
+   "wind_forecast_gwh": 142.43,
+   "wind_actual_gwh": 141.12,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-08",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 91.82,
+   "load_gw": 53.84,
+   "residual_gw": 40.31,
+   "import_gwh": 300.41,
+   "export_gwh": 48.56,
+   "net_import_gwh": 251.84,
+   "transit_gwh": 48.56,
+   "stayed_gwh": 251.84,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 94.33,
+   "exp_px_own": null,
+   "imp_px_de": 93.4,
+   "exp_px_de": 88.57,
+   "bal_de_keur": -23755.9,
+   "bal_zonal_keur": -16057.2,
+   "rent_keur": 7534.3,
+   "borders": {
+    "AT": {
+     "import_gwh": 7.09,
+     "export_gwh": 10.53,
+     "net_import_gwh": -3.43,
+     "bal_de_keur": 37.0,
+     "rent_keur": 22.6,
+     "mean_spread": 9.23
+    },
+    "BE": {
+     "import_gwh": 21.94,
+     "export_gwh": 3.16,
+     "net_import_gwh": 18.78,
+     "bal_de_keur": -1774.3,
+     "rent_keur": 320.3,
+     "mean_spread": 15.29
+    },
+    "CH": {
+     "import_gwh": 47.24,
+     "export_gwh": 1.55,
+     "net_import_gwh": 45.7,
+     "bal_de_keur": -4564.7,
+     "rent_keur": 328.5,
+     "mean_spread": 4.77
+    },
+    "CZ": {
+     "import_gwh": 15.68,
+     "export_gwh": 8.81,
+     "net_import_gwh": 6.87,
+     "bal_de_keur": -818.1,
+     "rent_keur": 21.5,
+     "mean_spread": 1.77
+    },
+    "DK_1": {
+     "import_gwh": 34.87,
+     "export_gwh": 7.02,
+     "net_import_gwh": 27.85,
+     "bal_de_keur": -2744.0,
+     "rent_keur": 82.7,
+     "mean_spread": 2.04
+    },
+    "DK_2": {
+     "import_gwh": 21.8,
+     "export_gwh": 4.1,
+     "net_import_gwh": 17.7,
+     "bal_de_keur": -1581.9,
+     "rent_keur": 43.7,
+     "mean_spread": 2.04
+    },
+    "FR": {
+     "import_gwh": 92.48,
+     "export_gwh": 0.0,
+     "net_import_gwh": 92.48,
+     "bal_de_keur": -8078.3,
+     "rent_keur": 6174.5,
+     "mean_spread": 69.84
+    },
+    "NL": {
+     "import_gwh": 12.21,
+     "export_gwh": 4.31,
+     "net_import_gwh": 7.9,
+     "bal_de_keur": -691.4,
+     "rent_keur": -48.1,
+     "mean_spread": -0.03
+    },
+    "NO_2": {
+     "import_gwh": 27.37,
+     "export_gwh": 0.0,
+     "net_import_gwh": 27.37,
+     "bal_de_keur": -2586.2,
+     "rent_keur": 408.1,
+     "mean_spread": 13.25
+    },
+    "PL": {
+     "import_gwh": 10.22,
+     "export_gwh": 9.09,
+     "net_import_gwh": 1.14,
+     "bal_de_keur": -149.8,
+     "rent_keur": 36.3,
+     "mean_spread": -1.73
+    },
+    "SE_4": {
+     "import_gwh": 9.51,
+     "export_gwh": 0.0,
+     "net_import_gwh": 9.51,
+     "bal_de_keur": -804.2,
+     "rent_keur": 144.2,
+     "mean_spread": 10.41
+    }
+   },
+   "solar_gwh": 244.48,
+   "solar_mv": 80.67,
+   "wind_onshore_gwh": 77.28,
+   "wind_onshore_mv": 92.38,
+   "wind_offshore_gwh": 2.84,
+   "wind_offshore_mv": 96.95,
+   "wind_forecast_gwh": 87.17,
+   "wind_actual_gwh": 80.12,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-09",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 61.86,
+   "load_gw": 42.81,
+   "residual_gw": 25.71,
+   "import_gwh": 238.16,
+   "export_gwh": 140.38,
+   "net_import_gwh": 97.79,
+   "transit_gwh": 96.45,
+   "stayed_gwh": 141.72,
+   "from_de_plants_gwh": 43.93,
+   "imp_px_own": 92.46,
+   "exp_px_own": -0.64,
+   "imp_px_de": 76.44,
+   "exp_px_de": 36.15,
+   "bal_de_keur": -13130.6,
+   "bal_zonal_keur": -8698.7,
+   "rent_keur": 4836.7,
+   "borders": {
+    "AT": {
+     "import_gwh": 8.62,
+     "export_gwh": 12.71,
+     "net_import_gwh": -4.09,
+     "bal_de_keur": -602.9,
+     "rent_keur": 11.8,
+     "mean_spread": 6.33
+    },
+    "BE": {
+     "import_gwh": 21.99,
+     "export_gwh": 11.73,
+     "net_import_gwh": 10.26,
+     "bal_de_keur": -1151.9,
+     "rent_keur": 372.5,
+     "mean_spread": 19.16
+    },
+    "CH": {
+     "import_gwh": 41.65,
+     "export_gwh": 4.46,
+     "net_import_gwh": 37.19,
+     "bal_de_keur": -3822.3,
+     "rent_keur": 405.9,
+     "mean_spread": 4.9
+    },
+    "CZ": {
+     "import_gwh": 13.08,
+     "export_gwh": 12.98,
+     "net_import_gwh": 0.1,
+     "bal_de_keur": -811.3,
+     "rent_keur": -26.6,
+     "mean_spread": -0.04
+    },
+    "DK_1": {
+     "import_gwh": 39.46,
+     "export_gwh": 25.95,
+     "net_import_gwh": 13.51,
+     "bal_de_keur": -2530.6,
+     "rent_keur": 156.2,
+     "mean_spread": 3.02
+    },
+    "DK_2": {
+     "import_gwh": 15.19,
+     "export_gwh": 7.04,
+     "net_import_gwh": 8.15,
+     "bal_de_keur": -1220.6,
+     "rent_keur": 70.3,
+     "mean_spread": 2.89
+    },
+    "FR": {
+     "import_gwh": 42.26,
+     "export_gwh": 3.73,
+     "net_import_gwh": 38.54,
+     "bal_de_keur": -2921.7,
+     "rent_keur": 2036.8,
+     "mean_spread": 43.74
+    },
+    "NL": {
+     "import_gwh": 22.38,
+     "export_gwh": 30.79,
+     "net_import_gwh": -8.41,
+     "bal_de_keur": 1855.3,
+     "rent_keur": -137.3,
+     "mean_spread": 3.41
+    },
+    "NO_2": {
+     "import_gwh": 21.59,
+     "export_gwh": 6.24,
+     "net_import_gwh": 15.34,
+     "bal_de_keur": -1930.0,
+     "rent_keur": 617.8,
+     "mean_spread": 15.86
+    },
+    "PL": {
+     "import_gwh": 2.07,
+     "export_gwh": 21.68,
+     "net_import_gwh": -19.62,
+     "bal_de_keur": 907.8,
+     "rent_keur": 676.6,
+     "mean_spread": -25.55
+    },
+    "SE_4": {
+     "import_gwh": 9.87,
+     "export_gwh": 3.06,
+     "net_import_gwh": 6.81,
+     "bal_de_keur": -902.5,
+     "rent_keur": 652.9,
+     "mean_spread": 43.72
+    }
+   },
+   "solar_gwh": 361.16,
+   "solar_mv": 16.35,
+   "wind_onshore_gwh": 37.49,
+   "wind_onshore_mv": 74.85,
+   "wind_offshore_gwh": 11.86,
+   "wind_offshore_mv": 52.11,
+   "wind_forecast_gwh": 56.01,
+   "wind_actual_gwh": 49.35,
+   "negative_price_hours": 5.0
+  },
+  {
+   "date": "2024-05-10",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 75.99,
+   "load_gw": 46.24,
+   "residual_gw": 29.13,
+   "import_gwh": 266.98,
+   "export_gwh": 80.08,
+   "net_import_gwh": 186.9,
+   "transit_gwh": 76.64,
+   "stayed_gwh": 190.34,
+   "from_de_plants_gwh": 3.44,
+   "imp_px_own": 99.89,
+   "exp_px_own": 0.26,
+   "imp_px_de": 83.09,
+   "exp_px_de": 39.59,
+   "bal_de_keur": -19012.5,
+   "bal_zonal_keur": -11943.4,
+   "rent_keur": 7631.5,
+   "borders": {
+    "AT": {
+     "import_gwh": 12.21,
+     "export_gwh": 8.95,
+     "net_import_gwh": 3.25,
+     "bal_de_keur": -1247.2,
+     "rent_keur": 102.7,
+     "mean_spread": 6.32
+    },
+    "BE": {
+     "import_gwh": 23.9,
+     "export_gwh": 6.35,
+     "net_import_gwh": 17.55,
+     "bal_de_keur": -1553.7,
+     "rent_keur": 536.9,
+     "mean_spread": 24.93
+    },
+    "CH": {
+     "import_gwh": 50.3,
+     "export_gwh": 4.43,
+     "net_import_gwh": 45.88,
+     "bal_de_keur": -4819.3,
+     "rent_keur": 875.5,
+     "mean_spread": 9.56
+    },
+    "CZ": {
+     "import_gwh": 9.95,
+     "export_gwh": 10.5,
+     "net_import_gwh": -0.54,
+     "bal_de_keur": -720.2,
+     "rent_keur": 2.4,
+     "mean_spread": 1.02
+    },
+    "DK_1": {
+     "import_gwh": 22.9,
+     "export_gwh": 13.8,
+     "net_import_gwh": 9.1,
+     "bal_de_keur": -1610.3,
+     "rent_keur": 180.0,
+     "mean_spread": 5.44
+    },
+    "DK_2": {
+     "import_gwh": 16.52,
+     "export_gwh": 5.99,
+     "net_import_gwh": 10.53,
+     "bal_de_keur": -1285.1,
+     "rent_keur": 64.1,
+     "mean_spread": 3.1
+    },
+    "FR": {
+     "import_gwh": 64.66,
+     "export_gwh": 0.27,
+     "net_import_gwh": 64.39,
+     "bal_de_keur": -4602.8,
+     "rent_keur": 3733.1,
+     "mean_spread": 62.07
+    },
+    "NL": {
+     "import_gwh": 27.58,
+     "export_gwh": 11.78,
+     "net_import_gwh": 15.8,
+     "bal_de_keur": -252.4,
+     "rent_keur": 43.6,
+     "mean_spread": 2.82
+    },
+    "NO_2": {
+     "import_gwh": 22.86,
+     "export_gwh": 3.9,
+     "net_import_gwh": 18.97,
+     "bal_de_keur": -2266.7,
+     "rent_keur": 1115.8,
+     "mean_spread": 32.06
+    },
+    "PL": {
+     "import_gwh": 4.46,
+     "export_gwh": 14.1,
+     "net_import_gwh": -9.65,
+     "bal_de_keur": 173.2,
+     "rent_keur": 612.3,
+     "mean_spread": -25.91
+    },
+    "SE_4": {
+     "import_gwh": 11.64,
+     "export_gwh": 0.0,
+     "net_import_gwh": 11.64,
+     "bal_de_keur": -827.9,
+     "rent_keur": 365.0,
+     "mean_spread": 25.2
+    }
+   },
+   "solar_gwh": 359.96,
+   "solar_mv": 33.92,
+   "wind_onshore_gwh": 42.13,
+   "wind_onshore_mv": 89.74,
+   "wind_offshore_gwh": 8.62,
+   "wind_offshore_mv": 76.71,
+   "wind_forecast_gwh": 60.27,
+   "wind_actual_gwh": 50.76,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-11",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 53.65,
+   "load_gw": 42.83,
+   "residual_gw": 23.51,
+   "import_gwh": 225.41,
+   "export_gwh": 104.29,
+   "net_import_gwh": 121.12,
+   "transit_gwh": 81.46,
+   "stayed_gwh": 143.95,
+   "from_de_plants_gwh": 22.83,
+   "imp_px_own": 83.14,
+   "exp_px_own": -18.19,
+   "imp_px_de": 65.72,
+   "exp_px_de": 23.3,
+   "bal_de_keur": -12383.4,
+   "bal_zonal_keur": -8500.5,
+   "rent_keur": 4875.7,
+   "borders": {
+    "AT": {
+     "import_gwh": 14.96,
+     "export_gwh": 10.67,
+     "net_import_gwh": 4.28,
+     "bal_de_keur": -1107.2,
+     "rent_keur": 66.2,
+     "mean_spread": 4.56
+    },
+    "BE": {
+     "import_gwh": 16.37,
+     "export_gwh": 3.64,
+     "net_import_gwh": 12.73,
+     "bal_de_keur": -891.8,
+     "rent_keur": 443.1,
+     "mean_spread": 27.93
+    },
+    "CH": {
+     "import_gwh": 61.44,
+     "export_gwh": 0.54,
+     "net_import_gwh": 60.9,
+     "bal_de_keur": -4171.4,
+     "rent_keur": 185.2,
+     "mean_spread": 0.53
+    },
+    "CZ": {
+     "import_gwh": 11.24,
+     "export_gwh": 11.2,
+     "net_import_gwh": 0.03,
+     "bal_de_keur": -791.1,
+     "rent_keur": -6.9,
+     "mean_spread": -0.64
+    },
+    "DK_1": {
+     "import_gwh": 7.87,
+     "export_gwh": 15.85,
+     "net_import_gwh": -7.98,
+     "bal_de_keur": -431.4,
+     "rent_keur": 170.3,
+     "mean_spread": 2.51
+    },
+    "DK_2": {
+     "import_gwh": 10.94,
+     "export_gwh": 10.3,
+     "net_import_gwh": 0.64,
+     "bal_de_keur": -752.5,
+     "rent_keur": 91.0,
+     "mean_spread": -3.65
+    },
+    "FR": {
+     "import_gwh": 32.3,
+     "export_gwh": 4.78,
+     "net_import_gwh": 27.52,
+     "bal_de_keur": -2462.7,
+     "rent_keur": 1823.2,
+     "mean_spread": 45.37
+    },
+    "NL": {
+     "import_gwh": 36.91,
+     "export_gwh": 23.18,
+     "net_import_gwh": 13.74,
+     "bal_de_keur": 1033.9,
+     "rent_keur": 125.9,
+     "mean_spread": 10.53
+    },
+    "NO_2": {
+     "import_gwh": 20.46,
+     "export_gwh": 6.75,
+     "net_import_gwh": 13.71,
+     "bal_de_keur": -1923.9,
+     "rent_keur": 1005.6,
+     "mean_spread": 21.9
+    },
+    "PL": {
+     "import_gwh": 4.52,
+     "export_gwh": 13.0,
+     "net_import_gwh": -8.48,
+     "bal_de_keur": -84.5,
+     "rent_keur": 847.8,
+     "mean_spread": -44.67
+    },
+    "SE_4": {
+     "import_gwh": 8.4,
+     "export_gwh": 4.38,
+     "net_import_gwh": 4.02,
+     "bal_de_keur": -800.7,
+     "rent_keur": 124.4,
+     "mean_spread": 1.03
+    }
+   },
+   "solar_gwh": 362.32,
+   "solar_mv": 2.41,
+   "wind_onshore_gwh": 90.54,
+   "wind_onshore_mv": 77.82,
+   "wind_offshore_gwh": 10.88,
+   "wind_offshore_mv": 80.83,
+   "wind_forecast_gwh": 105.51,
+   "wind_actual_gwh": 101.42,
+   "negative_price_hours": 6.0
+  },
+  {
+   "date": "2024-05-12",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 1.78,
+   "load_gw": 40.98,
+   "residual_gw": 13.42,
+   "import_gwh": 150.04,
+   "export_gwh": 175.21,
+   "net_import_gwh": -25.17,
+   "transit_gwh": 100.07,
+   "stayed_gwh": 49.97,
+   "from_de_plants_gwh": 75.14,
+   "imp_px_own": 44.99,
+   "exp_px_own": -72.74,
+   "imp_px_de": 28.23,
+   "exp_px_de": -19.85,
+   "bal_de_keur": -7713.6,
+   "bal_zonal_keur": -6479.2,
+   "rent_keur": 6325.9,
+   "borders": {
+    "AT": {
+     "import_gwh": 0.22,
+     "export_gwh": 28.36,
+     "net_import_gwh": -28.14,
+     "bal_de_keur": 640.8,
+     "rent_keur": 30.6,
+     "mean_spread": -1.09
+    },
+    "BE": {
+     "import_gwh": 19.56,
+     "export_gwh": 7.46,
+     "net_import_gwh": 12.1,
+     "bal_de_keur": 52.1,
+     "rent_keur": 177.7,
+     "mean_spread": 7.69
+    },
+    "CH": {
+     "import_gwh": 17.98,
+     "export_gwh": 4.18,
+     "net_import_gwh": 13.8,
+     "bal_de_keur": -936.7,
+     "rent_keur": -64.0,
+     "mean_spread": -2.67
+    },
+    "CZ": {
+     "import_gwh": 1.02,
+     "export_gwh": 23.46,
+     "net_import_gwh": -22.44,
+     "bal_de_keur": 245.5,
+     "rent_keur": 162.8,
+     "mean_spread": -4.46
+    },
+    "DK_1": {
+     "import_gwh": 16.84,
+     "export_gwh": 28.27,
+     "net_import_gwh": -11.43,
+     "bal_de_keur": -2112.2,
+     "rent_keur": 1305.2,
+     "mean_spread": -20.39
+    },
+    "DK_2": {
+     "import_gwh": 8.55,
+     "export_gwh": 10.61,
+     "net_import_gwh": -2.06,
+     "bal_de_keur": -942.5,
+     "rent_keur": 563.2,
+     "mean_spread": -22.92
+    },
+    "FR": {
+     "import_gwh": 42.84,
+     "export_gwh": 16.99,
+     "net_import_gwh": 25.84,
+     "bal_de_keur": -3222.3,
+     "rent_keur": 1335.3,
+     "mean_spread": -0.11
+    },
+    "NL": {
+     "import_gwh": 21.4,
+     "export_gwh": 15.38,
+     "net_import_gwh": 6.02,
+     "bal_de_keur": 642.4,
+     "rent_keur": 195.2,
+     "mean_spread": 9.58
+    },
+    "NO_2": {
+     "import_gwh": 13.65,
+     "export_gwh": 12.44,
+     "net_import_gwh": 1.21,
+     "bal_de_keur": -1463.3,
+     "rent_keur": 901.8,
+     "mean_spread": -18.52
+    },
+    "PL": {
+     "import_gwh": 0.41,
+     "export_gwh": 22.7,
+     "net_import_gwh": -22.29,
+     "bal_de_keur": 92.4,
+     "rent_keur": 1321.8,
+     "mean_spread": -58.9
+    },
+    "SE_4": {
+     "import_gwh": 7.57,
+     "export_gwh": 5.37,
+     "net_import_gwh": 2.2,
+     "bal_de_keur": -709.9,
+     "rent_keur": 396.3,
+     "mean_spread": -19.47
+    }
+   },
+   "solar_gwh": 372.57,
+   "solar_mv": -58.73,
+   "wind_onshore_gwh": 228.37,
+   "wind_onshore_mv": 30.28,
+   "wind_offshore_gwh": 60.57,
+   "wind_offshore_mv": 34.0,
+   "wind_forecast_gwh": 320.23,
+   "wind_actual_gwh": 288.93,
+   "negative_price_hours": 9.0
+  },
+  {
+   "date": "2024-05-13",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 46.41,
+   "load_gw": 53.04,
+   "residual_gw": 20.63,
+   "import_gwh": 208.0,
+   "export_gwh": 173.81,
+   "net_import_gwh": 34.18,
+   "transit_gwh": 138.96,
+   "stayed_gwh": 69.04,
+   "from_de_plants_gwh": 34.85,
+   "imp_px_own": 86.78,
+   "exp_px_own": -1.04,
+   "imp_px_de": 57.8,
+   "exp_px_de": 34.49,
+   "bal_de_keur": -6027.4,
+   "bal_zonal_keur": -2066.2,
+   "rent_keur": 5658.6,
+   "borders": {
+    "AT": {
+     "import_gwh": 0.54,
+     "export_gwh": 40.17,
+     "net_import_gwh": -39.63,
+     "bal_de_keur": 1818.1,
+     "rent_keur": -65.3,
+     "mean_spread": 2.11
+    },
+    "BE": {
+     "import_gwh": 22.56,
+     "export_gwh": 15.84,
+     "net_import_gwh": 6.72,
+     "bal_de_keur": -510.2,
+     "rent_keur": 55.7,
+     "mean_spread": -1.4
+    },
+    "CH": {
+     "import_gwh": 22.13,
+     "export_gwh": 12.31,
+     "net_import_gwh": 9.82,
+     "bal_de_keur": -1994.9,
+     "rent_keur": 433.1,
+     "mean_spread": -1.48
+    },
+    "CZ": {
+     "import_gwh": 1.47,
+     "export_gwh": 34.82,
+     "net_import_gwh": -33.35,
+     "bal_de_keur": 1497.8,
+     "rent_keur": 112.2,
+     "mean_spread": -2.46
+    },
+    "DK_1": {
+     "import_gwh": 36.31,
+     "export_gwh": 14.57,
+     "net_import_gwh": 21.74,
+     "bal_de_keur": -2005.2,
+     "rent_keur": 849.1,
+     "mean_spread": 16.88
+    },
+    "DK_2": {
+     "import_gwh": 13.47,
+     "export_gwh": 5.0,
+     "net_import_gwh": 8.47,
+     "bal_de_keur": -821.6,
+     "rent_keur": 327.3,
+     "mean_spread": 15.99
+    },
+    "FR": {
+     "import_gwh": 75.55,
+     "export_gwh": 1.51,
+     "net_import_gwh": 74.04,
+     "bal_de_keur": -4095.6,
+     "rent_keur": 1945.4,
+     "mean_spread": 22.86
+    },
+    "NL": {
+     "import_gwh": 10.07,
+     "export_gwh": 12.62,
+     "net_import_gwh": -2.55,
+     "bal_de_keur": 368.7,
+     "rent_keur": 21.9,
+     "mean_spread": -3.49
+    },
+    "NO_2": {
+     "import_gwh": 14.76,
+     "export_gwh": 4.97,
+     "net_import_gwh": 9.79,
+     "bal_de_keur": -854.6,
+     "rent_keur": 450.9,
+     "mean_spread": 20.24
+    },
+    "PL": {
+     "import_gwh": 2.83,
+     "export_gwh": 28.82,
+     "net_import_gwh": -25.99,
+     "bal_de_keur": 1167.0,
+     "rent_keur": 1252.5,
+     "mean_spread": -46.44
+    },
+    "SE_4": {
+     "import_gwh": 8.31,
+     "export_gwh": 3.17,
+     "net_import_gwh": 5.14,
+     "bal_de_keur": -596.8,
+     "rent_keur": 275.8,
+     "mean_spread": 16.11
+    }
+   },
+   "solar_gwh": 363.99,
+   "solar_mv": 18.93,
+   "wind_onshore_gwh": 312.98,
+   "wind_onshore_mv": 48.56,
+   "wind_offshore_gwh": 100.8,
+   "wind_offshore_mv": 50.08,
+   "wind_forecast_gwh": 449.13,
+   "wind_actual_gwh": 413.78,
+   "negative_price_hours": 5.0
+  },
+  {
+   "date": "2024-05-14",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 27.68,
+   "load_gw": 54.45,
+   "residual_gw": 16.52,
+   "import_gwh": 194.1,
+   "export_gwh": 222.08,
+   "net_import_gwh": -27.98,
+   "transit_gwh": 143.79,
+   "stayed_gwh": 50.31,
+   "from_de_plants_gwh": 78.29,
+   "imp_px_own": 54.36,
+   "exp_px_own": -23.55,
+   "imp_px_de": 42.94,
+   "exp_px_de": 16.92,
+   "bal_de_keur": -4578.2,
+   "bal_zonal_keur": -960.6,
+   "rent_keur": 7614.1,
+   "borders": {
+    "AT": {
+     "import_gwh": 0.33,
+     "export_gwh": 50.33,
+     "net_import_gwh": -50.0,
+     "bal_de_keur": 1413.7,
+     "rent_keur": -217.4,
+     "mean_spread": 4.11
+    },
+    "BE": {
+     "import_gwh": 13.76,
+     "export_gwh": 22.2,
+     "net_import_gwh": -8.45,
+     "bal_de_keur": 1.4,
+     "rent_keur": 311.3,
+     "mean_spread": -8.6
+    },
+    "CH": {
+     "import_gwh": 24.47,
+     "export_gwh": 5.65,
+     "net_import_gwh": 18.81,
+     "bal_de_keur": -1500.7,
+     "rent_keur": 85.0,
+     "mean_spread": -3.81
+    },
+    "CZ": {
+     "import_gwh": 0.36,
+     "export_gwh": 42.66,
+     "net_import_gwh": -42.3,
+     "bal_de_keur": 1215.5,
+     "rent_keur": 528.2,
+     "mean_spread": -12.06
+    },
+    "DK_1": {
+     "import_gwh": 31.13,
+     "export_gwh": 18.23,
+     "net_import_gwh": 12.91,
+     "bal_de_keur": -1693.2,
+     "rent_keur": 871.7,
+     "mean_spread": 9.2
+    },
+    "DK_2": {
+     "import_gwh": 12.02,
+     "export_gwh": 5.84,
+     "net_import_gwh": 6.17,
+     "bal_de_keur": -719.4,
+     "rent_keur": 375.1,
+     "mean_spread": 8.9
+    },
+    "FR": {
+     "import_gwh": 68.99,
+     "export_gwh": 10.48,
+     "net_import_gwh": 58.51,
+     "bal_de_keur": -3530.3,
+     "rent_keur": 2398.5,
+     "mean_spread": 20.79
+    },
+    "NL": {
+     "import_gwh": 19.13,
+     "export_gwh": 19.73,
+     "net_import_gwh": -0.6,
+     "bal_de_keur": 595.7,
+     "rent_keur": 396.4,
+     "mean_spread": -6.37
+    },
+    "NO_2": {
+     "import_gwh": 12.02,
+     "export_gwh": 5.79,
+     "net_import_gwh": 6.23,
+     "bal_de_keur": -743.1,
+     "rent_keur": 404.3,
+     "mean_spread": 9.43
+    },
+    "PL": {
+     "import_gwh": 2.65,
+     "export_gwh": 37.53,
+     "net_import_gwh": -34.88,
+     "bal_de_keur": 963.4,
+     "rent_keur": 2160.9,
+     "mean_spread": -61.61
+    },
+    "SE_4": {
+     "import_gwh": 9.26,
+     "export_gwh": 3.63,
+     "net_import_gwh": 5.62,
+     "bal_de_keur": -581.2,
+     "rent_keur": 300.0,
+     "mean_spread": 9.62
+    }
+   },
+   "solar_gwh": 388.28,
+   "solar_mv": -8.4,
+   "wind_onshore_gwh": 417.34,
+   "wind_onshore_mv": 31.86,
+   "wind_offshore_gwh": 104.79,
+   "wind_offshore_mv": 35.89,
+   "wind_forecast_gwh": 562.56,
+   "wind_actual_gwh": 522.13,
+   "negative_price_hours": 8.0
+  },
+  {
+   "date": "2024-05-15",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 42.93,
+   "load_gw": 54.21,
+   "residual_gw": 19.56,
+   "import_gwh": 181.79,
+   "export_gwh": 197.17,
+   "net_import_gwh": -15.38,
+   "transit_gwh": 139.04,
+   "stayed_gwh": 42.76,
+   "from_de_plants_gwh": 58.13,
+   "imp_px_own": 71.77,
+   "exp_px_own": -3.77,
+   "imp_px_de": 56.19,
+   "exp_px_de": 35.13,
+   "bal_de_keur": -3288.2,
+   "bal_zonal_keur": -278.3,
+   "rent_keur": 5495.2,
+   "borders": {
+    "AT": {
+     "import_gwh": 0.0,
+     "export_gwh": 39.14,
+     "net_import_gwh": -39.14,
+     "bal_de_keur": 1504.0,
+     "rent_keur": 154.2,
+     "mean_spread": -2.0
+    },
+    "BE": {
+     "import_gwh": 19.57,
+     "export_gwh": 19.14,
+     "net_import_gwh": 0.44,
+     "bal_de_keur": -433.2,
+     "rent_keur": 120.8,
+     "mean_spread": -7.24
+    },
+    "CH": {
+     "import_gwh": 38.26,
+     "export_gwh": 5.34,
+     "net_import_gwh": 32.92,
+     "bal_de_keur": -2627.5,
+     "rent_keur": 707.7,
+     "mean_spread": 5.2
+    },
+    "CZ": {
+     "import_gwh": 3.63,
+     "export_gwh": 32.88,
+     "net_import_gwh": -29.25,
+     "bal_de_keur": 1148.0,
+     "rent_keur": 345.3,
+     "mean_spread": -10.17
+    },
+    "DK_1": {
+     "import_gwh": 34.4,
+     "export_gwh": 11.67,
+     "net_import_gwh": 22.74,
+     "bal_de_keur": -1852.0,
+     "rent_keur": 805.9,
+     "mean_spread": 17.39
+    },
+    "DK_2": {
+     "import_gwh": 16.41,
+     "export_gwh": 3.78,
+     "net_import_gwh": 12.63,
+     "bal_de_keur": -768.1,
+     "rent_keur": 410.7,
+     "mean_spread": 22.46
+    },
+    "FR": {
+     "import_gwh": 26.47,
+     "export_gwh": 3.46,
+     "net_import_gwh": 23.02,
+     "bal_de_keur": -1436.0,
+     "rent_keur": 870.3,
+     "mean_spread": 23.94
+    },
+    "NL": {
+     "import_gwh": 8.35,
+     "export_gwh": 49.84,
+     "net_import_gwh": -41.49,
+     "bal_de_keur": 1895.3,
+     "rent_keur": 910.3,
+     "mean_spread": -20.62
+    },
+    "NO_2": {
+     "import_gwh": 12.73,
+     "export_gwh": 4.73,
+     "net_import_gwh": 8.0,
+     "bal_de_keur": -747.3,
+     "rent_keur": 386.5,
+     "mean_spread": 19.08
+    },
+    "PL": {
+     "import_gwh": 11.33,
+     "export_gwh": 25.12,
+     "net_import_gwh": -13.79,
+     "bal_de_keur": 692.6,
+     "rent_keur": 373.9,
+     "mean_spread": -19.96
+    },
+    "SE_4": {
+     "import_gwh": 10.63,
+     "export_gwh": 2.08,
+     "net_import_gwh": 8.56,
+     "bal_de_keur": -664.0,
+     "rent_keur": 409.7,
+     "mean_spread": 25.59
+    }
+   },
+   "solar_gwh": 316.91,
+   "solar_mv": 14.86,
+   "wind_onshore_gwh": 442.93,
+   "wind_onshore_mv": 43.15,
+   "wind_offshore_gwh": 71.64,
+   "wind_offshore_mv": 52.78,
+   "wind_forecast_gwh": 640.32,
+   "wind_actual_gwh": 514.56,
+   "negative_price_hours": 5.0
+  },
+  {
+   "date": "2024-05-16",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 49.56,
+   "load_gw": 55.15,
+   "residual_gw": 23.4,
+   "import_gwh": 210.46,
+   "export_gwh": 166.41,
+   "net_import_gwh": 44.04,
+   "transit_gwh": 127.18,
+   "stayed_gwh": 83.28,
+   "from_de_plants_gwh": 39.24,
+   "imp_px_own": 69.48,
+   "exp_px_own": 1.12,
+   "imp_px_de": 58.08,
+   "exp_px_de": 38.94,
+   "bal_de_keur": -5742.7,
+   "bal_zonal_keur": -1892.2,
+   "rent_keur": 5527.3,
+   "borders": {
+    "AT": {
+     "import_gwh": 5.03,
+     "export_gwh": 25.93,
+     "net_import_gwh": -20.91,
+     "bal_de_keur": 566.6,
+     "rent_keur": 204.3,
+     "mean_spread": -1.09
+    },
+    "BE": {
+     "import_gwh": 14.67,
+     "export_gwh": 20.47,
+     "net_import_gwh": -5.8,
+     "bal_de_keur": -142.5,
+     "rent_keur": 124.8,
+     "mean_spread": -5.49
+    },
+    "CH": {
+     "import_gwh": 46.74,
+     "export_gwh": 1.55,
+     "net_import_gwh": 45.19,
+     "bal_de_keur": -2552.2,
+     "rent_keur": 176.2,
+     "mean_spread": 2.75
+    },
+    "CZ": {
+     "import_gwh": 2.99,
+     "export_gwh": 31.21,
+     "net_import_gwh": -28.22,
+     "bal_de_keur": 1095.7,
+     "rent_keur": 375.9,
+     "mean_spread": -9.47
+    },
+    "DK_1": {
+     "import_gwh": 33.52,
+     "export_gwh": 5.9,
+     "net_import_gwh": 27.62,
+     "bal_de_keur": -2006.3,
+     "rent_keur": 1271.2,
+     "mean_spread": 31.2
+    },
+    "DK_2": {
+     "import_gwh": 17.31,
+     "export_gwh": 1.99,
+     "net_import_gwh": 15.31,
+     "bal_de_keur": -805.3,
+     "rent_keur": 579.4,
+     "mean_spread": 35.67
+    },
+    "FR": {
+     "import_gwh": 39.47,
+     "export_gwh": 3.18,
+     "net_import_gwh": 36.29,
+     "bal_de_keur": -2373.6,
+     "rent_keur": 918.0,
+     "mean_spread": 18.94
+    },
+    "NL": {
+     "import_gwh": 11.34,
+     "export_gwh": 47.69,
+     "net_import_gwh": -36.34,
+     "bal_de_keur": 1626.0,
+     "rent_keur": 623.3,
+     "mean_spread": -18.53
+    },
+    "NO_2": {
+     "import_gwh": 16.35,
+     "export_gwh": 3.03,
+     "net_import_gwh": 13.33,
+     "bal_de_keur": -971.8,
+     "rent_keur": 616.9,
+     "mean_spread": 31.32
+    },
+    "PL": {
+     "import_gwh": 12.41,
+     "export_gwh": 22.86,
+     "net_import_gwh": -10.44,
+     "bal_de_keur": 541.5,
+     "rent_keur": 101.5,
+     "mean_spread": -7.86
+    },
+    "SE_4": {
+     "import_gwh": 10.62,
+     "export_gwh": 2.6,
+     "net_import_gwh": 8.02,
+     "bal_de_keur": -720.9,
+     "rent_keur": 535.7,
+     "mean_spread": 36.21
+    }
+   },
+   "solar_gwh": 287.41,
+   "solar_mv": 20.0,
+   "wind_onshore_gwh": 412.27,
+   "wind_onshore_mv": 49.68,
+   "wind_offshore_gwh": 62.2,
+   "wind_offshore_mv": 53.57,
+   "wind_forecast_gwh": 622.8,
+   "wind_actual_gwh": 474.48,
+   "negative_price_hours": 3.0
+  },
+  {
+   "date": "2024-05-17",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 69.01,
+   "load_gw": 53.85,
+   "residual_gw": 25.38,
+   "import_gwh": 246.42,
+   "export_gwh": 110.29,
+   "net_import_gwh": 136.13,
+   "transit_gwh": 110.29,
+   "stayed_gwh": 136.13,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 71.88,
+   "exp_px_own": null,
+   "imp_px_de": 70.06,
+   "exp_px_de": 67.8,
+   "bal_de_keur": -9785.3,
+   "bal_zonal_keur": -3360.6,
+   "rent_keur": 7218.9,
+   "borders": {
+    "AT": {
+     "import_gwh": 6.27,
+     "export_gwh": 17.35,
+     "net_import_gwh": -11.09,
+     "bal_de_keur": 785.5,
+     "rent_keur": -7.7,
+     "mean_spread": -0.98
+    },
+    "BE": {
+     "import_gwh": 19.11,
+     "export_gwh": 10.25,
+     "net_import_gwh": 8.85,
+     "bal_de_keur": -630.7,
+     "rent_keur": -8.1,
+     "mean_spread": -2.52
+    },
+    "CH": {
+     "import_gwh": 51.26,
+     "export_gwh": 1.8,
+     "net_import_gwh": 49.46,
+     "bal_de_keur": -3874.1,
+     "rent_keur": 490.8,
+     "mean_spread": 9.09
+    },
+    "CZ": {
+     "import_gwh": 1.97,
+     "export_gwh": 23.86,
+     "net_import_gwh": -21.89,
+     "bal_de_keur": 1446.0,
+     "rent_keur": 344.2,
+     "mean_spread": -14.67
+    },
+    "DK_1": {
+     "import_gwh": 44.03,
+     "export_gwh": 0.44,
+     "net_import_gwh": 43.6,
+     "bal_de_keur": -3031.6,
+     "rent_keur": 2053.3,
+     "mean_spread": 46.72
+    },
+    "DK_2": {
+     "import_gwh": 16.44,
+     "export_gwh": 0.0,
+     "net_import_gwh": 16.44,
+     "bal_de_keur": -1137.1,
+     "rent_keur": 936.0,
+     "mean_spread": 56.85
+    },
+    "FR": {
+     "import_gwh": 44.54,
+     "export_gwh": 0.45,
+     "net_import_gwh": 44.08,
+     "bal_de_keur": -3024.7,
+     "rent_keur": 1216.1,
+     "mean_spread": 25.74
+    },
+    "NL": {
+     "import_gwh": 21.8,
+     "export_gwh": 41.37,
+     "net_import_gwh": -19.57,
+     "bal_de_keur": 1423.1,
+     "rent_keur": 331.6,
+     "mean_spread": -14.1
+    },
+    "NO_2": {
+     "import_gwh": 19.22,
+     "export_gwh": 0.01,
+     "net_import_gwh": 19.21,
+     "bal_de_keur": -1328.5,
+     "rent_keur": 897.2,
+     "mean_spread": 46.61
+    },
+    "PL": {
+     "import_gwh": 7.02,
+     "export_gwh": 14.75,
+     "net_import_gwh": -7.73,
+     "bal_de_keur": 605.5,
+     "rent_keur": 57.8,
+     "mean_spread": 11.13
+    },
+    "SE_4": {
+     "import_gwh": 14.76,
+     "export_gwh": 0.0,
+     "net_import_gwh": 14.76,
+     "bal_de_keur": -1018.6,
+     "rent_keur": 907.7,
+     "mean_spread": 61.5
+    }
+   },
+   "solar_gwh": 206.88,
+   "solar_mv": 54.48,
+   "wind_onshore_gwh": 415.51,
+   "wind_onshore_mv": 67.16,
+   "wind_offshore_gwh": 60.93,
+   "wind_offshore_mv": 75.07,
+   "wind_forecast_gwh": 548.05,
+   "wind_actual_gwh": 476.43,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-18",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 55.8,
+   "load_gw": 45.23,
+   "residual_gw": 26.67,
+   "import_gwh": 271.43,
+   "export_gwh": 89.99,
+   "net_import_gwh": 181.43,
+   "transit_gwh": 89.99,
+   "stayed_gwh": 181.43,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 66.98,
+   "exp_px_own": null,
+   "imp_px_de": 60.62,
+   "exp_px_de": 47.8,
+   "bal_de_keur": -12152.6,
+   "bal_zonal_keur": -7331.8,
+   "rent_keur": 4816.4,
+   "borders": {
+    "AT": {
+     "import_gwh": 4.22,
+     "export_gwh": 8.88,
+     "net_import_gwh": -4.65,
+     "bal_de_keur": 244.3,
+     "rent_keur": 16.2,
+     "mean_spread": 2.39
+    },
+    "BE": {
+     "import_gwh": 20.25,
+     "export_gwh": 9.79,
+     "net_import_gwh": 10.47,
+     "bal_de_keur": -1027.3,
+     "rent_keur": 267.1,
+     "mean_spread": 12.22
+    },
+    "CH": {
+     "import_gwh": 63.23,
+     "export_gwh": 0.92,
+     "net_import_gwh": 62.31,
+     "bal_de_keur": -4038.2,
+     "rent_keur": 595.7,
+     "mean_spread": 8.04
+    },
+    "CZ": {
+     "import_gwh": 2.21,
+     "export_gwh": 12.41,
+     "net_import_gwh": -10.19,
+     "bal_de_keur": 383.4,
+     "rent_keur": 3.6,
+     "mean_spread": -0.71
+    },
+    "DK_1": {
+     "import_gwh": 44.56,
+     "export_gwh": 7.61,
+     "net_import_gwh": 36.95,
+     "bal_de_keur": -2562.9,
+     "rent_keur": 533.5,
+     "mean_spread": 11.2
+    },
+    "DK_2": {
+     "import_gwh": 18.18,
+     "export_gwh": 1.17,
+     "net_import_gwh": 17.01,
+     "bal_de_keur": -944.6,
+     "rent_keur": 276.6,
+     "mean_spread": 15.68
+    },
+    "FR": {
+     "import_gwh": 52.21,
+     "export_gwh": 4.68,
+     "net_import_gwh": 47.53,
+     "bal_de_keur": -3333.2,
+     "rent_keur": 1574.5,
+     "mean_spread": 28.6
+    },
+    "NL": {
+     "import_gwh": 26.8,
+     "export_gwh": 27.76,
+     "net_import_gwh": -0.96,
+     "bal_de_keur": 1130.2,
+     "rent_keur": -56.8,
+     "mean_spread": 2.78
+    },
+    "NO_2": {
+     "import_gwh": 23.28,
+     "export_gwh": 5.23,
+     "net_import_gwh": 18.05,
+     "bal_de_keur": -1575.8,
+     "rent_keur": 770.5,
+     "mean_spread": 25.73
+    },
+    "PL": {
+     "import_gwh": 2.32,
+     "export_gwh": 11.55,
+     "net_import_gwh": -9.23,
+     "bal_de_keur": 394.7,
+     "rent_keur": 216.5,
+     "mean_spread": -20.67
+    },
+    "SE_4": {
+     "import_gwh": 14.16,
+     "export_gwh": 0.0,
+     "net_import_gwh": 14.16,
+     "bal_de_keur": -823.2,
+     "rent_keur": 619.0,
+     "mean_spread": 41.94
+    }
+   },
+   "solar_gwh": 258.48,
+   "solar_mv": 17.8,
+   "wind_onshore_gwh": 141.58,
+   "wind_onshore_mv": 54.6,
+   "wind_offshore_gwh": 45.49,
+   "wind_offshore_mv": 66.07,
+   "wind_forecast_gwh": 247.73,
+   "wind_actual_gwh": 187.07,
+   "negative_price_hours": 5.0
+  },
+  {
+   "date": "2024-05-19",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 52.5,
+   "load_gw": 40.27,
+   "residual_gw": 24.3,
+   "import_gwh": 269.65,
+   "export_gwh": 100.71,
+   "net_import_gwh": 168.94,
+   "transit_gwh": 100.46,
+   "stayed_gwh": 169.19,
+   "from_de_plants_gwh": 0.25,
+   "imp_px_own": 70.3,
+   "exp_px_own": -10.0,
+   "imp_px_de": 56.94,
+   "exp_px_de": 34.32,
+   "bal_de_keur": -11896.9,
+   "bal_zonal_keur": -5700.8,
+   "rent_keur": 6291.5,
+   "borders": {
+    "AT": {
+     "import_gwh": 5.0,
+     "export_gwh": 7.24,
+     "net_import_gwh": -2.24,
+     "bal_de_keur": 270.0,
+     "rent_keur": -1.1,
+     "mean_spread": 3.31
+    },
+    "BE": {
+     "import_gwh": 22.47,
+     "export_gwh": 5.91,
+     "net_import_gwh": 16.56,
+     "bal_de_keur": -1011.9,
+     "rent_keur": 421.2,
+     "mean_spread": 22.27
+    },
+    "CH": {
+     "import_gwh": 75.45,
+     "export_gwh": 0.12,
+     "net_import_gwh": 75.32,
+     "bal_de_keur": -4369.5,
+     "rent_keur": 957.2,
+     "mean_spread": 11.39
+    },
+    "CZ": {
+     "import_gwh": 1.67,
+     "export_gwh": 10.78,
+     "net_import_gwh": -9.11,
+     "bal_de_keur": 422.4,
+     "rent_keur": -2.5,
+     "mean_spread": 0.91
+    },
+    "DK_1": {
+     "import_gwh": 27.33,
+     "export_gwh": 18.26,
+     "net_import_gwh": 9.07,
+     "bal_de_keur": -976.3,
+     "rent_keur": 0.1,
+     "mean_spread": -0.0
+    },
+    "DK_2": {
+     "import_gwh": 13.95,
+     "export_gwh": 7.33,
+     "net_import_gwh": 6.63,
+     "bal_de_keur": -700.0,
+     "rent_keur": 0.1,
+     "mean_spread": -0.0
+    },
+    "FR": {
+     "import_gwh": 60.31,
+     "export_gwh": 13.26,
+     "net_import_gwh": 47.04,
+     "bal_de_keur": -4541.0,
+     "rent_keur": 2631.1,
+     "mean_spread": 37.24
+    },
+    "NL": {
+     "import_gwh": 25.75,
+     "export_gwh": 15.92,
+     "net_import_gwh": 9.83,
+     "bal_de_keur": 659.5,
+     "rent_keur": 503.6,
+     "mean_spread": 13.66
+    },
+    "NO_2": {
+     "import_gwh": 24.81,
+     "export_gwh": 5.57,
+     "net_import_gwh": 19.25,
+     "bal_de_keur": -1743.4,
+     "rent_keur": 820.0,
+     "mean_spread": 22.45
+    },
+    "PL": {
+     "import_gwh": 0.99,
+     "export_gwh": 15.89,
+     "net_import_gwh": -14.9,
+     "bal_de_keur": 759.9,
+     "rent_keur": 532.7,
+     "mean_spread": -30.25
+    },
+    "SE_4": {
+     "import_gwh": 11.92,
+     "export_gwh": 0.42,
+     "net_import_gwh": 11.5,
+     "bal_de_keur": -666.8,
+     "rent_keur": 429.3,
+     "mean_spread": 29.3
+    }
+   },
+   "solar_gwh": 264.71,
+   "solar_mv": 6.01,
+   "wind_onshore_gwh": 73.88,
+   "wind_onshore_mv": 49.37,
+   "wind_offshore_gwh": 44.62,
+   "wind_offshore_mv": 66.69,
+   "wind_forecast_gwh": 132.14,
+   "wind_actual_gwh": 118.5,
+   "negative_price_hours": 8.0
+  },
+  {
+   "date": "2024-05-20",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 64.98,
+   "load_gw": 40.62,
+   "residual_gw": 21.49,
+   "import_gwh": 252.11,
+   "export_gwh": 163.07,
+   "net_import_gwh": 89.04,
+   "transit_gwh": 125.61,
+   "stayed_gwh": 126.5,
+   "from_de_plants_gwh": 37.46,
+   "imp_px_own": 94.91,
+   "exp_px_own": 1.7,
+   "imp_px_de": 75.01,
+   "exp_px_de": 42.73,
+   "bal_de_keur": -11942.1,
+   "bal_zonal_keur": -6571.1,
+   "rent_keur": 7309.9,
+   "borders": {
+    "AT": {
+     "import_gwh": 0.09,
+     "export_gwh": 25.79,
+     "net_import_gwh": -25.69,
+     "bal_de_keur": 1149.8,
+     "rent_keur": 8.5,
+     "mean_spread": 3.51
+    },
+    "BE": {
+     "import_gwh": 19.35,
+     "export_gwh": 7.81,
+     "net_import_gwh": 11.54,
+     "bal_de_keur": -1180.2,
+     "rent_keur": 481.0,
+     "mean_spread": 26.31
+    },
+    "CH": {
+     "import_gwh": 52.27,
+     "export_gwh": 6.45,
+     "net_import_gwh": 45.82,
+     "bal_de_keur": -4898.4,
+     "rent_keur": 926.4,
+     "mean_spread": 10.12
+    },
+    "CZ": {
+     "import_gwh": 1.54,
+     "export_gwh": 34.1,
+     "net_import_gwh": -32.55,
+     "bal_de_keur": 1672.3,
+     "rent_keur": 218.1,
+     "mean_spread": -5.59
+    },
+    "DK_1": {
+     "import_gwh": 41.24,
+     "export_gwh": 13.89,
+     "net_import_gwh": 27.35,
+     "bal_de_keur": -2965.9,
+     "rent_keur": 66.3,
+     "mean_spread": 1.38
+    },
+    "DK_2": {
+     "import_gwh": 13.37,
+     "export_gwh": 5.1,
+     "net_import_gwh": 8.27,
+     "bal_de_keur": -1012.5,
+     "rent_keur": 28.1,
+     "mean_spread": 1.21
+    },
+    "FR": {
+     "import_gwh": 55.86,
+     "export_gwh": 0.57,
+     "net_import_gwh": 55.29,
+     "bal_de_keur": -4297.4,
+     "rent_keur": 3017.1,
+     "mean_spread": 45.48
+    },
+    "NL": {
+     "import_gwh": 33.45,
+     "export_gwh": 25.5,
+     "net_import_gwh": 7.95,
+     "bal_de_keur": 197.9,
+     "rent_keur": -26.4,
+     "mean_spread": 5.39
+    },
+    "NO_2": {
+     "import_gwh": 22.28,
+     "export_gwh": 4.1,
+     "net_import_gwh": 18.18,
+     "bal_de_keur": -2003.4,
+     "rent_keur": 950.4,
+     "mean_spread": 27.62
+    },
+    "PL": {
+     "import_gwh": 3.82,
+     "export_gwh": 37.92,
+     "net_import_gwh": -34.1,
+     "bal_de_keur": 2179.0,
+     "rent_keur": 1513.5,
+     "mean_spread": -41.42
+    },
+    "SE_4": {
+     "import_gwh": 8.83,
+     "export_gwh": 1.84,
+     "net_import_gwh": 6.98,
+     "bal_de_keur": -783.3,
+     "rent_keur": 126.9,
+     "mean_spread": 8.07
+    }
+   },
+   "solar_gwh": 345.05,
+   "solar_mv": 21.56,
+   "wind_onshore_gwh": 70.35,
+   "wind_onshore_mv": 76.06,
+   "wind_offshore_gwh": 43.76,
+   "wind_offshore_mv": 75.76,
+   "wind_forecast_gwh": 112.1,
+   "wind_actual_gwh": 114.11,
+   "negative_price_hours": 2.0
+  },
+  {
+   "date": "2024-05-21",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 79.81,
+   "load_gw": 53.12,
+   "residual_gw": 26.17,
+   "import_gwh": 239.2,
+   "export_gwh": 116.0,
+   "net_import_gwh": 123.2,
+   "transit_gwh": 116.0,
+   "stayed_gwh": 123.2,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 83.78,
+   "exp_px_own": null,
+   "imp_px_de": 80.49,
+   "exp_px_de": 76.98,
+   "bal_de_keur": -10322.2,
+   "bal_zonal_keur": -4242.2,
+   "rent_keur": 6689.8,
+   "borders": {
+    "AT": {
+     "import_gwh": 5.26,
+     "export_gwh": 24.56,
+     "net_import_gwh": -19.29,
+     "bal_de_keur": 1453.5,
+     "rent_keur": 4.4,
+     "mean_spread": -0.36
+    },
+    "BE": {
+     "import_gwh": 22.11,
+     "export_gwh": 10.47,
+     "net_import_gwh": 11.64,
+     "bal_de_keur": -980.3,
+     "rent_keur": 149.8,
+     "mean_spread": 7.09
+    },
+    "CH": {
+     "import_gwh": 39.55,
+     "export_gwh": 4.02,
+     "net_import_gwh": 35.53,
+     "bal_de_keur": -3390.0,
+     "rent_keur": 468.1,
+     "mean_spread": 2.21
+    },
+    "CZ": {
+     "import_gwh": 6.45,
+     "export_gwh": 29.76,
+     "net_import_gwh": -23.31,
+     "bal_de_keur": 1801.5,
+     "rent_keur": 121.9,
+     "mean_spread": -4.15
+    },
+    "DK_1": {
+     "import_gwh": 46.67,
+     "export_gwh": 1.92,
+     "net_import_gwh": 44.75,
+     "bal_de_keur": -3583.2,
+     "rent_keur": 1168.4,
+     "mean_spread": 25.91
+    },
+    "DK_2": {
+     "import_gwh": 16.47,
+     "export_gwh": 0.0,
+     "net_import_gwh": 16.47,
+     "bal_de_keur": -1313.9,
+     "rent_keur": 678.4,
+     "mean_spread": 41.26
+    },
+    "FR": {
+     "import_gwh": 47.64,
+     "export_gwh": 0.15,
+     "net_import_gwh": 47.49,
+     "bal_de_keur": -3821.7,
+     "rent_keur": 2206.9,
+     "mean_spread": 47.72
+    },
+    "NL": {
+     "import_gwh": 15.21,
+     "export_gwh": 17.33,
+     "net_import_gwh": -2.12,
+     "bal_de_keur": 416.7,
+     "rent_keur": 57.8,
+     "mean_spread": -1.44
+    },
+    "NO_2": {
+     "import_gwh": 21.28,
+     "export_gwh": 0.02,
+     "net_import_gwh": 21.26,
+     "bal_de_keur": -1706.3,
+     "rent_keur": 726.6,
+     "mean_spread": 34.06
+    },
+    "PL": {
+     "import_gwh": 4.07,
+     "export_gwh": 27.77,
+     "net_import_gwh": -23.7,
+     "bal_de_keur": 1954.0,
+     "rent_keur": 381.8,
+     "mean_spread": -15.5
+    },
+    "SE_4": {
+     "import_gwh": 14.5,
+     "export_gwh": 0.0,
+     "net_import_gwh": 14.5,
+     "bal_de_keur": -1152.6,
+     "rent_keur": 725.6,
+     "mean_spread": 49.21
+    }
+   },
+   "solar_gwh": 227.22,
+   "solar_mv": 64.27,
+   "wind_onshore_gwh": 340.89,
+   "wind_onshore_mv": 80.35,
+   "wind_offshore_gwh": 78.67,
+   "wind_offshore_mv": 85.35,
+   "wind_forecast_gwh": 417.7,
+   "wind_actual_gwh": 419.57,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-22",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 85.84,
+   "load_gw": 55.03,
+   "residual_gw": 31.34,
+   "import_gwh": 283.08,
+   "export_gwh": 84.54,
+   "net_import_gwh": 198.54,
+   "transit_gwh": 84.54,
+   "stayed_gwh": 198.54,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 90.95,
+   "exp_px_own": null,
+   "imp_px_de": 86.65,
+   "exp_px_de": 76.56,
+   "bal_de_keur": -18057.7,
+   "bal_zonal_keur": -6421.6,
+   "rent_keur": 11556.0,
+   "borders": {
+    "AT": {
+     "import_gwh": 1.45,
+     "export_gwh": 26.79,
+     "net_import_gwh": -25.34,
+     "bal_de_keur": 1934.5,
+     "rent_keur": -75.9,
+     "mean_spread": 3.76
+    },
+    "BE": {
+     "import_gwh": 18.21,
+     "export_gwh": 5.11,
+     "net_import_gwh": 13.1,
+     "bal_de_keur": -1274.5,
+     "rent_keur": 771.8,
+     "mean_spread": 31.99
+    },
+    "CH": {
+     "import_gwh": 31.26,
+     "export_gwh": 2.88,
+     "net_import_gwh": 28.38,
+     "bal_de_keur": -2937.1,
+     "rent_keur": 550.2,
+     "mean_spread": 9.83
+    },
+    "CZ": {
+     "import_gwh": 9.85,
+     "export_gwh": 22.77,
+     "net_import_gwh": -12.91,
+     "bal_de_keur": 884.5,
+     "rent_keur": 13.4,
+     "mean_spread": -1.13
+    },
+    "DK_1": {
+     "import_gwh": 48.98,
+     "export_gwh": 0.33,
+     "net_import_gwh": 48.64,
+     "bal_de_keur": -4306.8,
+     "rent_keur": 1821.4,
+     "mean_spread": 38.82
+    },
+    "DK_2": {
+     "import_gwh": 16.25,
+     "export_gwh": 0.01,
+     "net_import_gwh": 16.24,
+     "bal_de_keur": -1394.8,
+     "rent_keur": 979.1,
+     "mean_spread": 60.34
+    },
+    "FR": {
+     "import_gwh": 75.62,
+     "export_gwh": 0.0,
+     "net_import_gwh": 75.62,
+     "bal_de_keur": -5965.2,
+     "rent_keur": 3934.7,
+     "mean_spread": 55.95
+    },
+    "NL": {
+     "import_gwh": 35.1,
+     "export_gwh": 10.48,
+     "net_import_gwh": 24.62,
+     "bal_de_keur": -2252.1,
+     "rent_keur": 1031.0,
+     "mean_spread": 17.08
+    },
+    "NO_2": {
+     "import_gwh": 24.78,
+     "export_gwh": 0.0,
+     "net_import_gwh": 24.78,
+     "bal_de_keur": -2238.2,
+     "rent_keur": 1319.6,
+     "mean_spread": 50.74
+    },
+    "PL": {
+     "import_gwh": 6.82,
+     "export_gwh": 16.17,
+     "net_import_gwh": -9.35,
+     "bal_de_keur": 759.1,
+     "rent_keur": 92.5,
+     "mean_spread": -8.96
+    },
+    "SE_4": {
+     "import_gwh": 14.76,
+     "export_gwh": 0.0,
+     "net_import_gwh": 14.76,
+     "bal_de_keur": -1267.1,
+     "rent_keur": 1118.2,
+     "mean_spread": 75.76
+    }
+   },
+   "solar_gwh": 200.07,
+   "solar_mv": 75.02,
+   "wind_onshore_gwh": 290.61,
+   "wind_onshore_mv": 79.05,
+   "wind_offshore_gwh": 77.92,
+   "wind_offshore_mv": 80.62,
+   "wind_forecast_gwh": 365.82,
+   "wind_actual_gwh": 368.53,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-23",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 93.87,
+   "load_gw": 52.06,
+   "residual_gw": 33.27,
+   "import_gwh": 275.42,
+   "export_gwh": 90.13,
+   "net_import_gwh": 185.29,
+   "transit_gwh": 90.13,
+   "stayed_gwh": 185.29,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 101.06,
+   "exp_px_own": null,
+   "imp_px_de": 94.5,
+   "exp_px_de": 81.01,
+   "bal_de_keur": -18725.0,
+   "bal_zonal_keur": -11748.6,
+   "rent_keur": 6987.8,
+   "borders": {
+    "AT": {
+     "import_gwh": 5.83,
+     "export_gwh": 15.98,
+     "net_import_gwh": -10.15,
+     "bal_de_keur": 448.8,
+     "rent_keur": -10.5,
+     "mean_spread": 5.28
+    },
+    "BE": {
+     "import_gwh": 23.56,
+     "export_gwh": 3.81,
+     "net_import_gwh": 19.75,
+     "bal_de_keur": -1904.4,
+     "rent_keur": 558.5,
+     "mean_spread": 26.65
+    },
+    "CH": {
+     "import_gwh": 22.92,
+     "export_gwh": 6.94,
+     "net_import_gwh": 15.98,
+     "bal_de_keur": -2012.3,
+     "rent_keur": 474.7,
+     "mean_spread": 11.15
+    },
+    "CZ": {
+     "import_gwh": 7.72,
+     "export_gwh": 13.48,
+     "net_import_gwh": -5.77,
+     "bal_de_keur": 150.8,
+     "rent_keur": 4.0,
+     "mean_spread": 0.72
+    },
+    "DK_1": {
+     "import_gwh": 40.39,
+     "export_gwh": 7.09,
+     "net_import_gwh": 33.3,
+     "bal_de_keur": -3648.3,
+     "rent_keur": 216.6,
+     "mean_spread": 3.83
+    },
+    "DK_2": {
+     "import_gwh": 9.29,
+     "export_gwh": 10.13,
+     "net_import_gwh": -0.84,
+     "bal_de_keur": -62.8,
+     "rent_keur": 64.4,
+     "mean_spread": 3.83
+    },
+    "FR": {
+     "import_gwh": 72.81,
+     "export_gwh": 0.0,
+     "net_import_gwh": 72.81,
+     "bal_de_keur": -6250.8,
+     "rent_keur": 3142.4,
+     "mean_spread": 45.44
+    },
+    "NL": {
+     "import_gwh": 42.02,
+     "export_gwh": 18.72,
+     "net_import_gwh": 23.3,
+     "bal_de_keur": -1908.6,
+     "rent_keur": 184.9,
+     "mean_spread": 7.13
+    },
+    "NO_2": {
+     "import_gwh": 33.21,
+     "export_gwh": 0.2,
+     "net_import_gwh": 33.02,
+     "bal_de_keur": -3125.3,
+     "rent_keur": 1370.9,
+     "mean_spread": 40.83
+    },
+    "PL": {
+     "import_gwh": 4.81,
+     "export_gwh": 13.78,
+     "net_import_gwh": -8.97,
+     "bal_de_keur": 678.3,
+     "rent_keur": 152.5,
+     "mean_spread": -14.3
+    },
+    "SE_4": {
+     "import_gwh": 12.86,
+     "export_gwh": 0.0,
+     "net_import_gwh": 12.86,
+     "bal_de_keur": -1090.4,
+     "rent_keur": 829.4,
+     "mean_spread": 56.67
+    }
+   },
+   "solar_gwh": 304.66,
+   "solar_mv": 73.38,
+   "wind_onshore_gwh": 123.89,
+   "wind_onshore_mv": 83.17,
+   "wind_offshore_gwh": 22.53,
+   "wind_offshore_mv": 91.27,
+   "wind_forecast_gwh": 148.56,
+   "wind_actual_gwh": 146.42,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-24",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 102.19,
+   "load_gw": 51.1,
+   "residual_gw": 36.04,
+   "import_gwh": 226.27,
+   "export_gwh": 66.66,
+   "net_import_gwh": 159.61,
+   "transit_gwh": 66.66,
+   "stayed_gwh": 159.61,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 102.91,
+   "exp_px_own": null,
+   "imp_px_de": 101.96,
+   "exp_px_de": 99.68,
+   "bal_de_keur": -16425.9,
+   "bal_zonal_keur": -12508.4,
+   "rent_keur": 3766.8,
+   "borders": {
+    "AT": {
+     "import_gwh": 12.31,
+     "export_gwh": 1.62,
+     "net_import_gwh": 10.69,
+     "bal_de_keur": -1106.9,
+     "rent_keur": 115.7,
+     "mean_spread": 6.27
+    },
+    "BE": {
+     "import_gwh": 21.42,
+     "export_gwh": 5.63,
+     "net_import_gwh": 15.79,
+     "bal_de_keur": -1622.2,
+     "rent_keur": 121.5,
+     "mean_spread": 6.69
+    },
+    "CH": {
+     "import_gwh": 29.58,
+     "export_gwh": 0.22,
+     "net_import_gwh": 29.36,
+     "bal_de_keur": -3007.8,
+     "rent_keur": 451.0,
+     "mean_spread": 15.12
+    },
+    "CZ": {
+     "import_gwh": 5.68,
+     "export_gwh": 2.37,
+     "net_import_gwh": 3.31,
+     "bal_de_keur": -363.0,
+     "rent_keur": 19.5,
+     "mean_spread": 2.64
+    },
+    "DK_1": {
+     "import_gwh": 48.87,
+     "export_gwh": 19.83,
+     "net_import_gwh": 29.04,
+     "bal_de_keur": -3090.7,
+     "rent_keur": 11.5,
+     "mean_spread": 1.12
+    },
+    "DK_2": {
+     "import_gwh": 8.04,
+     "export_gwh": 3.72,
+     "net_import_gwh": 4.32,
+     "bal_de_keur": -393.7,
+     "rent_keur": 0.0,
+     "mean_spread": 0.0
+    },
+    "FR": {
+     "import_gwh": 49.97,
+     "export_gwh": 0.14,
+     "net_import_gwh": 49.83,
+     "bal_de_keur": -5022.1,
+     "rent_keur": 1519.8,
+     "mean_spread": 30.79
+    },
+    "NL": {
+     "import_gwh": 2.97,
+     "export_gwh": 23.51,
+     "net_import_gwh": -20.54,
+     "bal_de_keur": 1965.0,
+     "rent_keur": -96.9,
+     "mean_spread": 3.07
+    },
+    "NO_2": {
+     "import_gwh": 31.28,
+     "export_gwh": 0.01,
+     "net_import_gwh": 31.27,
+     "bal_de_keur": -3227.1,
+     "rent_keur": 1370.4,
+     "mean_spread": 42.99
+    },
+    "PL": {
+     "import_gwh": 5.56,
+     "export_gwh": 9.61,
+     "net_import_gwh": -4.05,
+     "bal_de_keur": 468.4,
+     "rent_keur": 22.5,
+     "mean_spread": -4.14
+    },
+    "SE_4": {
+     "import_gwh": 10.58,
+     "export_gwh": 0.0,
+     "net_import_gwh": 10.58,
+     "bal_de_keur": -1025.7,
+     "rent_keur": 231.7,
+     "mean_spread": 16.0
+    }
+   },
+   "solar_gwh": 249.84,
+   "solar_mv": 95.26,
+   "wind_onshore_gwh": 94.57,
+   "wind_onshore_mv": 102.69,
+   "wind_offshore_gwh": 17.12,
+   "wind_offshore_mv": 107.99,
+   "wind_forecast_gwh": 97.82,
+   "wind_actual_gwh": 111.69,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-25",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 72.26,
+   "load_gw": 41.8,
+   "residual_gw": 25.44,
+   "import_gwh": 228.64,
+   "export_gwh": 68.06,
+   "net_import_gwh": 160.58,
+   "transit_gwh": 66.64,
+   "stayed_gwh": 162.01,
+   "from_de_plants_gwh": 1.43,
+   "imp_px_own": 92.91,
+   "exp_px_own": 0.02,
+   "imp_px_de": 81.02,
+   "exp_px_de": 51.03,
+   "bal_de_keur": -15051.9,
+   "bal_zonal_keur": -11614.3,
+   "rent_keur": 3779.0,
+   "borders": {
+    "AT": {
+     "import_gwh": 13.76,
+     "export_gwh": 4.21,
+     "net_import_gwh": 9.55,
+     "bal_de_keur": -910.2,
+     "rent_keur": 58.5,
+     "mean_spread": 2.41
+    },
+    "BE": {
+     "import_gwh": 22.43,
+     "export_gwh": 4.24,
+     "net_import_gwh": 18.19,
+     "bal_de_keur": -1367.0,
+     "rent_keur": 178.3,
+     "mean_spread": 8.05
+    },
+    "CH": {
+     "import_gwh": 25.93,
+     "export_gwh": 0.82,
+     "net_import_gwh": 25.1,
+     "bal_de_keur": -1990.2,
+     "rent_keur": 195.8,
+     "mean_spread": 4.41
+    },
+    "CZ": {
+     "import_gwh": 9.67,
+     "export_gwh": 5.44,
+     "net_import_gwh": 4.23,
+     "bal_de_keur": -712.1,
+     "rent_keur": 8.6,
+     "mean_spread": 0.77
+    },
+    "DK_1": {
+     "import_gwh": 36.63,
+     "export_gwh": 17.37,
+     "net_import_gwh": 19.26,
+     "bal_de_keur": -2441.1,
+     "rent_keur": 17.4,
+     "mean_spread": 0.31
+    },
+    "DK_2": {
+     "import_gwh": 12.63,
+     "export_gwh": 3.38,
+     "net_import_gwh": 9.25,
+     "bal_de_keur": -983.8,
+     "rent_keur": 0.5,
+     "mean_spread": 0.0
+    },
+    "FR": {
+     "import_gwh": 59.34,
+     "export_gwh": 0.0,
+     "net_import_gwh": 59.34,
+     "bal_de_keur": -4659.3,
+     "rent_keur": 1990.2,
+     "mean_spread": 31.86
+    },
+    "NL": {
+     "import_gwh": 11.35,
+     "export_gwh": 18.99,
+     "net_import_gwh": -7.64,
+     "bal_de_keur": 423.5,
+     "rent_keur": 56.2,
+     "mean_spread": 1.45
+    },
+    "NO_2": {
+     "import_gwh": 23.98,
+     "export_gwh": 1.55,
+     "net_import_gwh": 22.43,
+     "bal_de_keur": -2266.7,
+     "rent_keur": 974.9,
+     "mean_spread": 29.02
+    },
+    "PL": {
+     "import_gwh": 3.95,
+     "export_gwh": 12.06,
+     "net_import_gwh": -8.11,
+     "bal_de_keur": 542.7,
+     "rent_keur": 251.4,
+     "mean_spread": -25.06
+    },
+    "SE_4": {
+     "import_gwh": 8.97,
+     "export_gwh": 0.0,
+     "net_import_gwh": 8.97,
+     "bal_de_keur": -687.7,
+     "rent_keur": 47.1,
+     "mean_spread": 3.76
+    }
+   },
+   "solar_gwh": 293.46,
+   "solar_mv": 30.61,
+   "wind_onshore_gwh": 58.18,
+   "wind_onshore_mv": 78.45,
+   "wind_offshore_gwh": 41.01,
+   "wind_offshore_mv": 78.52,
+   "wind_forecast_gwh": 106.02,
+   "wind_actual_gwh": 99.19,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-26",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 57.93,
+   "load_gw": 40.97,
+   "residual_gw": 22.01,
+   "import_gwh": 201.81,
+   "export_gwh": 105.81,
+   "net_import_gwh": 95.99,
+   "transit_gwh": 66.7,
+   "stayed_gwh": 135.1,
+   "from_de_plants_gwh": 39.11,
+   "imp_px_own": 88.34,
+   "exp_px_own": -7.12,
+   "imp_px_de": 75.48,
+   "exp_px_de": 28.54,
+   "bal_de_keur": -12213.2,
+   "bal_zonal_keur": -8027.6,
+   "rent_keur": 4531.5,
+   "borders": {
+    "AT": {
+     "import_gwh": 9.72,
+     "export_gwh": 8.52,
+     "net_import_gwh": 1.2,
+     "bal_de_keur": -662.0,
+     "rent_keur": 41.5,
+     "mean_spread": 3.56
+    },
+    "BE": {
+     "import_gwh": 19.96,
+     "export_gwh": 8.43,
+     "net_import_gwh": 11.53,
+     "bal_de_keur": -1327.0,
+     "rent_keur": 321.8,
+     "mean_spread": 13.77
+    },
+    "CH": {
+     "import_gwh": 16.83,
+     "export_gwh": 1.53,
+     "net_import_gwh": 15.3,
+     "bal_de_keur": -1275.8,
+     "rent_keur": 180.8,
+     "mean_spread": 8.02
+    },
+    "CZ": {
+     "import_gwh": 8.13,
+     "export_gwh": 11.34,
+     "net_import_gwh": -3.22,
+     "bal_de_keur": -460.1,
+     "rent_keur": -24.7,
+     "mean_spread": -0.59
+    },
+    "DK_1": {
+     "import_gwh": 32.05,
+     "export_gwh": 25.34,
+     "net_import_gwh": 6.71,
+     "bal_de_keur": -1701.7,
+     "rent_keur": 67.1,
+     "mean_spread": -1.27
+    },
+    "DK_2": {
+     "import_gwh": 8.9,
+     "export_gwh": 7.96,
+     "net_import_gwh": 0.94,
+     "bal_de_keur": -661.2,
+     "rent_keur": 31.8,
+     "mean_spread": -1.27
+    },
+    "FR": {
+     "import_gwh": 54.18,
+     "export_gwh": 3.06,
+     "net_import_gwh": 51.12,
+     "bal_de_keur": -3708.7,
+     "rent_keur": 2854.4,
+     "mean_spread": 44.15
+    },
+    "NL": {
+     "import_gwh": 16.21,
+     "export_gwh": 15.15,
+     "net_import_gwh": 1.05,
+     "bal_de_keur": 237.6,
+     "rent_keur": -23.7,
+     "mean_spread": 1.33
+    },
+    "NO_2": {
+     "import_gwh": 20.24,
+     "export_gwh": 7.62,
+     "net_import_gwh": 12.61,
+     "bal_de_keur": -1934.9,
+     "rent_keur": 855.5,
+     "mean_spread": 22.64
+    },
+    "PL": {
+     "import_gwh": 7.56,
+     "export_gwh": 12.88,
+     "net_import_gwh": -5.32,
+     "bal_de_keur": 31.7,
+     "rent_keur": 172.0,
+     "mean_spread": -15.79
+    },
+    "SE_4": {
+     "import_gwh": 8.04,
+     "export_gwh": 3.97,
+     "net_import_gwh": 4.06,
+     "bal_de_keur": -751.1,
+     "rent_keur": 54.9,
+     "mean_spread": 1.32
+    }
+   },
+   "solar_gwh": 336.99,
+   "solar_mv": 7.45,
+   "wind_onshore_gwh": 98.14,
+   "wind_onshore_mv": 74.29,
+   "wind_offshore_gwh": 19.75,
+   "wind_offshore_mv": 77.57,
+   "wind_forecast_gwh": 80.63,
+   "wind_actual_gwh": 117.89,
+   "negative_price_hours": 6.0
+  },
+  {
+   "date": "2024-05-27",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 106.88,
+   "load_gw": 50.93,
+   "residual_gw": 33.8,
+   "import_gwh": 236.03,
+   "export_gwh": 42.04,
+   "net_import_gwh": 193.99,
+   "transit_gwh": 42.04,
+   "stayed_gwh": 193.99,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 109.82,
+   "exp_px_own": null,
+   "imp_px_de": 108.17,
+   "exp_px_de": 100.54,
+   "bal_de_keur": -21303.7,
+   "bal_zonal_keur": -13400.6,
+   "rent_keur": 7716.5,
+   "borders": {
+    "AT": {
+     "import_gwh": 15.32,
+     "export_gwh": 1.08,
+     "net_import_gwh": 14.24,
+     "bal_de_keur": -1545.6,
+     "rent_keur": 118.7,
+     "mean_spread": 5.25
+    },
+    "BE": {
+     "import_gwh": 22.81,
+     "export_gwh": 0.9,
+     "net_import_gwh": 21.91,
+     "bal_de_keur": -2287.2,
+     "rent_keur": 519.6,
+     "mean_spread": 24.61
+    },
+    "CH": {
+     "import_gwh": 11.78,
+     "export_gwh": 9.67,
+     "net_import_gwh": 2.11,
+     "bal_de_keur": -851.0,
+     "rent_keur": 636.7,
+     "mean_spread": 23.66
+    },
+    "CZ": {
+     "import_gwh": 10.49,
+     "export_gwh": 5.56,
+     "net_import_gwh": 4.93,
+     "bal_de_keur": -680.7,
+     "rent_keur": 49.7,
+     "mean_spread": 5.03
+    },
+    "DK_1": {
+     "import_gwh": 56.87,
+     "export_gwh": 1.58,
+     "net_import_gwh": 55.29,
+     "bal_de_keur": -6009.8,
+     "rent_keur": 718.5,
+     "mean_spread": 12.17
+    },
+    "DK_2": {
+     "import_gwh": 7.58,
+     "export_gwh": 10.62,
+     "net_import_gwh": -3.03,
+     "bal_de_keur": 702.8,
+     "rent_keur": 22.0,
+     "mean_spread": 1.0
+    },
+    "FR": {
+     "import_gwh": 43.9,
+     "export_gwh": 0.0,
+     "net_import_gwh": 43.9,
+     "bal_de_keur": -4507.3,
+     "rent_keur": 3225.3,
+     "mean_spread": 76.8
+    },
+    "NL": {
+     "import_gwh": 10.52,
+     "export_gwh": 8.81,
+     "net_import_gwh": 1.7,
+     "bal_de_keur": -523.7,
+     "rent_keur": 156.4,
+     "mean_spread": 16.83
+    },
+    "NO_2": {
+     "import_gwh": 33.39,
+     "export_gwh": 0.23,
+     "net_import_gwh": 33.16,
+     "bal_de_keur": -3557.3,
+     "rent_keur": 1671.3,
+     "mean_spread": 50.03
+    },
+    "PL": {
+     "import_gwh": 10.86,
+     "export_gwh": 3.59,
+     "net_import_gwh": 7.27,
+     "bal_de_keur": -673.1,
+     "rent_keur": 53.2,
+     "mean_spread": 5.39
+    },
+    "SE_4": {
+     "import_gwh": 12.51,
+     "export_gwh": 0.0,
+     "net_import_gwh": 12.51,
+     "bal_de_keur": -1370.7,
+     "rent_keur": 545.1,
+     "mean_spread": 47.24
+    }
+   },
+   "solar_gwh": 270.31,
+   "solar_mv": 90.53,
+   "wind_onshore_gwh": 96.14,
+   "wind_onshore_mv": 100.6,
+   "wind_offshore_gwh": 44.58,
+   "wind_offshore_mv": 93.87,
+   "wind_forecast_gwh": 126.6,
+   "wind_actual_gwh": 140.72,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-28",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 90.75,
+   "load_gw": 50.9,
+   "residual_gw": 32.31,
+   "import_gwh": 230.21,
+   "export_gwh": 84.27,
+   "net_import_gwh": 145.94,
+   "transit_gwh": 84.27,
+   "stayed_gwh": 145.94,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 97.16,
+   "exp_px_own": null,
+   "imp_px_de": 92.42,
+   "exp_px_de": 84.21,
+   "bal_de_keur": -14179.6,
+   "bal_zonal_keur": -7276.2,
+   "rent_keur": 6976.0,
+   "borders": {
+    "AT": {
+     "import_gwh": 1.8,
+     "export_gwh": 18.48,
+     "net_import_gwh": -16.69,
+     "bal_de_keur": 1237.1,
+     "rent_keur": 61.1,
+     "mean_spread": -1.46
+    },
+    "BE": {
+     "import_gwh": 24.05,
+     "export_gwh": 2.29,
+     "net_import_gwh": 21.76,
+     "bal_de_keur": -1988.8,
+     "rent_keur": 435.7,
+     "mean_spread": 19.67
+    },
+    "CH": {
+     "import_gwh": 22.58,
+     "export_gwh": 0.11,
+     "net_import_gwh": 22.47,
+     "bal_de_keur": -2127.4,
+     "rent_keur": 293.5,
+     "mean_spread": 10.82
+    },
+    "CZ": {
+     "import_gwh": 7.45,
+     "export_gwh": 17.69,
+     "net_import_gwh": -10.24,
+     "bal_de_keur": 765.8,
+     "rent_keur": 9.4,
+     "mean_spread": -0.18
+    },
+    "DK_1": {
+     "import_gwh": 43.23,
+     "export_gwh": 6.4,
+     "net_import_gwh": 36.83,
+     "bal_de_keur": -3644.0,
+     "rent_keur": 217.3,
+     "mean_spread": 3.72
+    },
+    "DK_2": {
+     "import_gwh": 2.24,
+     "export_gwh": 5.05,
+     "net_import_gwh": -2.81,
+     "bal_de_keur": 393.9,
+     "rent_keur": 0.0,
+     "mean_spread": 0.0
+    },
+    "FR": {
+     "import_gwh": 62.95,
+     "export_gwh": 0.06,
+     "net_import_gwh": 62.89,
+     "bal_de_keur": -5757.2,
+     "rent_keur": 4420.9,
+     "mean_spread": 71.45
+    },
+    "NL": {
+     "import_gwh": 18.05,
+     "export_gwh": 16.33,
+     "net_import_gwh": 1.71,
+     "bal_de_keur": -246.4,
+     "rent_keur": 59.9,
+     "mean_spread": 8.47
+    },
+    "NO_2": {
+     "import_gwh": 33.43,
+     "export_gwh": 0.61,
+     "net_import_gwh": 32.82,
+     "bal_de_keur": -2983.7,
+     "rent_keur": 916.5,
+     "mean_spread": 27.89
+    },
+    "PL": {
+     "import_gwh": 3.15,
+     "export_gwh": 17.25,
+     "net_import_gwh": -14.1,
+     "bal_de_keur": 1171.6,
+     "rent_keur": 196.4,
+     "mean_spread": -9.03
+    },
+    "SE_4": {
+     "import_gwh": 11.3,
+     "export_gwh": 0.0,
+     "net_import_gwh": 11.3,
+     "bal_de_keur": -1000.4,
+     "rent_keur": 365.3,
+     "mean_spread": 29.96
+    }
+   },
+   "solar_gwh": 265.4,
+   "solar_mv": 73.86,
+   "wind_onshore_gwh": 157.01,
+   "wind_onshore_mv": 89.63,
+   "wind_offshore_gwh": 23.7,
+   "wind_offshore_mv": 91.27,
+   "wind_forecast_gwh": 202.69,
+   "wind_actual_gwh": 180.71,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-29",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 79.18,
+   "load_gw": 53.86,
+   "residual_gw": 28.11,
+   "import_gwh": 263.94,
+   "export_gwh": 123.77,
+   "net_import_gwh": 140.18,
+   "transit_gwh": 123.77,
+   "stayed_gwh": 140.18,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 81.46,
+   "exp_px_own": null,
+   "imp_px_de": 77.52,
+   "exp_px_de": 73.06,
+   "bal_de_keur": -11419.0,
+   "bal_zonal_keur": -4551.5,
+   "rent_keur": 7670.2,
+   "borders": {
+    "AT": {
+     "import_gwh": 0.37,
+     "export_gwh": 25.74,
+     "net_import_gwh": -25.37,
+     "bal_de_keur": 1832.6,
+     "rent_keur": 118.0,
+     "mean_spread": -2.66
+    },
+    "BE": {
+     "import_gwh": 25.15,
+     "export_gwh": 4.63,
+     "net_import_gwh": 20.51,
+     "bal_de_keur": -1626.8,
+     "rent_keur": 353.8,
+     "mean_spread": 16.52
+    },
+    "CH": {
+     "import_gwh": 9.39,
+     "export_gwh": 10.46,
+     "net_import_gwh": -1.07,
+     "bal_de_keur": -357.4,
+     "rent_keur": 274.1,
+     "mean_spread": 6.15
+    },
+    "CZ": {
+     "import_gwh": 1.87,
+     "export_gwh": 27.62,
+     "net_import_gwh": -25.74,
+     "bal_de_keur": 1815.5,
+     "rent_keur": 91.1,
+     "mean_spread": -2.81
+    },
+    "DK_1": {
+     "import_gwh": 55.29,
+     "export_gwh": 6.79,
+     "net_import_gwh": 48.5,
+     "bal_de_keur": -3927.6,
+     "rent_keur": 532.3,
+     "mean_spread": 11.93
+    },
+    "DK_2": {
+     "import_gwh": 8.87,
+     "export_gwh": 7.32,
+     "net_import_gwh": 1.55,
+     "bal_de_keur": -75.9,
+     "rent_keur": 0.0,
+     "mean_spread": 0.0
+    },
+    "FR": {
+     "import_gwh": 81.58,
+     "export_gwh": 0.0,
+     "net_import_gwh": 81.58,
+     "bal_de_keur": -6149.2,
+     "rent_keur": 3667.6,
+     "mean_spread": 46.96
+    },
+    "NL": {
+     "import_gwh": 38.71,
+     "export_gwh": 9.12,
+     "net_import_gwh": 29.59,
+     "bal_de_keur": -1858.0,
+     "rent_keur": 382.9,
+     "mean_spread": 11.33
+    },
+    "NO_2": {
+     "import_gwh": 28.29,
+     "export_gwh": 2.36,
+     "net_import_gwh": 25.94,
+     "bal_de_keur": -2156.9,
+     "rent_keur": 786.8,
+     "mean_spread": 28.44
+    },
+    "PL": {
+     "import_gwh": 0.78,
+     "export_gwh": 29.73,
+     "net_import_gwh": -28.95,
+     "bal_de_keur": 2158.9,
+     "rent_keur": 906.3,
+     "mean_spread": -28.56
+    },
+    "SE_4": {
+     "import_gwh": 13.64,
+     "export_gwh": 0.0,
+     "net_import_gwh": 13.64,
+     "bal_de_keur": -1074.1,
+     "rent_keur": 557.4,
+     "mean_spread": 37.92
+    }
+   },
+   "solar_gwh": 227.77,
+   "solar_mv": 70.79,
+   "wind_onshore_gwh": 297.9,
+   "wind_onshore_mv": 72.98,
+   "wind_offshore_gwh": 92.37,
+   "wind_offshore_mv": 76.22,
+   "wind_forecast_gwh": 375.7,
+   "wind_actual_gwh": 390.27,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-30",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 97.45,
+   "load_gw": 46.28,
+   "residual_gw": 32.47,
+   "import_gwh": 253.49,
+   "export_gwh": 83.68,
+   "net_import_gwh": 169.82,
+   "transit_gwh": 83.68,
+   "stayed_gwh": 169.82,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 100.72,
+   "exp_px_own": null,
+   "imp_px_de": 98.31,
+   "exp_px_de": 93.42,
+   "bal_de_keur": -17103.8,
+   "bal_zonal_keur": -9379.8,
+   "rent_keur": 7194.9,
+   "borders": {
+    "AT": {
+     "import_gwh": 12.11,
+     "export_gwh": 8.34,
+     "net_import_gwh": 3.77,
+     "bal_de_keur": -571.3,
+     "rent_keur": 99.8,
+     "mean_spread": 8.82
+    },
+    "BE": {
+     "import_gwh": 28.47,
+     "export_gwh": 8.26,
+     "net_import_gwh": 20.21,
+     "bal_de_keur": -2001.7,
+     "rent_keur": 539.4,
+     "mean_spread": 25.77
+    },
+    "CH": {
+     "import_gwh": 21.19,
+     "export_gwh": 2.44,
+     "net_import_gwh": 18.75,
+     "bal_de_keur": -2011.4,
+     "rent_keur": 486.2,
+     "mean_spread": 22.52
+    },
+    "CZ": {
+     "import_gwh": 7.11,
+     "export_gwh": 11.03,
+     "net_import_gwh": -3.92,
+     "bal_de_keur": 207.8,
+     "rent_keur": 25.4,
+     "mean_spread": 1.31
+    },
+    "DK_1": {
+     "import_gwh": 59.58,
+     "export_gwh": 11.67,
+     "net_import_gwh": 47.91,
+     "bal_de_keur": -4691.8,
+     "rent_keur": 307.9,
+     "mean_spread": 5.96
+    },
+    "DK_2": {
+     "import_gwh": 7.07,
+     "export_gwh": 4.87,
+     "net_import_gwh": 2.19,
+     "bal_de_keur": -294.9,
+     "rent_keur": 0.0,
+     "mean_spread": 0.0
+    },
+    "FR": {
+     "import_gwh": 54.45,
+     "export_gwh": 0.0,
+     "net_import_gwh": 54.45,
+     "bal_de_keur": -5350.5,
+     "rent_keur": 4205.6,
+     "mean_spread": 77.86
+    },
+    "NL": {
+     "import_gwh": 12.77,
+     "export_gwh": 20.04,
+     "net_import_gwh": -7.27,
+     "bal_de_keur": 837.1,
+     "rent_keur": -103.4,
+     "mean_spread": 11.38
+    },
+    "NO_2": {
+     "import_gwh": 33.92,
+     "export_gwh": 1.26,
+     "net_import_gwh": 32.65,
+     "bal_de_keur": -3157.6,
+     "rent_keur": 1239.1,
+     "mean_spread": 38.69
+    },
+    "PL": {
+     "import_gwh": 6.53,
+     "export_gwh": 15.77,
+     "net_import_gwh": -9.25,
+     "bal_de_keur": 947.7,
+     "rent_keur": 31.9,
+     "mean_spread": -1.46
+    },
+    "SE_4": {
+     "import_gwh": 10.31,
+     "export_gwh": 0.0,
+     "net_import_gwh": 10.31,
+     "bal_de_keur": -1017.2,
+     "rent_keur": 363.0,
+     "mean_spread": 25.13
+    }
+   },
+   "solar_gwh": 234.72,
+   "solar_mv": 80.78,
+   "wind_onshore_gwh": 71.15,
+   "wind_onshore_mv": 100.86,
+   "wind_offshore_gwh": 25.47,
+   "wind_offshore_mv": 96.96,
+   "wind_forecast_gwh": 84.6,
+   "wind_actual_gwh": 96.62,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2024-05-31",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 60.0,
+   "price_de_mean": 89.22,
+   "load_gw": 49.2,
+   "residual_gw": 33.95,
+   "import_gwh": 300.98,
+   "export_gwh": 64.06,
+   "net_import_gwh": 236.92,
+   "transit_gwh": 64.06,
+   "stayed_gwh": 236.92,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 89.04,
+   "exp_px_own": null,
+   "imp_px_de": 89.39,
+   "exp_px_de": 90.66,
+   "bal_de_keur": -21096.3,
+   "bal_zonal_keur": -12329.6,
+   "rent_keur": 8626.0,
+   "borders": {
+    "AT": {
+     "import_gwh": 6.42,
+     "export_gwh": 8.01,
+     "net_import_gwh": -1.59,
+     "bal_de_keur": 114.0,
+     "rent_keur": 14.6,
+     "mean_spread": -3.02
+    },
+    "BE": {
+     "import_gwh": 25.96,
+     "export_gwh": 4.67,
+     "net_import_gwh": 21.29,
+     "bal_de_keur": -1909.3,
+     "rent_keur": 609.2,
+     "mean_spread": 28.87
+    },
+    "CH": {
+     "import_gwh": 22.0,
+     "export_gwh": 0.66,
+     "net_import_gwh": 21.34,
+     "bal_de_keur": -1987.1,
+     "rent_keur": 303.0,
+     "mean_spread": 10.3
+    },
+    "CZ": {
+     "import_gwh": 9.59,
+     "export_gwh": 7.66,
+     "net_import_gwh": 1.93,
+     "bal_de_keur": -295.4,
+     "rent_keur": 2.5,
+     "mean_spread": -1.42
+    },
+    "DK_1": {
+     "import_gwh": 57.96,
+     "export_gwh": 11.88,
+     "net_import_gwh": 46.08,
+     "bal_de_keur": -4030.6,
+     "rent_keur": 583.2,
+     "mean_spread": 12.42
+    },
+    "DK_2": {
+     "import_gwh": 20.06,
+     "export_gwh": 9.8,
+     "net_import_gwh": 10.25,
+     "bal_de_keur": -904.9,
+     "rent_keur": 69.9,
+     "mean_spread": 4.58
+    },
+    "FR": {
+     "import_gwh": 61.42,
+     "export_gwh": 0.17,
+     "net_import_gwh": 61.25,
+     "bal_de_keur": -5445.9,
+     "rent_keur": 5048.1,
+     "mean_spread": 82.56
+    },
+    "NL": {
+     "import_gwh": 50.28,
+     "export_gwh": 6.85,
+     "net_import_gwh": 43.43,
+     "bal_de_keur": -3713.9,
+     "rent_keur": 779.2,
+     "mean_spread": 16.01
+    },
+    "NO_2": {
+     "import_gwh": 32.38,
+     "export_gwh": 0.04,
+     "net_import_gwh": 32.34,
+     "bal_de_keur": -2899.2,
+     "rent_keur": 965.0,
+     "mean_spread": 29.42
+    },
+    "PL": {
+     "import_gwh": 6.91,
+     "export_gwh": 14.31,
+     "net_import_gwh": -7.4,
+     "bal_de_keur": 646.4,
+     "rent_keur": 190.4,
+     "mean_spread": -12.21
+    },
+    "SE_4": {
+     "import_gwh": 8.0,
+     "export_gwh": 0.0,
+     "net_import_gwh": 8.0,
+     "bal_de_keur": -670.4,
+     "rent_keur": 60.9,
+     "mean_spread": 4.67
+    }
+   },
+   "solar_gwh": 188.01,
+   "solar_mv": 81.0,
+   "wind_onshore_gwh": 116.3,
+   "wind_onshore_mv": 89.94,
+   "wind_offshore_gwh": 61.57,
+   "wind_offshore_mv": 89.14,
+   "wind_forecast_gwh": 184.6,
+   "wind_actual_gwh": 177.87,
+   "negative_price_hours": 0.0
+  }
+ ]
+}

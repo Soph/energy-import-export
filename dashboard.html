@@ -39,6 +39,7 @@
        light end clear of the surface. */
     --m1: #47a3a6; --m2: #3c8a8e; --m3: #327175; --m4: #26585d; --m5: #193f45;
     --st: #b9c0c6; --f1: #b07d28; --f2: #7d4f1f;   /* storage, then what burns */
+    --nuc: #7d4f96;                                /* nuclear: zero after Apr 2023 */
     --shadow:     0 1px 2px rgba(11,11,11,.04), 0 8px 24px -12px rgba(11,11,11,.10);
   }
   @media (prefers-color-scheme: dark) {
@@ -58,6 +59,7 @@
       --thru:     #6e6c66;
       --m1: #7ed4d8; --m2: #5ab5ba; --m3: #44989c; --m4: #357b7f; --m5: #2a5e62;
       --st: #5a6570; --f1: #e0ac5c; --f2: #a86c33;
+      --nuc: #ae82c6;
       --shadow:   none;
     }
   }
@@ -77,6 +79,7 @@
     --thru:     #6e6c66;
     --m1: #7ed4d8; --m2: #5ab5ba; --m3: #44989c; --m4: #357b7f; --m5: #2a5e62;
     --st: #5a6570; --f1: #e0ac5c; --f2: #a86c33;
+    --nuc: #ae82c6;
     --shadow:   none;
   }
 
@@ -1151,6 +1154,10 @@ const STACK_ORDER = [
   ["wind", "wind", "var(--m2)", true],
   ["hydro_bio", "hydro & biomass", "var(--m3)", true],
   ["storage", "pumped storage", "var(--st)", false],
+  // Nuclear is identically zero from 15 April 2023, so it draws nothing for recent days --
+  // but the band has to exist, or a pre-2023 day loses 2.6-7.6 GW from the stack and from
+  // the denominator of the renewable share.
+  ["nuclear", "nuclear", "var(--nuc)", false],
   ["coal", "lignite & hard coal", "var(--f1)", false],
   ["gas_other", "gas & other thermal", "var(--f2)", false],
 ];
