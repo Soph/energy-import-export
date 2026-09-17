@@ -1581,7 +1581,7 @@
    "step_minutes": 15.0,
    "price_de_mean": 256.55,
    "load_gw": 54.65,
-   "residual_gw": 39.54,
+   "residual_gw": 39.46,
    "import_gwh": 239.05,
    "export_gwh": 95.45,
    "net_import_gwh": 143.59,
@@ -1685,8 +1685,8 @@
      "mean_spread": -13.57
     }
    },
-   "solar_gwh": 1108.64,
-   "solar_mv": 193.37,
+   "solar_gwh": 1116.83,
+   "solar_mv": 193.49,
    "wind_onshore_gwh": 255.06,
    "wind_onshore_mv": 216.67,
    "wind_offshore_gwh": 86.95,
@@ -1701,8 +1701,8 @@
    "flows": "scheduled",
    "step_minutes": 15.0,
    "price_de_mean": 180.07,
-   "load_gw": 55.7,
-   "residual_gw": 30.09,
+   "load_gw": 55.72,
+   "residual_gw": 30.67,
    "import_gwh": 155.22,
    "export_gwh": 132.08,
    "net_import_gwh": 23.14,
@@ -1806,14 +1806,135 @@
      "mean_spread": 32.57
     }
    },
-   "solar_gwh": 1407.38,
-   "solar_mv": 102.09,
-   "wind_onshore_gwh": 528.61,
-   "wind_onshore_mv": 173.41,
-   "wind_offshore_gwh": 299.67,
-   "wind_offshore_mv": 182.27,
+   "solar_gwh": 1411.71,
+   "solar_mv": 102.16,
+   "wind_onshore_gwh": 648.41,
+   "wind_onshore_mv": 177.32,
+   "wind_offshore_gwh": 344.61,
+   "wind_offshore_mv": 183.08,
    "wind_forecast_gwh": 233.93,
-   "wind_actual_gwh": 207.07,
+   "wind_actual_gwh": 248.25,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2026-09-16",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 15.0,
+   "price_de_mean": 182.33,
+   "load_gw": 56.65,
+   "residual_gw": 35.26,
+   "import_gwh": 223.92,
+   "export_gwh": 91.54,
+   "net_import_gwh": 132.38,
+   "transit_gwh": 91.54,
+   "stayed_gwh": 132.38,
+   "from_de_plants_gwh": 0.0,
+   "imp_px_own": 190.51,
+   "exp_px_own": null,
+   "imp_px_de": 185.77,
+   "exp_px_de": 178.92,
+   "bal_de_keur": -25219.1,
+   "bal_zonal_keur": -22269.0,
+   "rent_keur": 3333.4,
+   "borders": {
+    "AT": {
+     "import_gwh": 2.52,
+     "export_gwh": 21.69,
+     "net_import_gwh": -19.17,
+     "bal_de_keur": 4080.6,
+     "rent_keur": 83.4,
+     "mean_spread": -1.4
+    },
+    "BE": {
+     "import_gwh": 7.76,
+     "export_gwh": 1.41,
+     "net_import_gwh": 6.35,
+     "bal_de_keur": -1172.3,
+     "rent_keur": -3.3,
+     "mean_spread": -0.34
+    },
+    "CH": {
+     "import_gwh": 10.14,
+     "export_gwh": 14.53,
+     "net_import_gwh": -4.39,
+     "bal_de_keur": -103.5,
+     "rent_keur": 453.1,
+     "mean_spread": -18.19
+    },
+    "CZ": {
+     "import_gwh": 15.51,
+     "export_gwh": 9.15,
+     "net_import_gwh": 6.36,
+     "bal_de_keur": -817.4,
+     "rent_keur": 142.8,
+     "mean_spread": 7.79
+    },
+    "DK_1": {
+     "import_gwh": 50.54,
+     "export_gwh": 3.66,
+     "net_import_gwh": 46.89,
+     "bal_de_keur": -8710.7,
+     "rent_keur": 144.6,
+     "mean_spread": 2.85
+    },
+    "DK_2": {
+     "import_gwh": 10.54,
+     "export_gwh": 4.76,
+     "net_import_gwh": 5.78,
+     "bal_de_keur": -1157.9,
+     "rent_keur": 8.0,
+     "mean_spread": 2.58
+    },
+    "FR": {
+     "import_gwh": 29.59,
+     "export_gwh": 0.12,
+     "net_import_gwh": 29.47,
+     "bal_de_keur": -5838.7,
+     "rent_keur": 154.6,
+     "mean_spread": 4.06
+    },
+    "NL": {
+     "import_gwh": 35.83,
+     "export_gwh": 19.26,
+     "net_import_gwh": 16.57,
+     "bal_de_keur": -3660.2,
+     "rent_keur": 1.2,
+     "mean_spread": -0.1
+    },
+    "NO_2": {
+     "import_gwh": 27.5,
+     "export_gwh": 7.55,
+     "net_import_gwh": 19.95,
+     "bal_de_keur": -4237.0,
+     "rent_keur": 531.3,
+     "mean_spread": 16.29
+    },
+    "PL": {
+     "import_gwh": 23.64,
+     "export_gwh": 9.42,
+     "net_import_gwh": 14.22,
+     "bal_de_keur": -1715.8,
+     "rent_keur": 627.5,
+     "mean_spread": 19.65
+    },
+    "SE_4": {
+     "import_gwh": 10.34,
+     "export_gwh": 0.0,
+     "net_import_gwh": 10.34,
+     "bal_de_keur": -1886.1,
+     "rent_keur": 1190.2,
+     "mean_spread": 115.07
+    }
+   },
+   "solar_gwh": 832.95,
+   "solar_mv": 142.37,
+   "wind_onshore_gwh": 979.7,
+   "wind_onshore_mv": 180.69,
+   "wind_offshore_gwh": 240.77,
+   "wind_offshore_mv": 187.37,
+   "wind_forecast_gwh": 292.73,
+   "wind_actual_gwh": 305.12,
    "negative_price_hours": 0.0
   }
  ]
