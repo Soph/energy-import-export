@@ -2,7 +2,7 @@
  "note": "One row per complete calendar month. price_gap is the volume-weighted day-ahead price in importing hours minus exporting hours, on the transit-free basis. day_ahead_mean is the mean of daily means, so every day counts equally. solar_vs_market is solar's generation-weighted capture price against that mean -- negative is the cannibalisation discount. Positive net_import_gwh means Germany was a net importer.",
  "source": "Bundesnetzagentur | SMARD.de",
  "licence": "CC BY 4.0",
- "generated_at": "2026-09-30T08:35:44+02:00",
+ "generated_at": "2026-10-01T08:36:05+02:00",
  "months": [
   {
    "month": "2019-01",
@@ -2302,6 +2302,31 @@
    "w_exp_de": 556957.5,
    "w_imp_own": 371475.0,
    "w_exp_own": 123893.3,
+   "step_minutes": 15.0
+  },
+  {
+   "month": "2026-09",
+   "days": 30,
+   "price_gap": 158.4,
+   "px_importing": 225.5,
+   "px_exporting": 67.1,
+   "net_import_gwh": -491.0,
+   "day_ahead_mean": 145.3,
+   "solar_mv": 84.8,
+   "solar_vs_market": -60.5,
+   "rent_meur": 189.7,
+   "bal_keur": -244491.5,
+   "rent_keur": 189719.8,
+   "import_gwh": 4638.0,
+   "export_gwh": 5129.1,
+   "transit_gwh": 2886.8,
+   "stayed_gwh": 1751.2,
+   "from_de_plants_gwh": 2242.3,
+   "load_gwh": 37193.8,
+   "w_imp_de": 833375.3,
+   "w_exp_de": 588880.8,
+   "w_imp_own": 394865.5,
+   "w_exp_own": 150373.5,
    "step_minutes": 15.0
   }
  ]
