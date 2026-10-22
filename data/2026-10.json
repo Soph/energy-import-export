@@ -2186,7 +2186,7 @@
    "step_minutes": 15.0,
    "price_de_mean": 208.44,
    "load_gw": 55.92,
-   "residual_gw": 25.2,
+   "residual_gw": 25.14,
    "import_gwh": 98.06,
    "export_gwh": 231.38,
    "net_import_gwh": -133.32,
@@ -2290,8 +2290,8 @@
      "mean_spread": 0.65
     }
    },
-   "solar_gwh": 734.33,
-   "solar_mv": 188.91,
+   "solar_gwh": 740.24,
+   "solar_mv": 189.01,
    "wind_onshore_gwh": 1594.6,
    "wind_onshore_mv": 208.08,
    "wind_offshore_gwh": 620.16,
@@ -2306,8 +2306,8 @@
    "flows": "scheduled",
    "step_minutes": 15.0,
    "price_de_mean": 195.66,
-   "load_gw": 57.93,
-   "residual_gw": 30.29,
+   "load_gw": 57.9,
+   "residual_gw": 30.26,
    "import_gwh": 141.92,
    "export_gwh": 175.21,
    "net_import_gwh": -33.29,
@@ -2411,14 +2411,135 @@
      "mean_spread": 16.99
     }
    },
-   "solar_gwh": 566.57,
-   "solar_mv": 169.15,
-   "wind_onshore_gwh": 1481.96,
+   "solar_gwh": 566.43,
+   "solar_mv": 169.14,
+   "wind_onshore_gwh": 1481.98,
    "wind_onshore_mv": 193.5,
    "wind_offshore_gwh": 605.43,
    "wind_offshore_mv": 197.36,
    "wind_forecast_gwh": 514.02,
    "wind_actual_gwh": 521.85,
+   "negative_price_hours": 0.0
+  },
+  {
+   "date": "2026-10-21",
+   "source": "smard",
+   "flows": "scheduled",
+   "step_minutes": 15.0,
+   "price_de_mean": 211.94,
+   "load_gw": 60.26,
+   "residual_gw": 41.62,
+   "import_gwh": 259.87,
+   "export_gwh": 122.29,
+   "net_import_gwh": 137.58,
+   "transit_gwh": 115.38,
+   "stayed_gwh": 144.49,
+   "from_de_plants_gwh": 6.91,
+   "imp_px_own": 222.02,
+   "exp_px_own": 167.19,
+   "imp_px_de": 218.89,
+   "exp_px_de": 212.26,
+   "bal_de_keur": -30923.9,
+   "bal_zonal_keur": -23745.7,
+   "rent_keur": 8004.8,
+   "borders": {
+    "AT": {
+     "import_gwh": 0.87,
+     "export_gwh": 39.74,
+     "net_import_gwh": -38.87,
+     "bal_de_keur": 8115.0,
+     "rent_keur": 896.1,
+     "mean_spread": -23.73
+    },
+    "BE": {
+     "import_gwh": 20.19,
+     "export_gwh": 7.04,
+     "net_import_gwh": 13.15,
+     "bal_de_keur": -3131.8,
+     "rent_keur": 387.9,
+     "mean_spread": 15.86
+    },
+    "CH": {
+     "import_gwh": 0.0,
+     "export_gwh": 25.31,
+     "net_import_gwh": -25.31,
+     "bal_de_keur": 5435.2,
+     "rent_keur": 682.6,
+     "mean_spread": -28.25
+    },
+    "CZ": {
+     "import_gwh": 12.12,
+     "export_gwh": 9.7,
+     "net_import_gwh": 2.42,
+     "bal_de_keur": -467.4,
+     "rent_keur": 77.4,
+     "mean_spread": 2.16
+    },
+    "DK_1": {
+     "import_gwh": 43.94,
+     "export_gwh": 16.01,
+     "net_import_gwh": 27.92,
+     "bal_de_keur": -6464.6,
+     "rent_keur": 623.2,
+     "mean_spread": 13.61
+    },
+    "DK_2": {
+     "import_gwh": 6.86,
+     "export_gwh": 12.66,
+     "net_import_gwh": -5.8,
+     "bal_de_keur": 1073.5,
+     "rent_keur": -16.3,
+     "mean_spread": 2.46
+    },
+    "FR": {
+     "import_gwh": 44.3,
+     "export_gwh": 0.65,
+     "net_import_gwh": 43.65,
+     "bal_de_keur": -9664.5,
+     "rent_keur": 2290.1,
+     "mean_spread": 50.6
+    },
+    "NL": {
+     "import_gwh": 70.51,
+     "export_gwh": 2.63,
+     "net_import_gwh": 67.88,
+     "bal_de_keur": -14848.6,
+     "rent_keur": 746.8,
+     "mean_spread": 9.58
+    },
+    "NO_2": {
+     "import_gwh": 31.74,
+     "export_gwh": 1.47,
+     "net_import_gwh": 30.28,
+     "bal_de_keur": -6562.5,
+     "rent_keur": 1411.8,
+     "mean_spread": 42.9
+    },
+    "PL": {
+     "import_gwh": 25.47,
+     "export_gwh": 6.76,
+     "net_import_gwh": 18.71,
+     "bal_de_keur": -3702.9,
+     "rent_keur": 591.8,
+     "mean_spread": 54.01
+    },
+    "SE_4": {
+     "import_gwh": 3.87,
+     "export_gwh": 0.32,
+     "net_import_gwh": 3.54,
+     "bal_de_keur": -705.4,
+     "rent_keur": 313.5,
+     "mean_spread": 70.08
+    }
+   },
+   "solar_gwh": 243.11,
+   "solar_mv": 217.48,
+   "wind_onshore_gwh": 977.44,
+   "wind_onshore_mv": 207.14,
+   "wind_offshore_gwh": 568.87,
+   "wind_offshore_mv": 210.3,
+   "wind_forecast_gwh": 360.33,
+   "wind_actual_gwh": 386.58,
    "negative_price_hours": 0.0
   }
  ]
